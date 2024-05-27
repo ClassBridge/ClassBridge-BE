@@ -1,6 +1,7 @@
 package com.linked.classbridge.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.linked.classbridge.type.ResponseMessage;
 import lombok.Builder;
 
 @Builder
@@ -10,18 +11,18 @@ public record SuccessResponse<T>(
         @JsonInclude(JsonInclude.Include.NON_NULL) T data
 ) {
 
-    public static <T> SuccessResponse<T> of(String message, T data) {
+    public static <T> SuccessResponse<T> of(ResponseMessage message, T data) {
         return SuccessResponse.<T>builder()
                 .code("SUCCESS")
-                .message(message)
+                .message(message.getMessage())
                 .data(data)
                 .build();
     }
 
-    public static <T> SuccessResponse<T> of(String message) {
+    public static <T> SuccessResponse<T> of(ResponseMessage message) {
         return SuccessResponse.<T>builder()
                 .code("SUCCESS")
-                .message(message)
+                .message(message.getMessage())
                 .build();
     }
 
