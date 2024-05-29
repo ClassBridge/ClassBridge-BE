@@ -2,11 +2,15 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/classBridge?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
 
   jpa:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
+    open-in-view: false
     properties:
       hibernate:
         show-sql: true
@@ -14,3 +18,19 @@ spring:
         use_sql_comments: true
         jdbc:
           time_zone: UTC
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 100MB
+
+cloud:
+  aws:
+    s3:
+      bucket: class-bridge
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
