@@ -7,10 +7,12 @@ import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
+import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
 import com.linked.classbridge.type.ErrorCode;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -38,37 +40,75 @@ public class ReviewService {
      */
     @Transactional
     public RegisterReviewDto.Response registerReview(User user, RegisterReviewDto.Request request) {
-        System.out.println("request = " + request);
-        validateReview(request);
+        validateRegisterReview(request);
 
         Lesson lesson = lessonService.findLessonById(request.lessonId());
         OneDayClass oneDayClass = lesson.getOneDayClass();
 
-        // 클래스 ID가 일치하는지 확인
         if (ObjectUtils.notEqual(request.classId(), oneDayClass.getOneDayClassId())) {
             throw new RestApiException(ErrorCode.INVALID_ONE_DAY_CLASS_ID);
         }
 
-        // 리뷰를 이미 작성했는지 확인 (하나의 레슨에 대해 유저는 하나의 리뷰만 작성 가능)
-        reviewRepository.findByLessonAndUser(lesson, user).ifPresent(review -> {
-            throw new RestApiException(ErrorCode.REVIEW_ALREADY_EXISTS);
-        });
+        validateReviewAlreadyExists(user, lesson);
 
-        // 리뷰 등록
         Review savedReview =
                 reviewRepository.save(Request.toEntity(user, lesson, oneDayClass, request));
 
-        // 리뷰 이미지 등록
         uploadAndSaveReviewImage(savedReview, request.image1(), request.image2(), request.image3());
+        oneDayClass.addReview(savedReview); // 평점 등록
 
         return RegisterReviewDto.Response.fromEntity(savedReview);
     }
 
-    public void validateReview(Request request) {
-        if (request.rating() < 0 || request.rating() > 5) {
+    /**
+     * 리뷰 수정
+     *
+     * @param user     사용자
+     * @param request  수정할 리뷰 정보
+     * @param reviewId 리뷰 ID
+     * @return 수정된 리뷰 응답
+     */
+    @Transactional
+    public UpdateReviewDto.Response updateReview(User user, UpdateReviewDto.Request request,
+                                                 Long reviewId) {
+        validateUpdateReview(request);
+
+        Review review = findReviewById(reviewId);
+        OneDayClass oneDayClass = review.getOneDayClass();
+
+        validateReviewOwner(user, review);
+
+        updateReviewImage(review, request.image1(), request.image2(), request.image3());
+
+        Double prevRating = review.getRating();
+        Double diffRating = request.rating() - prevRating; // 평점 차이 계산
+
+        review.update(request.contents(), request.rating());
+
+        oneDayClass.updateTotalStarRate(diffRating); // 평점 업데이트
+
+        return UpdateReviewDto.Response.fromEntity(review);
+    }
+
+    private void validateReviewAlreadyExists(User user, Lesson lesson) {
+        reviewRepository.findByLessonAndUser(lesson, user).ifPresent(review -> {
+            throw new RestApiException(ErrorCode.REVIEW_ALREADY_EXISTS);
+        });
+    }
+
+    public void validateRegisterReview(RegisterReviewDto.Request request) {
+        validateReviewRating(request.rating());
+        validateReviewContents(request.contents());
+    }
+
+    private void validateReviewRating(Double rating) {
+        if (rating < 0 || rating > 5) {
             throw new RestApiException(ErrorCode.INVALID_REVIEW_RATING);
         }
-        if (request.contents().length() < 10 || request.contents().length() > 200) {
+    }
+
+    private void validateReviewContents(String contents) {
+        if (contents.length() < 10 || contents.length() > 200) {
             throw new RestApiException(ErrorCode.INVALID_REVIEW_CONTENTS);
         }
     }
@@ -78,9 +118,7 @@ public class ReviewService {
         int sequence = 1;
         for (MultipartFile image : images) {
             if (image != null && !image.isEmpty()) {
-                // 이미지 S3 저장
                 String url = s3Service.uploadReviewImage(image);
-                // 리뷰 이미지 저장
                 reviewImageRepository.save(ReviewImage.builder()
                         .review(savedReview)
                         .url(url)
@@ -91,4 +129,46 @@ public class ReviewService {
         }
     }
 
+
+    public void validateUpdateReview(UpdateReviewDto.Request request) {
+        validateReviewRating(request.rating());
+        validateReviewContents(request.contents());
+    }
+
+    private void validateReviewOwner(User user, Review review) {
+        if (!review.getUser().getUserId().equals(user.getUserId())) {
+            throw new RestApiException(ErrorCode.NOT_REVIEW_OWNER);
+        }
+    }
+
+    public Review findReviewById(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.REVIEW_NOT_FOUND));
+    }
+
+
+    private void updateReviewImage(Review review, MultipartFile... images) {
+        List<ReviewImage> reviewImages =
+                reviewImageRepository.findByReviewOrderBySequenceAsc(review);
+        int sequence = 1;
+        for (MultipartFile image : images) {
+            if (image != null && !image.isEmpty()) {
+                if (sequence > reviewImages.size()) {
+                    String url = s3Service.uploadReviewImage(image);
+                    reviewImageRepository.save(ReviewImage.builder()
+                            .review(review)
+                            .url(url)
+                            .sequence(sequence)
+                            .build());
+                } else {
+                    ReviewImage reviewImage = reviewImages.get(sequence - 1);
+                    String prevImageUrl = reviewImage.getUrl();
+                    s3Service.delete(prevImageUrl);
+                    String url = s3Service.uploadReviewImage(image);
+                    reviewImage.updateUrl(url);
+                }
+            }
+            sequence++;
+        }
+    }
 }

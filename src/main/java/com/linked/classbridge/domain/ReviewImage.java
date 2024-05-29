@@ -33,4 +33,8 @@ public class ReviewImage {
 
     @Column(nullable = false)
     private String url;
+
+    public void updateUrl(String url) {
+        this.url = url;
+    }
 }

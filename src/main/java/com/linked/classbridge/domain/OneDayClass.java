@@ -37,6 +37,27 @@ public class OneDayClass extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User tutor;
 
+    private Double totalStarRate;
+
+    private Integer totalReviews;
+
+
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
+
+    public void addReview(Review review) {
+        this.reviewList.add(review);
+        this.totalStarRate += review.getRating();
+        this.totalReviews++;
+    }
+
+    public void removeReview(Review review) {
+        this.reviewList.remove(review);
+        this.totalStarRate -= review.getRating();
+        this.totalReviews--;
+    }
+
+    public void updateTotalStarRate(Double diff) {
+        this.totalStarRate += diff;
+    }
 }

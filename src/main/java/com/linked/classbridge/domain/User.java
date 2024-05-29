@@ -26,7 +26,7 @@ import org.hibernate.annotations.SQLRestriction;
 @AllArgsConstructor
 @SuperBuilder
 @Inheritance(strategy = InheritanceType.JOINED)
-@SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE id = ?")
+@SQLDelete(sql = "UPDATE user SET deleted_at = NOW() WHERE user_id = ?")
 @SQLRestriction("deleted_at is null")
 public class User extends BaseEntity {
 

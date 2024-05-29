@@ -33,6 +33,8 @@ public class InitDataLoader implements CommandLineRunner {
         OneDayClass saveOneDayClass = oneDayClassRepository.findById(1L)
                 .orElseGet(() -> oneDayClassRepository.save(OneDayClass.builder()
                         .tutor(savedUser)
+                        .totalReviews(0)
+                        .totalStarRate(0D)
                         .build()));
 
         Lesson savedLesson = lessonRepository.findById(1L)

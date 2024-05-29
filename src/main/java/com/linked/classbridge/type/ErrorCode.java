@@ -25,6 +25,8 @@ public enum ErrorCode {
     FAILED_TO_DELETE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제에 실패했습니다."),
 
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
+    REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
+    NOT_REVIEW_OWNER(HttpStatus.FORBIDDEN, "리뷰 작성자만 수정 및 삭제가 가능합니다."),
     ;
     private final HttpStatus httpStatus;
     private final String description;
