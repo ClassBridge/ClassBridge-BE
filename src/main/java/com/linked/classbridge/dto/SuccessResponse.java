@@ -2,10 +2,8 @@ package com.linked.classbridge.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
-import lombok.RequiredArgsConstructor;
 
 @Builder
-@RequiredArgsConstructor
 public record SuccessResponse<T>(
         String code,
         String message,
