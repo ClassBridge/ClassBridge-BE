@@ -5,6 +5,7 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.review.DeleteReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
@@ -88,6 +89,25 @@ public class ReviewService {
         oneDayClass.updateTotalStarRate(diffRating); // 평점 업데이트
 
         return UpdateReviewDto.Response.fromEntity(review);
+    }
+
+    @Transactional
+    public DeleteReviewResponse deleteReview(User user, Long reviewId) {
+
+        Review review = findReviewById(reviewId);
+
+        validateReviewOwner(user, review);
+
+        List<ReviewImage> reviewImages =
+                reviewImageRepository.findByReviewOrderBySequenceAsc(review);
+
+        reviewImages.forEach(reviewImage -> s3Service.delete(reviewImage.getUrl()));
+
+        review.getOneDayClass().removeReview(review);
+
+        reviewRepository.delete(review);
+
+        return new DeleteReviewResponse(reviewId);
     }
 
     private void validateReviewAlreadyExists(User user, Lesson lesson) {

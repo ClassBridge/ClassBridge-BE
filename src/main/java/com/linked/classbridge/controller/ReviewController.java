@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +52,20 @@ public class ReviewController {
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_UPDATE_SUCCESS,
                         reviewService.updateReview(user, request, reviewId)
+                )
+        );
+    }
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<SuccessResponse<?>> deleteReview(
+            @PathVariable Long reviewId
+    ) {
+        User user = userRepository.findById(1L).orElse(null);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.REVIEW_DELETE_SUCCESS,
+                        reviewService.deleteReview(user, reviewId)
                 )
         );
     }
