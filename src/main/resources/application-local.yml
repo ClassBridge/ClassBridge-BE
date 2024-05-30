@@ -8,17 +8,43 @@ spring:
     secret: ${JWT_SECRET}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/class_bridge_db?serverTimezone=UTC&CharacterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/${DB_NAME}?serverTimezone=UTC&CharacterEncoding=UTF-8
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-  jpa:
-    show-sql: true
-    database: mysql
-    hibernate:
-      ddl-auto: update
   mvc:
     pathmatch:
       matching-strategy: path_pattern_parser
   jackson:
     date-format: yyyy-MM-dd
     time-zone: Asia/Seoul
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        show-sql: true
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 100MB
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}

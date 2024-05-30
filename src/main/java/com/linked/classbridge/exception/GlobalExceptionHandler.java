@@ -86,12 +86,19 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<Object> handleExceptionInternal(ErrorCode errorCode) {
         return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(errorCode.getDescription());
+                .body(makeErrorResponseBody(errorCode));
     }
 
     private ResponseEntity<Object> handleExceptionInternal(Exception e, ErrorCode errorCode) {
         return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(makeErrorResponseBody((MethodArgumentNotValidException) e, errorCode));
+    }
+
+    private ErrorResponse makeErrorResponseBody(ErrorCode errorCode) {
+        return ErrorResponse.builder()
+                .code(errorCode.name())
+                .message(errorCode.getDescription())
+                .build();
     }
 
     private ErrorResponse makeErrorResponseBody(BindException e, ErrorCode errorCode) {
@@ -107,4 +114,5 @@ public class GlobalExceptionHandler {
                 .errors(validationErrorList)
                 .build();
     }
+
 }
