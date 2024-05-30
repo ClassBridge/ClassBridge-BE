@@ -5,11 +5,15 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.user.AuthDto;
+import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,19 +45,27 @@ public class UserController {
     }
 
     @PostMapping("/auth/signup")
-    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody AuthDto.SignUp signupRequest) {
+    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody AuthDto.SignUp signupRequest, HttpSession session) {
 
-        if (signupRequest.getAuthType() == AuthType.GOOGLE) {
-            UserDto userDTO = userService.getUserFromGoogle(signupRequest.getAccessToken());
-            if (userDTO == null) {
-                throw new IllegalArgumentException("User information is not found from Google API");
+        UserDto userDto = signupRequest.getUserDTO();
+
+        if (userDto == null) {
+            CustomOAuth2User customOAuth2User = (CustomOAuth2User) session.getAttribute("customOAuth2User");
+            if (customOAuth2User == null) {
+                throw new IllegalArgumentException("Session does not contain CustomOAuth2User");
             }
-            signupRequest.setUserDTO(userDTO);
+            userDto = userService.getUserDto(customOAuth2User);
         }
-        userService.addUser(signupRequest);
-        return ResponseEntity.status(CREATED).body(
-                SuccessResponse.of("success")
-        );
+
+        if (userDto != null && userDto.getAuthType() == AuthType.GOOGLE) {
+            signupRequest.setUserDTO(userDto);
+            userService.addUser(signupRequest);
+            return ResponseEntity.status(CREATED).body(
+                    SuccessResponse.of("success")
+            );
+        } else {
+            throw new IllegalArgumentException("User information is not found from Google API");
+        }
     }
 
     @PostMapping("/auth/signin")

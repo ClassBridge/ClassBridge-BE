@@ -2,6 +2,7 @@ package com.linked.classbridge.util;
 
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,9 +32,14 @@ public class JWTUtil {
     public List<String> getRoles(String token) {
 
         List<?> roles = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("roles", List.class);
-        return roles.stream()
-                .map(Object::toString)
-                .collect(Collectors.toList());
+
+        if (roles != null) {
+            return roles.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public Boolean isExpired(String token) {

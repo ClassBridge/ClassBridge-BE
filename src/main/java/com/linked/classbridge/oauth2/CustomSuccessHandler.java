@@ -8,6 +8,7 @@ import com.linked.classbridge.util.JWTUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 // OAuth2 로그인 성공 시 JWT 토큰을 생성하고 쿠키에 저장하는 핸들러
-// 만약, 해당 이메일로 가입된 유저가 존재하지 않는다면, 추가 정보 입력 페이지로 리다이렉트
+// 만약, 해당 이메일로 가입된 유저가 존재하지 않는다면, CustomOAuth2User를 세션에 저장하고 추가 정보 입력 페이지로 리다이렉트
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -50,6 +51,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
             response.sendRedirect("http://localhost:3000/");
         } else {
+            HttpSession session = request.getSession();
+            session.setAttribute("customOAuth2User", customOAuth2User);
             response.sendRedirect("http://localhost:3000/user/auth/additional-info");
         }
     }

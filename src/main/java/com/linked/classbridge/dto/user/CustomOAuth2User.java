@@ -37,9 +37,14 @@ public class CustomOAuth2User implements OAuth2User {
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
-        for (String role : userDTO.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority(role));
+        List<String> roles = userDTO.getRoles();
+
+        if (roles != null) {
+            for (String role : roles) {
+                authorities.add(new SimpleGrantedAuthority(role));
+            }
         }
+
         return authorities;
     }
 

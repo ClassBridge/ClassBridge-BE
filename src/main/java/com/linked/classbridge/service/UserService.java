@@ -8,6 +8,7 @@ import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
+import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.GoogleResponse;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
@@ -88,14 +89,28 @@ public class UserService {
         Map<String, Object> attributes = response.getBody();
         GoogleResponse googleResponse = new GoogleResponse(attributes);
 
-        UserDto userDTO = new UserDto();
-        userDTO.setProvider("google");
-        userDTO.setProviderId(googleResponse.getProviderId());
-        userDTO.setEmail(googleResponse.getEmail());
-        userDTO.setUsername(googleResponse.getName());
-        userDTO.setAuthType(AuthType.GOOGLE);
+        UserDto userDto = new UserDto();
+        userDto.setProvider("google");
+        userDto.setProviderId(googleResponse.getProviderId());
+        userDto.setEmail(googleResponse.getEmail());
+        userDto.setUsername(googleResponse.getName());
+        userDto.setAuthType(AuthType.GOOGLE);
 
-        return userDTO;
+        return userDto;
+    }
+
+    public UserDto getUserDto(CustomOAuth2User customOAuth2User) {
+
+        UserDto userDto = new UserDto();
+        Map<String, Object> attributes = customOAuth2User.getAttributes();
+
+        userDto.setProvider((String) attributes.get("provider"));
+        userDto.setProviderId((String) attributes.get("providerId"));
+        userDto.setEmail((String) attributes.get("email"));
+        userDto.setUsername((String) attributes.get("username"));
+        userDto.setAuthType((AuthType) attributes.get("authType"));
+
+        return userDto;
     }
 
     public void addUser(AuthDto.SignUp signupRequest) {

@@ -15,9 +15,7 @@ public class AuthDto {
     @Data
     public static class SignUp {
 
-        private AuthType authType;
         private UserDto userDTO;
         private AdditionalInfoDto additionalInfoDTO;
-        private String accessToken;
     }
 }
