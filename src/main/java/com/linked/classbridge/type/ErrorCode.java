@@ -42,6 +42,11 @@ public enum ErrorCode {
     CANNOT_CONVERT_FILE(HttpStatus.BAD_REQUEST, "파일 변환에 실패했습니다."),
     FILE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "파일 제거에 실패했습니다."),
     CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "원데이 클래스를 찾을 수 없습니다.");
+    PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
+    INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
+    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다.");
+
+    ;
     private final HttpStatus httpStatus;
     private final String description;
 }
