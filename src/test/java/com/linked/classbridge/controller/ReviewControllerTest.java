@@ -12,11 +12,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.DeleteReviewResponse;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -339,6 +342,63 @@ class ReviewControllerTest {
                 .andExpect(jsonPath("$.code").value(NOT_REVIEW_OWNER.name()))
                 .andExpect(jsonPath("$.message").value(NOT_REVIEW_OWNER.getDescription()))
         ;
+    }
+
+    @Test
+    @DisplayName("리뷰 단일 조회 성공")
+    void getReview_success() throws Exception {
+        GetReviewResponse response = new GetReviewResponse(
+                1L,
+                1L,
+                "className",
+                1L,
+                1L,
+                "userNickName",
+                4.5,
+                "contents",
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                List.of("image1", "image2", "image3")
+        );
+
+        // Given
+        given(reviewService.getReview(1L)).willReturn(response);
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/api/reviews/{reviewId}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.reviewId").value(1L))
+                .andExpect(jsonPath("$.data.classId").value(1L))
+                .andExpect(jsonPath("$.data.className").value("className"))
+                .andExpect(jsonPath("$.data.lessonId").value(1L))
+                .andExpect(jsonPath("$.data.userId").value(1L))
+                .andExpect(jsonPath("$.data.userNickName").value("userNickName"))
+                .andExpect(jsonPath("$.data.rating").value(4.5))
+                .andExpect(jsonPath("$.data.contents").value("contents"))
+                .andExpect(jsonPath("$.data.reviewImageUrlList").isArray())
+                .andExpect(jsonPath("$.data.reviewImageUrlList[0]").value("image1"))
+                .andExpect(jsonPath("$.data.reviewImageUrlList[1]").value("image2"))
+                .andExpect(jsonPath("$.data.reviewImageUrlList[2]").value("image3"));
+    }
+
+    @Test
+    @DisplayName("리뷰 단일 조회 실패 - 존재 하지 않는 리뷰 ID")
+    void getReview_fail_not_exist_review_id() throws Exception {
+        // Given
+        given(reviewService.getReview(1L)).willThrow(new RestApiException(REVIEW_NOT_FOUND));
+
+        // When & Then
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/api/reviews/{reviewId}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(REVIEW_NOT_FOUND.name()))
+                .andExpect(jsonPath("$.message").value(REVIEW_NOT_FOUND.getDescription()));
     }
 
 }

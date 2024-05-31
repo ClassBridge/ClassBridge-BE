@@ -6,6 +6,7 @@ import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.DeleteReviewResponse;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
@@ -190,5 +191,10 @@ public class ReviewService {
             }
             sequence++;
         }
+    }
+
+    public GetReviewResponse getReview(Long reviewId) {
+        Review review = findReviewById(reviewId);
+        return GetReviewResponse.fromEntity(review);
     }
 }

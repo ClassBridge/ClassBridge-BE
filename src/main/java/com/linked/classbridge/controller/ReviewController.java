@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,6 +67,18 @@ public class ReviewController {
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_DELETE_SUCCESS,
                         reviewService.deleteReview(user, reviewId)
+                )
+        );
+    }
+    
+    @GetMapping("/{reviewId}")
+    public ResponseEntity<SuccessResponse<?>> getReview(
+            @PathVariable Long reviewId
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.REVIEW_GET_SUCCESS,
+                        reviewService.getReview(reviewId)
                 )
         );
     }

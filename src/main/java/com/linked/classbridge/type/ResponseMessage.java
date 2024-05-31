@@ -12,7 +12,7 @@ public enum ResponseMessage {
     REVIEW_REGISTER_SUCCESS("리뷰 등록 성공"),
     REVIEW_UPDATE_SUCCESS("리뷰 수정 성공"),
     REVIEW_DELETE_SUCCESS("리뷰 삭제 성공"),
+    REVIEW_GET_SUCCESS("리뷰 조회 성공"),
     ;
-
     private final String message;
 }

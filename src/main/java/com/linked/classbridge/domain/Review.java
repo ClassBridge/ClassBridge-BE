@@ -59,4 +59,8 @@ public class Review extends BaseEntity {
         this.contents = contents;
         this.rating = rating;
     }
+
+    public void addReviewImage(ReviewImage reviewImage) {
+        reviewImageList.add(reviewImage);
+    }
 }
