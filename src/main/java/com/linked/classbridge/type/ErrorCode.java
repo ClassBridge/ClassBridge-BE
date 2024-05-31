@@ -53,7 +53,13 @@ public enum ErrorCode {
     MISMATCH_USER_CLASS(HttpStatus.BAD_REQUEST, "해당 유저와 클래스 생성자가 다릅니다."),
     INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
-    INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다.");
+    INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
+    PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
+    INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
+    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
+
+    ;
+
     private final HttpStatus httpStatus;
     private final String description;
 }

@@ -1,0 +1,9 @@
+### 결제
+POST http://localhost:8080/api/payments/prepare
+Content-Type: application/json
+
+{
+  "quantity": 1,
+  "totalAmount": 10000,
+  "itemName": "코딩클래스"
+}
