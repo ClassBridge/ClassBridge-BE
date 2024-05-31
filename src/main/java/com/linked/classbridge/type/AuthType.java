@@ -1,6 +1,6 @@
 package com.linked.classbridge.type;
 
 public enum AuthType {
-    LOCAL,
+    EMAIL,
     GOOGLE
 }

@@ -44,7 +44,6 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .collect(Collectors.toList());
 
             String token = jwtUtil.createJwt(email, roles, 60 * 60 * 24L * 1000); // 24시간
-            response.addHeader("Authorization", "Bearer " + token);
 
             Cookie cookie = CookieUtil.createCookie("Authorization", token);
             response.addCookie(cookie);

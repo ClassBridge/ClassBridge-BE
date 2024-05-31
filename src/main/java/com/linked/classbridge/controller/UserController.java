@@ -1,19 +1,20 @@
 package com.linked.classbridge.controller;
 
-import static org.springframework.http.HttpStatus.CREATED;
+import static com.linked.classbridge.type.ErrorCode.REQUIRED_USER_INFO;
+import static com.linked.classbridge.type.ErrorCode.SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER;
 import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,19 +53,44 @@ public class UserController {
         if (userDto == null) {
             CustomOAuth2User customOAuth2User = (CustomOAuth2User) session.getAttribute("customOAuth2User");
             if (customOAuth2User == null) {
-                throw new IllegalArgumentException("Session does not contain CustomOAuth2User");
+                throw new RestApiException(SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER);
             }
             userDto = userService.getUserDto(customOAuth2User);
         }
 
         if (userDto != null && userDto.getAuthType() == AuthType.GOOGLE) {
             signupRequest.setUserDTO(userDto);
+
+            if(signupRequest.getAdditionalInfoDTO().getPhoneNumber() == null
+                    || signupRequest.getAdditionalInfoDTO().getPhoneNumber().isEmpty()) {
+                throw new RestApiException(REQUIRED_USER_INFO);
+            }
+
+            if(signupRequest.getAdditionalInfoDTO().getNickname() == null
+                    || signupRequest.getAdditionalInfoDTO().getNickname().isEmpty()) {
+                throw new RestApiException(REQUIRED_USER_INFO);
+            }
+
             userService.addUser(signupRequest);
-            return ResponseEntity.status(CREATED).body(
-                    SuccessResponse.of("success")
-            );
+            session.removeAttribute("customOAuth2User"); // 회원가입 후 세션에서 유저 기본 정보 제거
+            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
+        } else if (userDto != null && userDto.getAuthType() == AuthType.EMAIL) {
+
+            if(signupRequest.getAdditionalInfoDTO().getPhoneNumber() == null
+                    || signupRequest.getAdditionalInfoDTO().getPhoneNumber().isEmpty()) {
+                throw new RestApiException(REQUIRED_USER_INFO);
+            }
+
+            if(signupRequest.getAdditionalInfoDTO().getNickname() == null
+                    || signupRequest.getAdditionalInfoDTO().getNickname().isEmpty()) {
+                throw new RestApiException(REQUIRED_USER_INFO);
+            }
+
+            // 일반 회원가입 방식 처리
+            userService.addUser(signupRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
         } else {
-            throw new IllegalArgumentException("User information is not found from Google API");
+            throw new RestApiException(REQUIRED_USER_INFO);
         }
     }
 

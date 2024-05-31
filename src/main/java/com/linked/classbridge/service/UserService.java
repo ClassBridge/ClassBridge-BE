@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -53,26 +55,39 @@ public class UserService {
 
     public String checkNickname(String nickname) {
 
+        log.info("Checking if nickname '{}' exists", nickname);
+
         if(userRepository.existsByNickname(nickname)){
+            log.warn("Nickname '{}' already exists", nickname);
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
+
+        log.info("Nickname '{}' is available", nickname);
         return "you can use this nickname";
     }
 
     public String checkEmail(String email) {
 
+        log.info("Checking if email '{}' exists", email);
+
         if(userRepository.existsByEmail(email)){
+            log.warn("Email '{}' is already registered", email);
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
+
+        log.info("Email '{}' is available", email);
         return "you can use this email";
     }
 
     public Optional<User> findByEmail(String email) {
 
+        log.info("Finding user by email '{}'", email);
         return userRepository.findByEmail(email);
     }
 
     public UserDto getUserFromGoogle(String accessToken) {
+
+        log.info("Getting user from Google with access token");
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -96,10 +111,13 @@ public class UserService {
         userDto.setUsername(googleResponse.getName());
         userDto.setAuthType(AuthType.GOOGLE);
 
+        log.info("Google user '{}' retrieved successfully", userDto.getUsername());
         return userDto;
     }
 
     public UserDto getUserDto(CustomOAuth2User customOAuth2User) {
+
+        log.info("Getting user DTO from CustomOAuth2User");
 
         UserDto userDto = new UserDto();
         Map<String, Object> attributes = customOAuth2User.getAttributes();
@@ -110,10 +128,13 @@ public class UserService {
         userDto.setUsername((String) attributes.get("username"));
         userDto.setAuthType((AuthType) attributes.get("authType"));
 
+        log.info("User DTO for '{}' created successfully", userDto.getUsername());
         return userDto;
     }
 
     public void addUser(AuthDto.SignUp signupRequest) {
+
+        log.info("Adding new user with email '{}'", signupRequest.getUserDTO().getEmail());
 
         UserDto userDTO = signupRequest.getUserDTO();
         AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDTO();
@@ -123,7 +144,13 @@ public class UserService {
         Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
 
         if (userRepository.existsByEmail(userDTO.getEmail())) {
+            log.warn("Email '{}' is already registered", userDTO.getEmail());
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
+        }
+
+        if(userRepository.existsByNickname(additionalInfoDTO.getNickname())) {
+            log.warn("Nickname '{}' already exists", additionalInfoDTO.getNickname());
+            throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
 
         User user = User.builder()
@@ -145,6 +172,7 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(signupRequest.getUserDTO().getPassword()));
         }
         userRepository.save(user);
+        log.info("User '{}' added successfully", user.getUsername());
 
         // 회원가입 완료 후 JWT 토큰 발급
         String token = jwtUtil.createJwt(userDTO.getEmail(), userDTO.getRoles(), 60 * 60 * 24L * 1000);
@@ -153,15 +181,22 @@ public class UserService {
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
             response.addCookie(cookie);
+            log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }
 
     public void signin(AuthDto.SignIn signinRequest) {
 
+        log.info("Signing in user with email '{}'", signinRequest.getEmail());
+
         User user = userRepository.findByEmail(signinRequest.getEmail())
-                .orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("User with email '{}' not found", signinRequest.getEmail());
+                    return new RestApiException(USER_NOT_FOUND);
+                });
 
         if (!passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())) {
+            log.warn("Password does not match for user '{}'", signinRequest.getEmail());
             throw new RestApiException(PASSWORD_NOT_MATCH);
         }
 
@@ -174,6 +209,7 @@ public class UserService {
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
             response.addCookie(cookie);
+            log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }
 }
