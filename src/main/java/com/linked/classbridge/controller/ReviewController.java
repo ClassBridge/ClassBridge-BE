@@ -2,6 +2,8 @@ package com.linked.classbridge.controller;
 
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.review.DeleteReviewResponse;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.repository.UserRepository;
@@ -29,7 +31,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
-    public ResponseEntity<SuccessResponse<?>> registerReview(
+    public ResponseEntity<SuccessResponse<RegisterReviewDto.Response>> registerReview(
             @Valid @ModelAttribute RegisterReviewDto.Request request
     ) {
         User user = userRepository.findById(1L).orElse(null);
@@ -43,7 +45,7 @@ public class ReviewController {
     }
 
     @PutMapping("/{reviewId}")
-    public ResponseEntity<SuccessResponse<?>> updateReview(
+    public ResponseEntity<SuccessResponse<UpdateReviewDto.Response>> updateReview(
             @Valid @ModelAttribute UpdateReviewDto.Request request,
             @PathVariable Long reviewId
     ) {
@@ -58,7 +60,7 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<SuccessResponse<?>> deleteReview(
+    public ResponseEntity<SuccessResponse<DeleteReviewResponse>> deleteReview(
             @PathVariable Long reviewId
     ) {
         User user = userRepository.findById(1L).orElse(null);
@@ -70,9 +72,9 @@ public class ReviewController {
                 )
         );
     }
-    
+
     @GetMapping("/{reviewId}")
-    public ResponseEntity<SuccessResponse<?>> getReview(
+    public ResponseEntity<SuccessResponse<GetReviewResponse>> getReview(
             @PathVariable Long reviewId
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(
