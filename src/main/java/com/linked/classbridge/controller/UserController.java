@@ -48,7 +48,7 @@ public class UserController {
     @PostMapping("/auth/signup")
     public ResponseEntity<SuccessResponse<?>> signup(@RequestBody AuthDto.SignUp signupRequest, HttpSession session) {
 
-        UserDto userDto = signupRequest.getUserDTO();
+        UserDto userDto = signupRequest.getUserDto();
 
         if (userDto == null) {
             CustomOAuth2User customOAuth2User = (CustomOAuth2User) session.getAttribute("customOAuth2User");
@@ -59,15 +59,15 @@ public class UserController {
         }
 
         if (userDto != null && userDto.getAuthType() == AuthType.GOOGLE) {
-            signupRequest.setUserDTO(userDto);
+            signupRequest.setUserDto(userDto);
 
-            if(signupRequest.getAdditionalInfoDTO().getPhoneNumber() == null
-                    || signupRequest.getAdditionalInfoDTO().getPhoneNumber().isEmpty()) {
+            if(signupRequest.getAdditionalInfoDto().getPhoneNumber() == null
+                    || signupRequest.getAdditionalInfoDto().getPhoneNumber().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
 
-            if(signupRequest.getAdditionalInfoDTO().getNickname() == null
-                    || signupRequest.getAdditionalInfoDTO().getNickname().isEmpty()) {
+            if(signupRequest.getAdditionalInfoDto().getNickname() == null
+                    || signupRequest.getAdditionalInfoDto().getNickname().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
 
@@ -76,13 +76,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
         } else if (userDto != null && userDto.getAuthType() == AuthType.EMAIL) {
 
-            if(signupRequest.getAdditionalInfoDTO().getPhoneNumber() == null
-                    || signupRequest.getAdditionalInfoDTO().getPhoneNumber().isEmpty()) {
+            if(signupRequest.getAdditionalInfoDto().getPhoneNumber() == null
+                    || signupRequest.getAdditionalInfoDto().getPhoneNumber().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
 
-            if(signupRequest.getAdditionalInfoDTO().getNickname() == null
-                    || signupRequest.getAdditionalInfoDTO().getNickname().isEmpty()) {
+            if(signupRequest.getAdditionalInfoDto().getNickname() == null
+                    || signupRequest.getAdditionalInfoDto().getNickname().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
 

@@ -134,10 +134,10 @@ public class UserService {
 
     public void addUser(AuthDto.SignUp signupRequest) {
 
-        log.info("Adding new user with email '{}'", signupRequest.getUserDTO().getEmail());
+        log.info("Adding new user with email '{}'", signupRequest.getUserDto().getEmail());
 
-        UserDto userDTO = signupRequest.getUserDTO();
-        AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDTO();
+        UserDto userDTO = signupRequest.getUserDto();
+        AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDto();
 
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
@@ -168,8 +168,8 @@ public class UserService {
                 .profileImageUrl(additionalInfoDTO.getProfilePictureUrl())
                 .build();
 
-        if(signupRequest.getUserDTO().getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(signupRequest.getUserDTO().getPassword()));
+        if(signupRequest.getUserDto().getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(signupRequest.getUserDto().getPassword()));
         }
         userRepository.save(user);
         log.info("User '{}' added successfully", user.getUsername());
