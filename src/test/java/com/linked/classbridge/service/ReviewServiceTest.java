@@ -1,10 +1,16 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.INVALID_ONE_DAY_CLASS_ID;
+import static com.linked.classbridge.type.ErrorCode.INVALID_REVIEW_CONTENTS;
+import static com.linked.classbridge.type.ErrorCode.INVALID_REVIEW_RATING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
@@ -12,17 +18,25 @@ import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.GetReviewResponse;
+import com.linked.classbridge.dto.review.RegisterReviewDto;
+import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
+import com.linked.classbridge.type.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
@@ -42,13 +56,51 @@ class ReviewServiceTest {
     @InjectMocks
     private ReviewService reviewService;
 
+    private User mockUser;
+    private Lesson mockLesson;
+    private OneDayClass mockOneDayClass;
+
+
+    @BeforeEach
+    void setUp() {
+        mockUser = User.builder()
+                .userId(1L)
+                .nickname("user")
+                .build();
+        mockOneDayClass = OneDayClass.builder()
+                .oneDayClassId(1L)
+                .className("oneDayClassName")
+                .reviewList(new ArrayList<>())
+                .totalStarRate(0.0)
+                .totalReviews(0)
+                .build();
+        mockLesson = Lesson.builder()
+                .lessonId(1L)
+                .oneDayClass(mockOneDayClass)
+                .lessonDate(LocalDateTime.now())
+                .build();
+    }
+
     @Test
     @DisplayName("리뷰 조회 성공")
     void getReview_success() {
         // given
-        Review review = createMockReview();
+        Review review = Review.builder()
+                .reviewId(1L)
+                .user(mockUser)
+                .lesson(mockLesson)
+                .oneDayClass(mockOneDayClass)
+                .contents("This is a contents.")
+                .rating(4.5)
+                .createdAt(LocalDateTime.now())
+                .reviewImageList(List.of(
+                        ReviewImage.builder().url("url1").build(),
+                        ReviewImage.builder().url("url2").build(),
+                        ReviewImage.builder().url("url3").build()
+                ))
+                .build();
 
-        given(reviewRepository.findById(anyLong())).willReturn(Optional.of(review));
+        given(reviewRepository.findById(1L)).willReturn(Optional.of(review));
 
         // when
         GetReviewResponse response = reviewService.getReview(1L);
@@ -68,56 +120,147 @@ class ReviewServiceTest {
         assertThat(response.reviewImageUrlList()).containsExactly("url1", "url2", "url3");
     }
 
+    @Test
+    @DisplayName("리뷰 조회 실패 - 존재하지 않는 리뷰")
+    void getReview_fail_notExistReview() {
+        // given
+        given(reviewRepository.findById(1L)).willReturn(Optional.empty());
 
-    private Review createMockReview() {
-        OneDayClass oneDayClass = OneDayClass.builder()
-                .oneDayClassId(1L)
-                .className("oneDayClassName")
-                .build();
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.getReview(1L));
 
-        Lesson lesson = Lesson.builder()
-                .lessonId(1L)
-                .oneDayClass(oneDayClass)
-                .lessonDate(LocalDateTime.now())
-                .build();
+        // then
+        assertEquals(ErrorCode.REVIEW_NOT_FOUND, exception.getErrorCode());
+    }
 
-        User user = User.builder()
-                .userId(1L)
-                .nickname("user")
-                .build();
+    @Test
+    @DisplayName("리뷰 등록 성공")
+    void createReview_success() {
+        // given
+        String url1 = "url1";
+        String url2 = "url2";
+        String url3 = "url3";
 
-        Review review = Review.builder()
+        RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
+
+        Review reviewToSave = RegisterReviewDto.Request.toEntity(mockUser, mockLesson,
+                mockOneDayClass, request);
+        Review savedReview = Review.builder()
                 .reviewId(1L)
-                .oneDayClass(oneDayClass)
-                .lesson(lesson)
-                .user(user)
-                .rating(5.0)
-                .contents("contents")
-                .createdAt(LocalDateTime.now())
-                .reviewImageList(new ArrayList<>())
+                .user(mockUser)
+                .lesson(mockLesson)
+                .oneDayClass(mockOneDayClass)
+                .contents(request.contents())
+                .rating(request.rating())
                 .build();
 
-        ReviewImage image1 = ReviewImage.builder()
-                .review(review)
-                .sequence(1)
-                .url("url1")
-                .build();
-        review.addReviewImage(image1);
+        given(reviewRepository.findByLessonAndUser(mockLesson, mockUser))
+                .willReturn(Optional.empty());
+        given(lessonService.findLessonById(1L)).willReturn(mockLesson);
+        given(s3Service.uploadReviewImage(request.image1())).willReturn(url1);
+        given(s3Service.uploadReviewImage(request.image2())).willReturn(url2);
+        given(s3Service.uploadReviewImage(request.image3())).willReturn(url3);
+        given(reviewRepository.save(reviewToSave)).willReturn(savedReview);
 
-        ReviewImage image2 = ReviewImage.builder()
-                .review(review)
-                .sequence(2)
-                .url("url2")
-                .build();
-        review.addReviewImage(image2);
+        // when
+        RegisterReviewDto.Response response = reviewService.registerReview(mockUser, request);
 
-        ReviewImage image3 = ReviewImage.builder()
-                .review(review)
-                .sequence(3)
-                .url("url3")
-                .build();
-        review.addReviewImage(image3);
+        // then
+        assertNotNull(response);
+        assertEquals(response.reviewId(), savedReview.getReviewId());
 
-        return review;
+        verify(reviewRepository, times(1)).save(reviewToSave);
+        verify(s3Service, times(1)).uploadReviewImage(request.image1());
+        verify(s3Service, times(1)).uploadReviewImage(request.image2());
+        verify(s3Service, times(1)).uploadReviewImage(request.image3());
+
+        ArgumentCaptor<ReviewImage> reviewImageCaptor = ArgumentCaptor.forClass(ReviewImage.class);
+        verify(reviewImageRepository, times(3)).save(reviewImageCaptor.capture());
+
+        List<ReviewImage> capturedReviewImages = reviewImageCaptor.getAllValues();
+        assertThat(capturedReviewImages).extracting("url").containsExactly(url1, url2, url3);
+    }
+
+    @Test
+    @DisplayName("리뷰 등록 실패 - 이미 리뷰를 등록한 사용자")
+    void createReview_fail_alreadyExistsReview() {
+        // given
+        RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
+
+        given(lessonService.findLessonById(request.lessonId())).willReturn(mockLesson);
+        given(reviewRepository.findByLessonAndUser(mockLesson, mockUser))
+                .willReturn(Optional.of(Review.builder().reviewId(1L).build()));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.registerReview(mockUser, request));
+
+        // then
+        assertEquals(ErrorCode.REVIEW_ALREADY_EXISTS, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 등록 실패 - 평점 범위 초과")
+    void createReview_fail_invalidRating() {
+        // given
+        RegisterReviewDto.Request request = new Request(1L, 1L, "valid contents", 5.1,
+                mock(MultipartFile.class), mock(MultipartFile.class), mock(MultipartFile.class));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.registerReview(mockUser, request));
+
+        // then
+        assertEquals(INVALID_REVIEW_RATING, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 등록 실패 - 리뷰 내용 길이 부족")
+    void createReview_fail_invalidReviewContents() {
+        // given
+        RegisterReviewDto.Request request = new Request(1L, 1L, "short", 4.5,
+                mock(MultipartFile.class), mock(MultipartFile.class), mock(MultipartFile.class));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.registerReview(mockUser, request));
+
+        // then
+        assertEquals(INVALID_REVIEW_CONTENTS, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 등록 실패 - 클래스 정보 일치 하지 않음")
+    void createReview_fail_notMatchClass() {
+        // given
+        RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
+
+        mockOneDayClass = OneDayClass.builder()
+                .oneDayClassId(2L)
+                .build();
+        mockLesson = Lesson.builder()
+                .lessonId(1L)
+                .oneDayClass(mockOneDayClass)
+                .build();
+
+        given(lessonService.findLessonById(request.lessonId()))
+                .willReturn(mockLesson);
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.registerReview(mockUser, request));
+
+        // then
+        assertEquals(INVALID_ONE_DAY_CLASS_ID, exception.getErrorCode());
+    }
+
+    private RegisterReviewDto.Request createRegisterReviewDtoRequest() {
+        MultipartFile image1 = mock(MultipartFile.class);
+        MultipartFile image2 = mock(MultipartFile.class);
+        MultipartFile image3 = mock(MultipartFile.class);
+        return new RegisterReviewDto.Request(
+                mockLesson.getLessonId(), mockOneDayClass.getOneDayClassId(),
+                "This is a contents.", 4.5, image1, image2, image3);
     }
 }
