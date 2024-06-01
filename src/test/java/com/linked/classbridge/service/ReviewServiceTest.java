@@ -17,9 +17,11 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.review.DeleteReviewResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
+import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
@@ -255,6 +257,156 @@ class ReviewServiceTest {
         assertEquals(INVALID_ONE_DAY_CLASS_ID, exception.getErrorCode());
     }
 
+    @Test
+    @DisplayName("리뷰 수정 성공")
+    void updateReview_success() {
+        // given
+        Long reviewId = 1L;
+
+        UpdateReviewDto.Request request = createUpdateReviewDtoRequest();
+
+        Review savedReview = Review.builder()
+                .reviewId(reviewId)
+                .user(mockUser)
+                .lesson(mockLesson)
+                .oneDayClass(mockOneDayClass)
+                .contents("This is a contents.")
+                .rating(4.5)
+                .createdAt(LocalDateTime.now())
+                .reviewImageList(List.of(
+                        ReviewImage.builder().url("url1").build(),
+                        ReviewImage.builder().url("url2").build(),
+                        ReviewImage.builder().url("url3").build()
+                ))
+                .build();
+
+        given(reviewRepository.findById(reviewId)).willReturn(Optional.of(savedReview));
+
+        // when
+        UpdateReviewDto.Response response = reviewService.updateReview(mockUser, request, reviewId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertEquals(response.reviewId(), savedReview.getReviewId());
+        assertEquals(response.contents(), request.contents());
+        assertEquals(response.rating(), request.rating());
+
+        verify(reviewRepository, times(1)).findById(reviewId);
+        verify(s3Service, times(1)).uploadReviewImage(request.image1());
+        verify(s3Service, times(1)).uploadReviewImage(request.image2());
+        verify(s3Service, times(1)).uploadReviewImage(request.image3());
+    }
+
+    @Test
+    @DisplayName("리뷰 수정 실패 - 존재하지 않는 리뷰")
+    void updateReview_fail_notExistReview() {
+        // given
+        Long reviewId = 1L;
+        UpdateReviewDto.Request request = createUpdateReviewDtoRequest();
+
+        given(reviewRepository.findById(reviewId)).willReturn(Optional.empty());
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.updateReview(mockUser, request, reviewId));
+
+        // then
+        assertEquals(ErrorCode.REVIEW_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 수정 실패 - 리뷰 작성자가 아닌 사용자")
+    void updateReview_fail_notReviewOwner() {
+        // given
+        Long reviewId = 1L;
+        UpdateReviewDto.Request request = createUpdateReviewDtoRequest();
+
+        Review savedReview = Review.builder()
+                .reviewId(reviewId)
+                .user(User.builder().userId(2L).build())
+                .build();
+
+        given(reviewRepository.findById(reviewId)).willReturn(Optional.of(savedReview));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.updateReview(mockUser, request, reviewId));
+
+        // then
+        assertEquals(ErrorCode.NOT_REVIEW_OWNER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 수정 실패 - 평점 범위 초과")
+    void updateReview_fail_invalidRating() {
+        // given
+        Long reviewId = 1L;
+        UpdateReviewDto.Request request = new UpdateReviewDto.Request(
+                "This is a update contents.", 5.1,
+                mock(MultipartFile.class), mock(MultipartFile.class), mock(MultipartFile.class));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.updateReview(mockUser, request, reviewId));
+
+        // then
+        assertEquals(INVALID_REVIEW_RATING, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 수정 실패 - 리뷰 내용 길이 부족")
+    void updateReview_fail_invalidReviewContents() {
+        // given
+        Long reviewId = 1L;
+        UpdateReviewDto.Request request = new UpdateReviewDto.Request(
+                "short", 3.0,
+                mock(MultipartFile.class), mock(MultipartFile.class), mock(MultipartFile.class));
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> reviewService.updateReview(mockUser, request, reviewId));
+
+        // then
+        assertEquals(INVALID_REVIEW_CONTENTS, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("리뷰 삭제 성공")
+    void deleteReview_success() {
+        // given
+        Long reviewId = 1L;
+
+        Review savedReview = Review.builder()
+                .reviewId(reviewId)
+                .user(mockUser)
+                .lesson(mockLesson)
+                .oneDayClass(mockOneDayClass)
+                .contents("This is a contents.")
+                .rating(4.5)
+                .createdAt(LocalDateTime.now())
+                .reviewImageList(List.of(
+                        ReviewImage.builder().url("url1").build(),
+                        ReviewImage.builder().url("url2").build(),
+                        ReviewImage.builder().url("url3").build()
+                ))
+                .build();
+
+        given(reviewRepository.findById(reviewId)).willReturn(Optional.of(savedReview));
+        given(reviewImageRepository.findByReviewOrderBySequenceAsc(savedReview))
+                .willReturn(savedReview.getReviewImageList());
+
+        // when
+        DeleteReviewResponse response = reviewService.deleteReview(mockUser, reviewId);
+
+        // then
+        assertEquals(response.reviewId(), reviewId);
+
+        verify(reviewRepository, times(1)).delete(savedReview);
+        verify(s3Service, times(1)).delete("url1");
+        verify(s3Service, times(1)).delete("url2");
+        verify(s3Service, times(1)).delete("url3");
+    }
+
     private RegisterReviewDto.Request createRegisterReviewDtoRequest() {
         MultipartFile image1 = mock(MultipartFile.class);
         MultipartFile image2 = mock(MultipartFile.class);
@@ -262,5 +414,13 @@ class ReviewServiceTest {
         return new RegisterReviewDto.Request(
                 mockLesson.getLessonId(), mockOneDayClass.getOneDayClassId(),
                 "This is a contents.", 4.5, image1, image2, image3);
+    }
+
+    private UpdateReviewDto.Request createUpdateReviewDtoRequest() {
+        MultipartFile image1 = mock(MultipartFile.class);
+        MultipartFile image2 = mock(MultipartFile.class);
+        MultipartFile image3 = mock(MultipartFile.class);
+        return new UpdateReviewDto.Request(
+                "This is a update contents.", 3.0, image1, image2, image3);
     }
 }
