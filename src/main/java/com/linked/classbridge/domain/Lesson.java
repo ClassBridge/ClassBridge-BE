@@ -42,4 +42,8 @@ public class Lesson extends BaseEntity {
     private List<Review> reviewList;
 
     private LocalDateTime lessonDate;
+
+    public void addReview(Review mockReview1) {
+        this.reviewList.add(mockReview1);
+    }
 }

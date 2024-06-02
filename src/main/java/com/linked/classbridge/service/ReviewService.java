@@ -17,6 +17,8 @@ import com.linked.classbridge.type.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +31,8 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     private final ReviewImageRepository reviewImageRepository;
+
+    private final OneDayClassService oneDayClassService;
 
     private final LessonService lessonService;
 
@@ -193,8 +197,30 @@ public class ReviewService {
         }
     }
 
+    /**
+     * 리뷰 조회
+     *
+     * @param reviewId 리뷰 ID
+     * @return 리뷰 응답
+     */
     public GetReviewResponse getReview(Long reviewId) {
         Review review = findReviewById(reviewId);
         return GetReviewResponse.fromEntity(review);
+    }
+
+    /**
+     * 클래스 리뷰 조회
+     *
+     * @param classId  클래스 ID
+     * @param pageable 페이징 정보
+     * @return 리뷰 응답
+     */
+    public Slice<GetReviewResponse> getClassReviews(Long classId, Pageable pageable) {
+
+        OneDayClass oneDayClass = oneDayClassService.findClassById(classId);
+
+        Slice<Review> reviews = reviewRepository.findByOneDayClass(oneDayClass, pageable);
+
+        return reviews.map(GetReviewResponse::fromEntity);
     }
 }

@@ -44,4 +44,8 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
+
+    public void addReview(Review mockReview1) {
+        this.reviewList.add(mockReview1);
+    }
 }
