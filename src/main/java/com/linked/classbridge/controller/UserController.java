@@ -6,6 +6,7 @@ import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -25,6 +26,7 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    @Operation(summary = "수강생 리뷰 조회", description = "수강생 리뷰 조회")
     @GetMapping("/reviews")
     public ResponseEntity<SuccessResponse<Slice<GetReviewResponse>>> getClassReviews(
             @PageableDefault Pageable pageable

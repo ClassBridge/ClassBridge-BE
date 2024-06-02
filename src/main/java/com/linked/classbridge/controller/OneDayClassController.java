@@ -4,6 +4,7 @@ import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -21,6 +22,7 @@ public class OneDayClassController {
 
     private final ReviewService reviewService;
 
+    @Operation(summary = "클래스 리뷰 조회", description = "클래스 리뷰 조회")
     @GetMapping("/{classId}/reviews")
     public ResponseEntity<SuccessResponse<Slice<GetReviewResponse>>> getClassReviews(
             @PathVariable Long classId,
