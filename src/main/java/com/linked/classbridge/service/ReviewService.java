@@ -223,4 +223,16 @@ public class ReviewService {
 
         return reviews.map(GetReviewResponse::fromEntity);
     }
+
+    /**
+     * 사용자 리뷰 조회
+     *
+     * @param user     사용자
+     * @param pageable 페이징 정보
+     * @return 리뷰 응답
+     */
+    public Slice<GetReviewResponse> getUserReviews(User user, Pageable pageable) {
+        Slice<Review> reviews = reviewRepository.findByUser(user, pageable);
+        return reviews.map(GetReviewResponse::fromEntity);
+    }
 }

@@ -15,4 +15,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByLessonAndUser(Lesson lesson, User user);
 
     Slice<Review> findByOneDayClass(OneDayClass oneDayClass, Pageable pageable);
+
+    Slice<Review> findByUser(User user, Pageable pageable);
 }

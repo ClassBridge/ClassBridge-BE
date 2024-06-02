@@ -68,11 +68,15 @@ class ReviewServiceTest {
     private User mockUser1;
     private User mockUser2;
     private User tutor;
-    private Lesson mockLesson;
-    private OneDayClass mockOneDayClass;
+    private Lesson mockLesson1;
+    private Lesson mockLesson2;
+    private OneDayClass mockOneDayClass1;
+    private OneDayClass mockOneDayClass2;
 
     private Review mockReview1;
     private Review mockReview2;
+    private Review mockReview3;
+    private Review mockReview4;
 
     private ReviewImage mockReviewImage1;
     private ReviewImage mockReviewImage2;
@@ -100,7 +104,7 @@ class ReviewServiceTest {
                 .reviewList(new ArrayList<>())
                 .build();
 
-        mockOneDayClass = OneDayClass.builder()
+        mockOneDayClass1 = OneDayClass.builder()
                 .oneDayClassId(1L)
                 .tutor(tutor)
                 .className("oneDayClassName")
@@ -108,17 +112,31 @@ class ReviewServiceTest {
                 .totalStarRate(0.0)
                 .totalReviews(0)
                 .build();
-        mockLesson = Lesson.builder()
+        mockOneDayClass2 = OneDayClass.builder()
+                .oneDayClassId(2L)
+                .tutor(tutor)
+                .className("oneDayClassName2")
+                .reviewList(new ArrayList<>())
+                .totalStarRate(0.0)
+                .totalReviews(0)
+                .build();
+        mockLesson1 = Lesson.builder()
                 .lessonId(1L)
-                .oneDayClass(mockOneDayClass)
+                .oneDayClass(mockOneDayClass1)
+                .lessonDate(LocalDateTime.now())
+                .reviewList(new ArrayList<>())
+                .build();
+        mockLesson2 = Lesson.builder()
+                .lessonId(2L)
+                .oneDayClass(mockOneDayClass2)
                 .lessonDate(LocalDateTime.now())
                 .reviewList(new ArrayList<>())
                 .build();
         mockReview1 = Review.builder()
                 .reviewId(1L)
                 .user(mockUser1)
-                .lesson(mockLesson)
-                .oneDayClass(mockOneDayClass)
+                .lesson(mockLesson1)
+                .oneDayClass(mockOneDayClass1)
                 .contents("review1 contents")
                 .rating(4.5)
                 .createdAt(LocalDateTime.now())
@@ -127,10 +145,30 @@ class ReviewServiceTest {
         mockReview2 = Review.builder()
                 .reviewId(2L)
                 .user(mockUser2)
-                .lesson(mockLesson)
-                .oneDayClass(mockOneDayClass)
+                .lesson(mockLesson1)
+                .oneDayClass(mockOneDayClass1)
                 .contents("review2 contents")
                 .rating(3.5)
+                .createdAt(LocalDateTime.now())
+                .reviewImageList(new ArrayList<>())
+                .build();
+        mockReview3 = Review.builder()
+                .reviewId(3L)
+                .user(mockUser1)
+                .lesson(mockLesson2)
+                .oneDayClass(mockOneDayClass2)
+                .contents("review3 contents")
+                .rating(2.5)
+                .createdAt(LocalDateTime.now())
+                .reviewImageList(new ArrayList<>())
+                .build();
+        mockReview4 = Review.builder()
+                .reviewId(4L)
+                .user(mockUser2)
+                .lesson(mockLesson2)
+                .oneDayClass(mockOneDayClass2)
+                .contents("review4 contents")
+                .rating(1.5)
                 .createdAt(LocalDateTime.now())
                 .reviewImageList(new ArrayList<>())
                 .build();
@@ -171,11 +209,17 @@ class ReviewServiceTest {
                 .sequence(3)
                 .build();
         mockUser1.addReview(mockReview1);
+        mockUser1.addReview(mockReview3);
         mockUser2.addReview(mockReview2);
-        mockLesson.addReview(mockReview1);
-        mockLesson.addReview(mockReview2);
-        mockOneDayClass.addReview(mockReview1);
-        mockOneDayClass.addReview(mockReview2);
+        mockUser2.addReview(mockReview4);
+        mockLesson1.addReview(mockReview1);
+        mockLesson1.addReview(mockReview2);
+        mockLesson2.addReview(mockReview3);
+        mockLesson2.addReview(mockReview4);
+        mockOneDayClass1.addReview(mockReview1);
+        mockOneDayClass1.addReview(mockReview2);
+        mockOneDayClass2.addReview(mockReview3);
+        mockOneDayClass2.addReview(mockReview4);
         mockReview1.addReviewImage(mockReviewImage1);
         mockReview1.addReviewImage(mockReviewImage2);
         mockReview1.addReviewImage(mockReviewImage3);
@@ -189,7 +233,7 @@ class ReviewServiceTest {
         MultipartFile image2 = mock(MultipartFile.class);
         MultipartFile image3 = mock(MultipartFile.class);
         return new RegisterReviewDto.Request(
-                mockLesson.getLessonId(), mockOneDayClass.getOneDayClassId(),
+                mockLesson1.getLessonId(), mockOneDayClass1.getOneDayClassId(),
                 mockReview1.getContents(), mockReview1.getRating(), image1, image2, image3);
     }
 
@@ -252,13 +296,13 @@ class ReviewServiceTest {
 
         RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
 
-        Review reviewToSave = RegisterReviewDto.Request.toEntity(mockUser1, mockLesson,
-                mockOneDayClass, request);
+        Review reviewToSave = RegisterReviewDto.Request.toEntity(mockUser1, mockLesson1,
+                mockOneDayClass1, request);
         Review savedReview = mockReview1;
 
-        given(reviewRepository.findByLessonAndUser(mockLesson, mockUser1))
+        given(reviewRepository.findByLessonAndUser(mockLesson1, mockUser1))
                 .willReturn(Optional.empty());
-        given(lessonService.findLessonById(1L)).willReturn(mockLesson);
+        given(lessonService.findLessonById(1L)).willReturn(mockLesson1);
         given(s3Service.uploadReviewImage(request.image1())).willReturn(url1);
         given(s3Service.uploadReviewImage(request.image2())).willReturn(url2);
         given(s3Service.uploadReviewImage(request.image3())).willReturn(url3);
@@ -289,8 +333,8 @@ class ReviewServiceTest {
         // given
         RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
 
-        given(lessonService.findLessonById(request.lessonId())).willReturn(mockLesson);
-        given(reviewRepository.findByLessonAndUser(mockLesson, mockUser1))
+        given(lessonService.findLessonById(request.lessonId())).willReturn(mockLesson1);
+        given(reviewRepository.findByLessonAndUser(mockLesson1, mockUser1))
                 .willReturn(Optional.of(Review.builder().reviewId(1L).build()));
 
         // when
@@ -337,16 +381,16 @@ class ReviewServiceTest {
         // given
         RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
 
-        mockOneDayClass = OneDayClass.builder()
+        mockOneDayClass1 = OneDayClass.builder()
                 .oneDayClassId(2L)
                 .build();
-        mockLesson = Lesson.builder()
+        mockLesson1 = Lesson.builder()
                 .lessonId(1L)
-                .oneDayClass(mockOneDayClass)
+                .oneDayClass(mockOneDayClass1)
                 .build();
 
         given(lessonService.findLessonById(request.lessonId()))
-                .willReturn(mockLesson);
+                .willReturn(mockLesson1);
 
         // when
         RestApiException exception = assertThrows(RestApiException.class,
@@ -488,8 +532,8 @@ class ReviewServiceTest {
         Slice<Review> reviewSlice =
                 new SliceImpl<>(Arrays.asList(mockReview1, mockReview2), pageable, true);
 
-        given(oneDayClassService.findClassById(1L)).willReturn(mockOneDayClass);
-        given(reviewRepository.findByOneDayClass(mockOneDayClass, pageable))
+        given(oneDayClassService.findClassById(1L)).willReturn(mockOneDayClass1);
+        given(reviewRepository.findByOneDayClass(mockOneDayClass1, pageable))
                 .willReturn(reviewSlice);
 
         // when
@@ -500,11 +544,11 @@ class ReviewServiceTest {
         assertThat(responses).extracting("reviewId").containsExactly(
                 mockReview1.getReviewId(), mockReview2.getReviewId());
         assertThat(responses).extracting("classId").containsExactly(
-                mockOneDayClass.getOneDayClassId(), mockOneDayClass.getOneDayClassId());
+                mockOneDayClass1.getOneDayClassId(), mockOneDayClass1.getOneDayClassId());
         assertThat(responses).extracting("className").containsExactly(
-                mockOneDayClass.getClassName(), mockOneDayClass.getClassName());
+                mockOneDayClass1.getClassName(), mockOneDayClass1.getClassName());
         assertThat(responses).extracting("lessonId").containsExactly(
-                mockLesson.getLessonId(), mockLesson.getLessonId());
+                mockLesson1.getLessonId(), mockLesson1.getLessonId());
         assertThat(responses).extracting("userId").containsExactly(
                 mockUser1.getUserId(), mockUser2.getUserId());
         assertThat(responses).extracting("userNickName").containsExactly(
@@ -514,7 +558,7 @@ class ReviewServiceTest {
         assertThat(responses).extracting("contents").containsExactly(
                 mockReview1.getContents(), mockReview2.getContents());
         assertThat(responses).extracting("lessonDate")
-                .containsExactly(mockLesson.getLessonDate(), mockLesson.getLessonDate());
+                .containsExactly(mockLesson1.getLessonDate(), mockLesson1.getLessonDate());
     }
 
     @Test
@@ -532,5 +576,41 @@ class ReviewServiceTest {
 
         // then
         assertEquals(CLASS_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("유저 리뷰 목록 조회 성공")
+    void getUserReviews_success() {
+        // given
+        Pageable pageable = mock(Pageable.class);
+
+        Slice<Review> reviewSlice =
+                new SliceImpl<>(Arrays.asList(mockReview1, mockReview3), pageable, true);
+
+        given(reviewRepository.findByUser(mockUser1, pageable)).willReturn(reviewSlice);
+
+        // when
+        Slice<GetReviewResponse> responses = reviewService.getUserReviews(mockUser1, pageable);
+
+        // then
+        assertThat(responses).hasSize(2);
+        assertThat(responses).extracting("reviewId").containsExactly(
+                mockReview1.getReviewId(), mockReview3.getReviewId());
+        assertThat(responses).extracting("classId").containsExactly(
+                mockOneDayClass1.getOneDayClassId(), mockOneDayClass2.getOneDayClassId());
+        assertThat(responses).extracting("className").containsExactly(
+                mockOneDayClass1.getClassName(), mockOneDayClass2.getClassName());
+        assertThat(responses).extracting("lessonId").containsExactly(
+                mockLesson1.getLessonId(), mockLesson2.getLessonId());
+        assertThat(responses).extracting("userId").containsExactly(
+                mockUser1.getUserId(), mockUser1.getUserId());
+        assertThat(responses).extracting("userNickName").containsExactly(
+                mockUser1.getNickname(), mockUser1.getNickname());
+        assertThat(responses).extracting("rating").containsExactly(
+                mockReview1.getRating(), mockReview3.getRating());
+        assertThat(responses).extracting("contents").containsExactly(
+                mockReview1.getContents(), mockReview3.getContents());
+        assertThat(responses).extracting("lessonDate")
+                .containsExactly(mockLesson1.getLessonDate(), mockLesson2.getLessonDate());
     }
 }
