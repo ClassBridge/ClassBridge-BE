@@ -613,4 +613,50 @@ class ReviewServiceTest {
         assertThat(responses).extracting("lessonDate")
                 .containsExactly(mockLesson1.getLessonDate(), mockLesson2.getLessonDate());
     }
+
+    @Test
+    @DisplayName("강사 받은 리뷰 목록 조회 성공")
+    void getTutorReviews_success() {
+        // given
+        Pageable pageable = mock(Pageable.class);
+
+        Slice<Review> reviewSlice =
+                new SliceImpl<>(Arrays.asList(mockReview1, mockReview2, mockReview3, mockReview4),
+                        pageable, true);
+
+        given(reviewRepository.findByTutor(tutor, pageable)).willReturn(reviewSlice);
+
+        // when
+        Slice<GetReviewResponse> responses = reviewService.getTutorReviews(tutor, pageable);
+
+        // then
+        assertThat(responses).hasSize(4);
+        assertThat(responses).extracting("reviewId").containsExactly(
+                mockReview1.getReviewId(), mockReview2.getReviewId(),
+                mockReview3.getReviewId(), mockReview4.getReviewId());
+        assertThat(responses).extracting("classId").containsExactly(
+                mockOneDayClass1.getOneDayClassId(), mockOneDayClass1.getOneDayClassId(),
+                mockOneDayClass2.getOneDayClassId(), mockOneDayClass2.getOneDayClassId());
+        assertThat(responses).extracting("className").containsExactly(
+                mockOneDayClass1.getClassName(), mockOneDayClass1.getClassName(),
+                mockOneDayClass2.getClassName(), mockOneDayClass2.getClassName());
+        assertThat(responses).extracting("lessonId").containsExactly(
+                mockLesson1.getLessonId(), mockLesson1.getLessonId()
+                , mockLesson2.getLessonId(), mockLesson2.getLessonId());
+        assertThat(responses).extracting("userId").containsExactly(
+                mockUser1.getUserId(), mockUser2.getUserId(),
+                mockUser1.getUserId(), mockUser2.getUserId());
+        assertThat(responses).extracting("userNickName").containsExactly(
+                mockUser1.getNickname(), mockUser2.getNickname(),
+                mockUser1.getNickname(), mockUser2.getNickname());
+        assertThat(responses).extracting("rating").containsExactly(
+                mockReview1.getRating(), mockReview2.getRating(),
+                mockReview3.getRating(), mockReview4.getRating());
+        assertThat(responses).extracting("contents").containsExactly(
+                mockReview1.getContents(), mockReview2.getContents(),
+                mockReview3.getContents(), mockReview4.getContents());
+        assertThat(responses).extracting("lessonDate").containsExactly(
+                mockLesson1.getLessonDate(), mockLesson1.getLessonDate(),
+                mockLesson2.getLessonDate(), mockLesson2.getLessonDate());
+    }
 }
