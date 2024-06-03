@@ -13,9 +13,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -42,6 +44,7 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "one_day_class_id")
     private OneDayClass oneDayClass;
@@ -55,8 +58,29 @@ public class Review extends BaseEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private List<ReviewImage> reviewImageList;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Review review = (Review) o;
+        return Objects.equals(reviewId, review.reviewId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(reviewId);
+    }
+
     public void update(String contents, Double rating) {
         this.contents = contents;
         this.rating = rating;
+    }
+
+    public void addReviewImage(ReviewImage reviewImage) {
+        reviewImageList.add(reviewImage);
     }
 }

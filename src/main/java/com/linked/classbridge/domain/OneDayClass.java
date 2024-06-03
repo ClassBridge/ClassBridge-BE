@@ -34,6 +34,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE one_day_class SET deleted_at = NOW() WHERE class_id = ?")
 @ToString
 public class OneDayClass extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "class_id")
@@ -109,5 +110,4 @@ public class OneDayClass extends BaseEntity {
     public void updateTotalStarRate(Double diff) {
         this.totalStarRate += diff;
     }
-
 }

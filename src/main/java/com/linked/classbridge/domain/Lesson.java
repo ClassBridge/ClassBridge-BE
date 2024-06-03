@@ -35,6 +35,7 @@ import org.hibernate.annotations.SQLRestriction;
 @ToString
 @SQLRestriction("deleted_at is null")
 public class Lesson extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long lessonId;
@@ -57,4 +58,8 @@ public class Lesson extends BaseEntity {
 
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
+
+    public void addReview(Review mockReview1) {
+        this.reviewList.add(mockReview1);
+    }
 }

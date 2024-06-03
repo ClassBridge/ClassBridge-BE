@@ -14,7 +14,8 @@ public enum ResponseMessage {
     REVIEW_DELETE_SUCCESS("리뷰 삭제 성공"),
     ONE_DAY_CLASS_LIST_GET_SUCCESS("강사 클래스 리스트 조회 성공"),
     CLASS_REGISTER_SUCCESS("클래스 등록 성공"),
-    CLASS_DELETE_SUCCESS("클래스 삭제 성공")
+    CLASS_DELETE_SUCCESS("클래스 삭제 성공"),
+    REVIEW_GET_SUCCESS("리뷰 조회 성공"),
     ;
 
     private final String message;
