@@ -48,6 +48,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.h2database/h2
     testImplementation group: 'com.h2database', name: 'h2', version: '2.1.214'
+
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.1'
 }
 
 tasks.named('test') {

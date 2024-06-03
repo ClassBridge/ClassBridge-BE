@@ -1,3 +1,4 @@
+/*
 package com.linked.classbridge.dataloader;
 
 import com.linked.classbridge.domain.Category;
@@ -96,3 +97,4 @@ public class InitDataLoader implements CommandLineRunner {
                         .build()));
     }
 }
+*/
