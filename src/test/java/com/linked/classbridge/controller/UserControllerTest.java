@@ -21,9 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -96,9 +96,9 @@ class UserControllerTest {
     void getUserReviews() throws Exception {
         // given
         given(userRepository.findById(1L)).willReturn(Optional.of(mockUser));
-        given(reviewService.getUserReviews(mockUser, pageable)).willReturn(new SliceImpl<>(
+        given(reviewService.getUserReviews(mockUser, pageable)).willReturn(new PageImpl<>(
                 Arrays.asList(reviewResponse1, reviewResponse2, reviewResponse3, reviewResponse4)
-                , pageable, true)
+                , pageable, 4)
         );
 
         // when & then

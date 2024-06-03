@@ -8,8 +8,8 @@ import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +27,7 @@ public class TutorController {
 
     @Operation(summary = "강사 리뷰 조회", description = "강사 리뷰 조회")
     @GetMapping("/reviews")
-    public ResponseEntity<SuccessResponse<Slice<GetReviewResponse>>> getClassReviews(
+    public ResponseEntity<SuccessResponse<Page<GetReviewResponse>>> getClassReviews(
             @PageableDefault Pageable pageable
     ) {
 

@@ -40,9 +40,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -529,15 +529,15 @@ class ReviewServiceTest {
         // given
         Pageable pageable = mock(Pageable.class);
 
-        Slice<Review> reviewSlice =
-                new SliceImpl<>(Arrays.asList(mockReview1, mockReview2), pageable, true);
+        Page<Review> reviewPage =
+                new PageImpl<>(Arrays.asList(mockReview1, mockReview2), pageable, 2);
 
         given(oneDayClassService.findClassById(1L)).willReturn(mockOneDayClass1);
         given(reviewRepository.findByOneDayClass(mockOneDayClass1, pageable))
-                .willReturn(reviewSlice);
+                .willReturn(reviewPage);
 
         // when
-        Slice<GetReviewResponse> responses = reviewService.getClassReviews(1L, pageable);
+        Page<GetReviewResponse> responses = reviewService.getClassReviews(1L, pageable);
 
         // then
         assertThat(responses).hasSize(2);
@@ -584,13 +584,13 @@ class ReviewServiceTest {
         // given
         Pageable pageable = mock(Pageable.class);
 
-        Slice<Review> reviewSlice =
-                new SliceImpl<>(Arrays.asList(mockReview1, mockReview3), pageable, true);
+        Page<Review> reviewPage =
+                new PageImpl<>(Arrays.asList(mockReview1, mockReview3), pageable, 2);
 
-        given(reviewRepository.findByUser(mockUser1, pageable)).willReturn(reviewSlice);
+        given(reviewRepository.findByUser(mockUser1, pageable)).willReturn(reviewPage);
 
         // when
-        Slice<GetReviewResponse> responses = reviewService.getUserReviews(mockUser1, pageable);
+        Page<GetReviewResponse> responses = reviewService.getUserReviews(mockUser1, pageable);
 
         // then
         assertThat(responses).hasSize(2);
@@ -620,14 +620,14 @@ class ReviewServiceTest {
         // given
         Pageable pageable = mock(Pageable.class);
 
-        Slice<Review> reviewSlice =
-                new SliceImpl<>(Arrays.asList(mockReview1, mockReview2, mockReview3, mockReview4),
-                        pageable, true);
+        Page<Review> reviewPage =
+                new PageImpl<>(Arrays.asList(mockReview1, mockReview2, mockReview3, mockReview4),
+                        pageable, 4);
 
-        given(reviewRepository.findByTutor(tutor, pageable)).willReturn(reviewSlice);
+        given(reviewRepository.findByTutor(tutor, pageable)).willReturn(reviewPage);
 
         // when
-        Slice<GetReviewResponse> responses = reviewService.getTutorReviews(tutor, pageable);
+        Page<GetReviewResponse> responses = reviewService.getTutorReviews(tutor, pageable);
 
         // then
         assertThat(responses).hasSize(4);

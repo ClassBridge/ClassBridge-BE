@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -66,7 +66,7 @@ class OneDayClassControllerTest {
     void getClassReviews() throws Exception {
         // given
         given(reviewService.getClassReviews(1L, pageable)).willReturn(
-                new SliceImpl<>(Arrays.asList(reviewResponse1, reviewResponse2), pageable, true));
+                new PageImpl<>(Arrays.asList(reviewResponse1, reviewResponse2), pageable, 2));
 
         // when & then
         mockMvc.perform(get("/api/class/{classId}/reviews", 1L)

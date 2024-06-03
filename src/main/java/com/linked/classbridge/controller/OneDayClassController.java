@@ -6,8 +6,8 @@ import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,7 +24,7 @@ public class OneDayClassController {
 
     @Operation(summary = "클래스 리뷰 조회", description = "클래스 리뷰 조회")
     @GetMapping("/{classId}/reviews")
-    public ResponseEntity<SuccessResponse<Slice<GetReviewResponse>>> getClassReviews(
+    public ResponseEntity<SuccessResponse<Page<GetReviewResponse>>> getClassReviews(
             @PathVariable Long classId,
             @PageableDefault Pageable pageable
     ) {

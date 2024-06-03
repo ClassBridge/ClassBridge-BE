@@ -17,8 +17,8 @@ import com.linked.classbridge.type.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -215,11 +215,11 @@ public class ReviewService {
      * @param pageable 페이징 정보
      * @return 리뷰 응답
      */
-    public Slice<GetReviewResponse> getClassReviews(Long classId, Pageable pageable) {
+    public Page<GetReviewResponse> getClassReviews(Long classId, Pageable pageable) {
 
         OneDayClass oneDayClass = oneDayClassService.findClassById(classId);
 
-        Slice<Review> reviews = reviewRepository.findByOneDayClass(oneDayClass, pageable);
+        Page<Review> reviews = reviewRepository.findByOneDayClass(oneDayClass, pageable);
 
         return reviews.map(GetReviewResponse::fromEntity);
     }
@@ -231,8 +231,8 @@ public class ReviewService {
      * @param pageable 페이징 정보
      * @return 리뷰 응답
      */
-    public Slice<GetReviewResponse> getUserReviews(User user, Pageable pageable) {
-        Slice<Review> reviews = reviewRepository.findByUser(user, pageable);
+    public Page<GetReviewResponse> getUserReviews(User user, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByUser(user, pageable);
         return reviews.map(GetReviewResponse::fromEntity);
     }
 
@@ -244,8 +244,8 @@ public class ReviewService {
      * @return 리뷰 응답
      */
 
-    public Slice<GetReviewResponse> getTutorReviews(User tutor, Pageable pageable) {
-        Slice<Review> reviews = reviewRepository.findByTutor(tutor, pageable);
+    public Page<GetReviewResponse> getTutorReviews(User tutor, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByTutor(tutor, pageable);
         return reviews.map(GetReviewResponse::fromEntity);
     }
 }
