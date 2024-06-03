@@ -40,6 +40,11 @@ public class S3Service {
         return uploadImage(image, REVIEW_FOLDER);
     }
 
+    @Transactional
+    public String uploadOneDayClassImage(MultipartFile image) {
+        return uploadImage(image, ONE_DAY_CLASS_FOLDER);
+    }
+
     /**
      * S3에 파일 업로드
      *
