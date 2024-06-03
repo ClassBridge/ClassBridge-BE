@@ -46,7 +46,7 @@ public class ReviewService {
         Lesson lesson = lessonService.findLessonById(request.lessonId());
         OneDayClass oneDayClass = lesson.getOneDayClass();
 
-        if (ObjectUtils.notEqual(request.classId(), oneDayClass.getOneDayClassId())) {
+        if (ObjectUtils.notEqual(request.classId(), oneDayClass.getClassId())) {
             throw new RestApiException(ErrorCode.INVALID_ONE_DAY_CLASS_ID);
         }
 
