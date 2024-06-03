@@ -20,7 +20,7 @@ import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto.dayList;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.service.ClassService;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.type.CategoryType;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -39,12 +39,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ClassController.class)
+@WebMvcTest(TutorController.class)
 @TestPropertySource(properties = "spring.config.location=classpath:application-test.yml")
-class ClassControllerTest {
+class TutorClassControllerTest {
 
     @MockBean
-    private ClassService classService;
+    private OneDayClassService classService;
 
     @Autowired
     private MockMvc mockMvc;

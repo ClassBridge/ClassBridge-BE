@@ -9,7 +9,7 @@ import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.service.ClassService;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class TutorController {
 
     private final ReviewService reviewService;
-    private final ClassService classService;
+    private final OneDayClassService oneDayClassService;
     private final UserRepository userRepository;
 
     @Operation(summary = "강사 리뷰 조회", description = "강사 리뷰 조회")
@@ -68,7 +68,7 @@ public class TutorController {
     public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(/* Authentication authentication, */ Pageable pageable) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
-                classService.getOneDayClassList(/*authentication, */ pageable))
+                oneDayClassService.getOneDayClassList(/*authentication, */ pageable))
         );
     }
 
@@ -83,7 +83,7 @@ public class TutorController {
             @PathVariable String classId) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
-                classService.getOneDayClass(/*authentication, */ Long.parseLong(classId)))
+                oneDayClassService.getOneDayClass(/*authentication, */ Long.parseLong(classId)))
         );
     }
 
@@ -110,7 +110,7 @@ public class TutorController {
 
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
-                classService.registerClass(user, request, fileList))
+                oneDayClassService.registerClass(user, request, fileList))
         );
     }
 
@@ -128,7 +128,7 @@ public class TutorController {
     ) throws IOException {
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
-                classService.updateClass(request, Long.parseLong(classId)))
+                oneDayClassService.updateClass(request, Long.parseLong(classId)))
         );
     }
 
@@ -145,7 +145,7 @@ public class TutorController {
     ) throws IOException {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_DELETE_SUCCESS,
-                classService.deleteClass(Long.parseLong(classId)))
+                oneDayClassService.deleteClass(Long.parseLong(classId)))
         );
     }
 

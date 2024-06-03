@@ -56,7 +56,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ClassService {
+public class OneDayClassService {
 
     private final OneDayClassRepository classRepository;
     private final UserRepository userRepository;

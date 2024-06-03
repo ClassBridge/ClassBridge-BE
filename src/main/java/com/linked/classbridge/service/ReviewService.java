@@ -35,7 +35,7 @@ public class ReviewService {
     private final LessonService lessonService;
 
     private final S3Service s3Service;
-    private final ClassService classService;
+    private final OneDayClassService classService;
 
     /**
      * 리뷰 등록
