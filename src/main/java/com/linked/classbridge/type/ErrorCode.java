@@ -13,6 +13,16 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서부 오류가 발생했습니다."),
 
     ALREADY_REGISTERED_EMAIL(HttpStatus.BAD_REQUEST, "이미 등록된 이메일 입니다."),
+
+    ALREADY_EXIST_NICKNAME(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임 입니다."),
+    NOT_SUPPORTED_AUTH_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 로그인 방식입니다."),
+    ALREADY_REGISTERED_OTHER_AUTH_TYPE(HttpStatus.BAD_REQUEST, "다른 로그인 방식으로 가입한 사용자입니다."),
+    ALREADY_EXIST_USER(HttpStatus.BAD_REQUEST, "이미 존재하는 사용자입니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
+    SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER(HttpStatus.BAD_REQUEST, "세션에 CustomOAuth2User가 존재하지 않습니다."),
+    REQUIRED_USER_INFO(HttpStatus.BAD_REQUEST, "가입시 필요한 사용자 필수 정보가 빠져있습니다."),
+
     HELLO_NAME_IS_REQUIRED(HttpStatus.BAD_REQUEST, "Hello 이름은 필수입니다."),
     HELLO_NOT_FOUND(HttpStatus.BAD_REQUEST, "Hello를 찾을 수 없습니다."),
 
@@ -23,6 +33,7 @@ public enum ErrorCode {
     INVALID_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "유효한 이미지 파일이 아닙니다."),
     FAILED_TO_UPLOAD_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다."),
     FAILED_TO_DELETE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제에 실패했습니다."),
+
 
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
     REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
