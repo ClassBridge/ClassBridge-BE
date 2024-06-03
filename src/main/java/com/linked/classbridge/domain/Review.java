@@ -46,7 +46,7 @@ public class Review extends BaseEntity {
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "one_day_class_id")
+    @JoinColumn(name = "class_id")
     private OneDayClass oneDayClass;
 
     @Column(nullable = false)

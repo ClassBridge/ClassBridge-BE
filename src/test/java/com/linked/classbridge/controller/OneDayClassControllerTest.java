@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.ReviewService;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -48,14 +49,14 @@ class OneDayClassControllerTest {
         reviewResponse1 = new GetReviewResponse(
                 1L, 1L, "className", 1L, 1L,
                 "userNickname1", 4.5, "content1",
-                LocalDateTime.of(2024, 6, 1, 9, 0),
+                LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 3, 15, 0),
                 List.of("url1", "url2", "url3")
         );
         reviewResponse2 = new GetReviewResponse(
                 2L, 1L, "className", 2L, 2L,
                 "userNickname2", 2.3, "content2",
-                LocalDateTime.of(2024, 6, 1, 12, 0),
+                LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 2, 17, 0),
                 List.of("url4", "url5", "url6")
         );

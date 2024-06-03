@@ -2,6 +2,7 @@ package com.linked.classbridge.dto.review;
 
 import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public record GetReviewResponse(
         String userNickName,
         Double rating,
         String contents,
-        LocalDateTime lessonDate,
+        LocalDate lessonDate,
         LocalDateTime createdAt,
         List<String> reviewImageUrlList
 ) {
@@ -22,7 +23,7 @@ public record GetReviewResponse(
 
         return new GetReviewResponse(
                 review.getReviewId(),
-                review.getOneDayClass().getOneDayClassId(),
+                review.getOneDayClass().getClassId(),
                 review.getOneDayClass().getClassName(),
                 review.getLesson().getLessonId(),
                 review.getUser().getUserId(),

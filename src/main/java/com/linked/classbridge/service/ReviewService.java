@@ -32,11 +32,10 @@ public class ReviewService {
 
     private final ReviewImageRepository reviewImageRepository;
 
-    private final OneDayClassService oneDayClassService;
-
     private final LessonService lessonService;
 
     private final S3Service s3Service;
+    private final OneDayClassService classService;
 
     /**
      * 리뷰 등록
@@ -51,7 +50,7 @@ public class ReviewService {
         Lesson lesson = lessonService.findLessonById(request.lessonId());
         OneDayClass oneDayClass = lesson.getOneDayClass();
 
-        if (ObjectUtils.notEqual(request.classId(), oneDayClass.getOneDayClassId())) {
+        if (ObjectUtils.notEqual(request.classId(), oneDayClass.getClassId())) {
             throw new RestApiException(ErrorCode.INVALID_ONE_DAY_CLASS_ID);
         }
 
@@ -217,7 +216,7 @@ public class ReviewService {
      */
     public Page<GetReviewResponse> getClassReviews(Long classId, Pageable pageable) {
 
-        OneDayClass oneDayClass = oneDayClassService.findClassById(classId);
+        OneDayClass oneDayClass = classService.findClassById(classId);
 
         Page<Review> reviews = reviewRepository.findByOneDayClass(oneDayClass, pageable);
 

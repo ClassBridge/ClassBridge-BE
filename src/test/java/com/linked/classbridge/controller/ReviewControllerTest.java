@@ -19,6 +19,7 @@ import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -409,7 +410,7 @@ class ReviewControllerTest {
                 "userNickName",
                 4.5,
                 "contents",
-                LocalDateTime.now(),
+                LocalDate.now(),
                 LocalDateTime.now(),
                 List.of("image1", "image2", "image3")
         );
