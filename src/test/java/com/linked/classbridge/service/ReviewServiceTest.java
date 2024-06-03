@@ -50,7 +50,7 @@ import org.springframework.web.multipart.MultipartFile;
 class ReviewServiceTest {
 
     @Mock
-    private ClassService oneDayClassService;
+    private OneDayClassService oneDayClassService;
     @Mock
     private ReviewRepository reviewRepository;
 
