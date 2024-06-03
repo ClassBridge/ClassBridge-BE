@@ -6,6 +6,7 @@ import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.DeleteReviewResponse;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
@@ -16,6 +17,8 @@ import com.linked.classbridge.type.ErrorCode;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +31,8 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     private final ReviewImageRepository reviewImageRepository;
+
+    private final OneDayClassService oneDayClassService;
 
     private final LessonService lessonService;
 
@@ -190,5 +195,57 @@ public class ReviewService {
             }
             sequence++;
         }
+    }
+
+    /**
+     * 리뷰 조회
+     *
+     * @param reviewId 리뷰 ID
+     * @return 리뷰 응답
+     */
+    public GetReviewResponse getReview(Long reviewId) {
+        Review review = findReviewById(reviewId);
+        return GetReviewResponse.fromEntity(review);
+    }
+
+    /**
+     * 클래스 리뷰 조회
+     *
+     * @param classId  클래스 ID
+     * @param pageable 페이징 정보
+     * @return 리뷰 응답
+     */
+    public Page<GetReviewResponse> getClassReviews(Long classId, Pageable pageable) {
+
+        OneDayClass oneDayClass = oneDayClassService.findClassById(classId);
+
+        Page<Review> reviews = reviewRepository.findByOneDayClass(oneDayClass, pageable);
+
+        return reviews.map(GetReviewResponse::fromEntity);
+    }
+
+    /**
+     * 사용자 리뷰 조회
+     *
+     * @param user     사용자
+     * @param pageable 페이징 정보
+     * @return 리뷰 응답
+     */
+    public Page<GetReviewResponse> getUserReviews(User user, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByUser(user, pageable);
+        return reviews.map(GetReviewResponse::fromEntity);
+    }
+
+    /**
+     * 강사 리뷰 조회
+     *
+     * @param tutor    강사
+     * @param pageable 페이징 정보
+     * @return 리뷰 응답
+     */
+
+    public Page<GetReviewResponse> getTutorReviews(User tutor, Pageable pageable) {
+        Page<Review> reviews = reviewRepository.findByTutor(tutor, pageable);
+        return reviews.map(GetReviewResponse::fromEntity);
     }
 }

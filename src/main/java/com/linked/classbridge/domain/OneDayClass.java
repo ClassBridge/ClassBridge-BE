@@ -37,6 +37,8 @@ public class OneDayClass extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User tutor;
 
+    private String className;
+
     private Double totalStarRate;
 
     private Integer totalReviews;

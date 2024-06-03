@@ -38,7 +38,7 @@ public enum ErrorCode {
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
     REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
     NOT_REVIEW_OWNER(HttpStatus.FORBIDDEN, "리뷰 작성자만 수정 및 삭제가 가능합니다."),
-    ;
+    CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "원데이 클래스를 찾을 수 없습니다.");
     private final HttpStatus httpStatus;
     private final String description;
 }
