@@ -1,9 +1,7 @@
 package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
-import static com.linked.classbridge.type.ErrorCode.KAKAO_MAP_ERROR;
 
-import com.linked.classbridge.config.KakaoMapConfig;
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.ClassFAQ;
 import com.linked.classbridge.domain.ClassImage;
@@ -11,7 +9,6 @@ import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.kakaoMapDto.KakaoMapResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
@@ -28,8 +25,6 @@ import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
 import jakarta.transaction.Transactional;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -42,16 +37,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Slf4j
@@ -60,14 +47,13 @@ public class OneDayClassService {
 
     private final OneDayClassRepository classRepository;
     private final UserRepository userRepository;
+    private final KakaoMapService kakaoMapService;
     private final ClassTagRepository tagRepository;
     private final ClassFAQRepository faqRepository;
     private final ClassImageRepository imageRepository;
     private final CategoryRepository categoryRepository;
-    private final KakaoMapConfig kakaoMapConfig;
     private final S3Service s3Service;
     private final LessonRepository lessonRepository;
-    private final RestTemplate restTemplate;
     private final ClassImageRepository classImageRepository;
 
     @Transactional
@@ -80,7 +66,7 @@ public class OneDayClassService {
         Category category = categoryRepository.findByName(request.categoryType());
         oneDayClass.setCategory(category);
 
-        extracted(oneDayClass);
+        kakaoMapService.extracted(oneDayClass);
 
         oneDayClass = classRepository.save(oneDayClass);
 
@@ -117,38 +103,6 @@ public class OneDayClassService {
                     .build());
         }
         return !images.isEmpty() ? classImageRepository.saveAll(images) : new ArrayList<>();
-    }
-
-    private void extracted(OneDayClass oneDayClass) {
-        try {
-            HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(this.getHeader());
-
-            UriComponents uriComponents = UriComponentsBuilder.fromUriString(kakaoMapConfig.getMapUrl())
-                    .queryParam("analyze_type", "similar")
-                    .queryParam("page", "1")
-                    .queryParam("size", "10")
-                    .queryParam("query", oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3())
-                    .encode(StandardCharsets.UTF_8) // UTF-8로 인코딩
-                    .build();
-
-            URI targetUrl = uriComponents.toUri();
-            ResponseEntity<Map> responseEntity = restTemplate.exchange(targetUrl, HttpMethod.GET, requestEntity, Map.class);
-            KakaoMapResponse kakaoMapResponse = new KakaoMapResponse((ArrayList)responseEntity.getBody().get("documents"));
-            oneDayClass.setLatitude(Double.parseDouble(kakaoMapResponse.getY()));
-            oneDayClass.setLongitude(Double.parseDouble(kakaoMapResponse.getX()));
-
-        } catch (HttpClientErrorException e) {
-            throw new RestApiException(KAKAO_MAP_ERROR);
-        }
-    }
-
-    private HttpHeaders getHeader() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        String auth = "KakaoAK " + kakaoMapConfig.getAdminKey();
-
-        httpHeaders.set("Authorization", auth);
-
-        return httpHeaders;
     }
 
     private List<Lesson> createRepeatLesson(ClassRequest request, OneDayClass oneDayClass) {
@@ -227,7 +181,7 @@ public class OneDayClassService {
         if(!changeClass.getAddress1().equals(oneDayClass.getAddress1())
                 || !changeClass.getAddress2().equals(oneDayClass.getAddress2())
                 || !changeClass.getAddress3().equals(oneDayClass.getAddress3())) {
-            extracted(oneDayClass);
+            kakaoMapService.extracted(oneDayClass);
         } else {
             changeClass.setLatitude(oneDayClass.getLatitude());
             changeClass.setLongitude(oneDayClass.getLongitude());
