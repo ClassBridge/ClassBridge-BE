@@ -26,6 +26,7 @@ import com.linked.classbridge.repository.ClassTagRepository;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.type.ErrorCode;
 import jakarta.transaction.Transactional;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -273,5 +274,10 @@ public class ClassService {
 
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
+    }
+
+    public OneDayClass findClassById(Long classId) {
+        return classRepository.findById(classId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.CLASS_NOT_FOUND));
     }
 }
