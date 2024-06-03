@@ -27,6 +27,7 @@ import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
 import com.linked.classbridge.type.ErrorCode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,7 +106,7 @@ class ReviewServiceTest {
                 .build();
 
         mockOneDayClass1 = OneDayClass.builder()
-                .oneDayClassId(1L)
+                .classId(1L)
                 .tutor(tutor)
                 .className("oneDayClassName")
                 .reviewList(new ArrayList<>())
@@ -113,7 +114,7 @@ class ReviewServiceTest {
                 .totalReviews(0)
                 .build();
         mockOneDayClass2 = OneDayClass.builder()
-                .oneDayClassId(2L)
+                .classId(2L)
                 .tutor(tutor)
                 .className("oneDayClassName2")
                 .reviewList(new ArrayList<>())
@@ -123,13 +124,13 @@ class ReviewServiceTest {
         mockLesson1 = Lesson.builder()
                 .lessonId(1L)
                 .oneDayClass(mockOneDayClass1)
-                .lessonDate(LocalDateTime.now())
+                .lessonDate(LocalDate.now())
                 .reviewList(new ArrayList<>())
                 .build();
         mockLesson2 = Lesson.builder()
                 .lessonId(2L)
                 .oneDayClass(mockOneDayClass2)
-                .lessonDate(LocalDateTime.now())
+                .lessonDate(LocalDate.now())
                 .reviewList(new ArrayList<>())
                 .build();
         mockReview1 = Review.builder()
@@ -233,7 +234,7 @@ class ReviewServiceTest {
         MultipartFile image2 = mock(MultipartFile.class);
         MultipartFile image3 = mock(MultipartFile.class);
         return new RegisterReviewDto.Request(
-                mockLesson1.getLessonId(), mockOneDayClass1.getOneDayClassId(),
+                mockLesson1.getLessonId(), mockOneDayClass1.getClassId(),
                 mockReview1.getContents(), mockReview1.getRating(), image1, image2, image3);
     }
 
@@ -257,7 +258,7 @@ class ReviewServiceTest {
         // then
         assertNotNull(response);
         assertEquals(response.reviewId(), mockReview1.getReviewId());
-        assertEquals(response.classId(), mockReview1.getOneDayClass().getOneDayClassId());
+        assertEquals(response.classId(), mockReview1.getOneDayClass().getClassId());
         assertEquals(response.className(), mockReview1.getOneDayClass().getClassName());
         assertEquals(response.lessonId(), mockReview1.getLesson().getLessonId());
         assertEquals(response.userId(), mockReview1.getUser().getUserId());
@@ -382,7 +383,7 @@ class ReviewServiceTest {
         RegisterReviewDto.Request request = createRegisterReviewDtoRequest();
 
         mockOneDayClass1 = OneDayClass.builder()
-                .oneDayClassId(2L)
+                .classId(2L)
                 .build();
         mockLesson1 = Lesson.builder()
                 .lessonId(1L)
@@ -544,7 +545,7 @@ class ReviewServiceTest {
         assertThat(responses).extracting("reviewId").containsExactly(
                 mockReview1.getReviewId(), mockReview2.getReviewId());
         assertThat(responses).extracting("classId").containsExactly(
-                mockOneDayClass1.getOneDayClassId(), mockOneDayClass1.getOneDayClassId());
+                mockOneDayClass1.getClassId(), mockOneDayClass1.getClassId());
         assertThat(responses).extracting("className").containsExactly(
                 mockOneDayClass1.getClassName(), mockOneDayClass1.getClassName());
         assertThat(responses).extracting("lessonId").containsExactly(
@@ -597,7 +598,7 @@ class ReviewServiceTest {
         assertThat(responses).extracting("reviewId").containsExactly(
                 mockReview1.getReviewId(), mockReview3.getReviewId());
         assertThat(responses).extracting("classId").containsExactly(
-                mockOneDayClass1.getOneDayClassId(), mockOneDayClass2.getOneDayClassId());
+                mockOneDayClass1.getClassId(), mockOneDayClass2.getClassId());
         assertThat(responses).extracting("className").containsExactly(
                 mockOneDayClass1.getClassName(), mockOneDayClass2.getClassName());
         assertThat(responses).extracting("lessonId").containsExactly(
@@ -635,8 +636,8 @@ class ReviewServiceTest {
                 mockReview1.getReviewId(), mockReview2.getReviewId(),
                 mockReview3.getReviewId(), mockReview4.getReviewId());
         assertThat(responses).extracting("classId").containsExactly(
-                mockOneDayClass1.getOneDayClassId(), mockOneDayClass1.getOneDayClassId(),
-                mockOneDayClass2.getOneDayClassId(), mockOneDayClass2.getOneDayClassId());
+                mockOneDayClass1.getClassId(), mockOneDayClass1.getClassId(),
+                mockOneDayClass2.getClassId(), mockOneDayClass2.getClassId());
         assertThat(responses).extracting("className").containsExactly(
                 mockOneDayClass1.getClassName(), mockOneDayClass1.getClassName(),
                 mockOneDayClass2.getClassName(), mockOneDayClass2.getClassName());
