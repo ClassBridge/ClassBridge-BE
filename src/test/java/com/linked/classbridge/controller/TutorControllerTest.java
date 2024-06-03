@@ -11,6 +11,7 @@ import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.type.ResponseMessage;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -62,22 +63,22 @@ class TutorControllerTest {
         reviewResponse1 = new GetReviewResponse(
                 1L, 1L, "className", 1L, 1L,
                 "userNickname", 4.5, "review1 content",
-                LocalDateTime.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
         );
         reviewResponse2 = new GetReviewResponse(
                 1L, 1L, "className", 2L, 1L,
                 "userNickname", 4.5, "review1 content",
-                LocalDateTime.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
         );
         reviewResponse3 = new GetReviewResponse(
                 1L, 2L, "className", 3L, 2L,
                 "userNickname", 4.5, "review1 content",
-                LocalDateTime.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
         );
         reviewResponse4 = new GetReviewResponse(
                 1L, 2L, "className", 4L, 2L,
                 "userNickname", 4.5, "review1 content",
-                LocalDateTime.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
         );
     }
 
