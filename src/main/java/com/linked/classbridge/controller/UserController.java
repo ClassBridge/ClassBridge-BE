@@ -11,6 +11,7 @@ import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.ResponseMessage;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,23 +31,29 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/auth/check-nickname")
-    public ResponseEntity<SuccessResponse<?>> checkNickname(@RequestParam String nickname) {
+    public ResponseEntity<SuccessResponse<String>> checkNickname(@RequestParam String nickname) {
 
-        return ResponseEntity.ok(
-                SuccessResponse.of(userService.checkNickname(nickname))
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.NO_MATCHED_NICKNAME,
+                        userService.checkNickname(nickname)
+                )
         );
     }
 
     @GetMapping("/auth/check-email")
-    public ResponseEntity<SuccessResponse<?>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<SuccessResponse<String>> checkEmail(@RequestParam String email) {
 
-        return ResponseEntity.ok(
-                SuccessResponse.of(userService.checkEmail(email))
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.NO_MATCHED_EMAIL,
+                        userService.checkEmail(email)
+                )
         );
     }
 
     @PostMapping("/auth/signup")
-    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody AuthDto.SignUp signupRequest, HttpSession session) {
+    public ResponseEntity<SuccessResponse<String>> signup(@RequestBody AuthDto.SignUp signupRequest, HttpSession session) {
 
         UserDto userDto = signupRequest.getUserDto();
 
@@ -73,7 +80,12 @@ public class UserController {
 
             userService.addUser(signupRequest);
             session.removeAttribute("customOAuth2User"); // 회원가입 후 세션에서 유저 기본 정보 제거
-            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    SuccessResponse.of(
+                            ResponseMessage.SIGNUP_SUCCESS,
+                            "success"
+                    )
+            );
         } else if (userDto != null && userDto.getAuthType() == AuthType.EMAIL) {
 
             if(signupRequest.getAdditionalInfoDto().getPhoneNumber() == null
@@ -88,18 +100,26 @@ public class UserController {
 
             // 일반 회원가입 방식 처리
             userService.addUser(signupRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    SuccessResponse.of(
+                            ResponseMessage.SIGNUP_SUCCESS,
+                            "success"
+                    )
+            );
         } else {
             throw new RestApiException(REQUIRED_USER_INFO);
         }
     }
 
     @PostMapping("/auth/signin")
-    public ResponseEntity<SuccessResponse<?>> signin(@RequestBody AuthDto.SignIn signinRequest) {
+    public ResponseEntity<SuccessResponse<String>> signin(@RequestBody AuthDto.SignIn signinRequest) {
 
         userService.signin(signinRequest);
         return ResponseEntity.status(OK).body(
-                SuccessResponse.of("success")
+                SuccessResponse.of(
+                        ResponseMessage.LOGIN_SUCCESS,
+                        "success"
+                )
         );
     }
 }

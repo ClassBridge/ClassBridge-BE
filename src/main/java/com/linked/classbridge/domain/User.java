@@ -65,6 +65,7 @@ public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
     private String birthDate;

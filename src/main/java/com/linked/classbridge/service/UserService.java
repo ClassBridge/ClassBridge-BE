@@ -63,7 +63,7 @@ public class UserService {
         }
 
         log.info("Nickname '{}' is available", nickname);
-        return "you can use this nickname";
+        return "Use this nickname";
     }
 
     public String checkEmail(String email) {
@@ -76,7 +76,7 @@ public class UserService {
         }
 
         log.info("Email '{}' is available", email);
-        return "you can use this email";
+        return "Use this email";
     }
 
     public Optional<User> findByEmail(String email) {
@@ -136,15 +136,15 @@ public class UserService {
 
         log.info("Adding new user with email '{}'", signupRequest.getUserDto().getEmail());
 
-        UserDto userDTO = signupRequest.getUserDto();
+        UserDto userDto = signupRequest.getUserDto();
         AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDto();
 
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
         Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
 
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            log.warn("Email '{}' is already registered", userDTO.getEmail());
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            log.warn("Email '{}' is already registered", userDto.getEmail());
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
 
@@ -154,11 +154,11 @@ public class UserService {
         }
 
         User user = User.builder()
-                .provider(userDTO.getProvider())
-                .providerId(userDTO.getProviderId())
-                .email(userDTO.getEmail())
-                .username(userDTO.getUsername())
-                .authType(userDTO.getAuthType())
+                .provider(userDto.getProvider())
+                .providerId(userDto.getProviderId())
+                .email(userDto.getEmail())
+                .username(userDto.getUsername())
+                .authType(userDto.getAuthType())
                 .roles(roles)
                 .nickname(additionalInfoDTO.getNickname())
                 .phone(additionalInfoDTO.getPhoneNumber())
@@ -175,7 +175,7 @@ public class UserService {
         log.info("User '{}' added successfully", user.getUsername());
 
         // 회원가입 완료 후 JWT 토큰 발급
-        String token = jwtUtil.createJwt(userDTO.getEmail(), userDTO.getRoles(), 60 * 60 * 24L * 1000);
+        String token = jwtUtil.createJwt(userDto.getEmail(), userDto.getRoles(), 60 * 60 * 24L * 1000);
         // JWT 토큰을 클라이언트로 전송
         Cookie cookie = CookieUtil.createCookie("Authorization", token);
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
