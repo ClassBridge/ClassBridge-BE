@@ -94,9 +94,13 @@ public class User extends BaseEntity {
     @ElementCollection(targetClass = UserRole.class)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Fetch(FetchMode.JOIN) // 즉시로딩 설정
+    @Fetch(FetchMode.JOIN)
     private List<UserRole> roles;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
+
+    public void addReview(Review mockReview1) {
+        this.reviewList.add(mockReview1);
+    }
 }

@@ -42,6 +42,11 @@ public class S3Service {
     }
 
     @Transactional
+    public String uploadOneDayClassImage(MultipartFile image) {
+        return uploadImage(image, ONE_DAY_CLASS_FOLDER);
+    }
+
+    @Transactional
     public String uploadUserProfileImage(MultipartFile image) {
 
         return uploadImage(image, USER_PROFILE_FOLDER);
