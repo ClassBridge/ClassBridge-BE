@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -48,11 +49,15 @@ public class UserService {
 
     private final JWTUtil jwtUtil;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTUtil jwtUtil) {
+    private final S3Service s3Service;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTUtil jwtUtil,
+                       S3Service s3Service) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.s3Service = s3Service;
     }
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
@@ -152,24 +157,24 @@ public class UserService {
         log.info("Adding new user with email '{}'", signupRequest.getUserDto().getEmail());
 
         UserDto userDto = signupRequest.getUserDto();
-        AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDto();
+        AdditionalInfoDto additionalInfoDto = signupRequest.getAdditionalInfoDto();
 
         if (userRepository.existsByEmail(userDto.getEmail())) {
             log.warn("Email '{}' is already registered", userDto.getEmail());
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
 
-        if(userRepository.existsByNickname(additionalInfoDTO.getNickname())) {
-            log.warn("Nickname '{}' already exists", additionalInfoDTO.getNickname());
+        if(userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+            log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
 
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
-        Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
+        Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
 
         // 만 나이 계산
-        String birthDateString = additionalInfoDTO.getBirthDate();
+        String birthDateString = additionalInfoDto.getBirthDate();
         int age = calculateAge(birthDateString);
 
         User user = User.builder()
@@ -179,14 +184,19 @@ public class UserService {
                 .username(userDto.getUsername())
                 .authType(userDto.getAuthType())
                 .roles(roles)
-                .nickname(additionalInfoDTO.getNickname())
-                .phone(additionalInfoDTO.getPhoneNumber())
+                .nickname(additionalInfoDto.getNickname())
+                .phone(additionalInfoDto.getPhoneNumber())
                 .gender(gender)
-                .birthDate(additionalInfoDTO.getBirthDate())
+                .birthDate(additionalInfoDto.getBirthDate())
                 .age(age)
-                .interests(additionalInfoDTO.getInterests())
-                .profileImageUrl(additionalInfoDTO.getProfilePictureUrl())
+                .interests(additionalInfoDto.getInterests())
                 .build();
+
+        MultipartFile profileImage = signupRequest.getAdditionalInfoDto().getProfileImage();
+        if (profileImage != null) {
+            String profileImageUrl = s3Service.uploadUserProfileImage(profileImage);
+            user.setProfileImageUrl(profileImageUrl);
+        }
 
         if(signupRequest.getUserDto().getPassword() != null) {
             user.setPassword(passwordEncoder.encode(signupRequest.getUserDto().getPassword()));

@@ -68,7 +68,7 @@ class UserControllerTest {
         additionalInfoDto.setGender("MALE");
         additionalInfoDto.setBirthDate("2001-01-01");
         additionalInfoDto.setInterests("Coding");
-        additionalInfoDto.setProfilePictureUrl("http://example.com/profile.jpg");
+        additionalInfoDto.setProfileImage("http://example.com/profile.jpg");
 
         signupRequest = new AuthDto.SignUp();
         signupRequest.setUserDto(userDto);
