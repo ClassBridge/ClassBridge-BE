@@ -17,7 +17,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +33,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
+@Table(name = "`user`")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,6 +49,7 @@ public class User extends BaseEntity {
     private Long userId;
 
     @Column(unique = true, nullable = false)
+    @Email(message = "유효한 이메일 주소 형식이어야 합니다.")
     private String email;
 
     private String password;
@@ -68,11 +73,13 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "생년월일은 yyyy-mm-dd 형식이어야 합니다.")
     private String birthDate;
 
     private String age;
 
     @Column(nullable = false)
+    @Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "전화번호는 010-xxxx-xxxx 형식이어야 합니다.")
     private String phone;
 
     private String profileImageUrl;
