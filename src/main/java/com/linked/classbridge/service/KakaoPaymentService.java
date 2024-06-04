@@ -1,6 +1,7 @@
 package com.linked.classbridge.service;
 
 import com.linked.classbridge.config.PayProperties;
+import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
@@ -9,11 +10,16 @@ import com.linked.classbridge.type.ErrorCode;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -24,21 +30,21 @@ import reactor.core.publisher.Mono;
  * 결제 취소
  * 결제 상태 조회
  */
+@Slf4j
 @RequiredArgsConstructor
-@Component
-public class KakaoPayment implements PaymentProcessor {
+@Service
+public class KakaoPaymentService {
 
     private final PayProperties payProperties;
     private final WebClient.Builder webClient;
+    private PaymentPrepareDto.Response paymentResponse;
 
     /**
      * 카카오페이 결제 요청 로직
      */
-    @Override
+//    @Override
+    @Transactional
     public PaymentPrepareDto.Response initiatePayment(Request request) {
-
-        request.setPartnerUserId("dummyData");
-        request.setPartnerOrderId("dummyData");
 
         // 카카오페이 요청 형식
         Map<String, String> parameters = getInitiateParameters(request);
@@ -59,9 +65,7 @@ public class KakaoPayment implements PaymentProcessor {
         }
     }
 
-    @Override
-    public String approvePayment(PaymentPrepareDto.Response response, Authentication authentication,
-                                 String header, String token) {
+    public ResponseEntity<String> approvePayment(PaymentPrepareDto.Response response, String header) {
         try {
             // 카카오 요청
             Map<String, String> parameters = new HashMap<>();
@@ -71,46 +75,60 @@ public class KakaoPayment implements PaymentProcessor {
             parameters.put("partner_user_id", response.getPartnerUserId());
             parameters.put("pg_token", response.getPgToken());
 
-            // WebClient로 외부에 요청
-            webClient.build().post()
-//                    .uri(payProperties.getApproveUrl())
-                    .uri(uriBuilder -> uriBuilder
-                            .path(payProperties.getApproveUrl())
-                            .queryParam("token", token) // Include token in the URL
-                            .build())
-                    .headers(httpHeaders -> {
-                        httpHeaders.setAll(getHeaders().toSingleValueMap());
-                    })
+//            response.setCid(payProperties.getCid());
+
+            log.info("kakao payment tid :: {}", response.getTid());
+            log.info("kakao payment pg token :: {}", response.getPgToken());
+
+
+
+            WebClient webClient = WebClient.builder()
+                    .baseUrl(payProperties.getApproveUrl())
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + payProperties.getDevKey())
+                    .build();
+
+
+            PaymentApproveDto.Response kakaoResponse = webClient.post()
+                    .uri(uriBuilder -> uriBuilder.path("/").build())
                     .bodyValue(parameters)
                     .retrieve()
-                    .bodyToMono(Response.class)
-                    .block(); // 동기식 처리
+                    .bodyToMono(PaymentApproveDto.Response.class)
+                    .block();
 
-            // 새로운 요청 생성
+            // POST 요청 생성
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", header);
+//            headers.set("Authorization", "SECRET_KEY " + payProperties.getDevKey());
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<PaymentPrepareDto.Response> newRequestEntity = new HttpEntity<>(response, headers);
 
-            // WebClient로 POST 요청 보내기
-            String newResponse = webClient.build().post()
-                    .uri("http://localhost:8080/api/payments/complete")
-                    .headers(httpHeaders -> {
-                        httpHeaders.setAll(headers.toSingleValueMap());
-                    })
-                    .body(Mono.just(newRequestEntity), PaymentPrepareDto.Response.class)
+            WebClient localWebClient = WebClient.builder()
+                    .baseUrl("http://localhost:8080")
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+//                    .defaultHeader(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + payProperties.getDevKey())
+                    .build();
+
+            // 에러 확인을 위한 로깅 추가
+            log.info("Sending request to /api/payments/complete with body: {}", kakaoResponse);
+
+            Mono<ResponseEntity<String>> entity = localWebClient.post()
+                    .uri("/api/payments/complete")
+                    .bodyValue(kakaoResponse)
                     .retrieve()
-                    .bodyToMono(String.class)
-                    .block(); // 동기식 처리
+                    .toEntity(String.class);
 
-            return newResponse;
+
+            return entity.block();
 
         } catch (WebClientResponseException e) {
+            log.error(e.getMessage());
             throw new RestApiException(ErrorCode.PAY_ERROR);
         }
     }
 
     private Map<String, String> getInitiateParameters(Request request) {
+
+        request.setPartnerUserId("payservice1");
+        request.setPartnerOrderId("payservice1");
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put("cid", payProperties.getCid());

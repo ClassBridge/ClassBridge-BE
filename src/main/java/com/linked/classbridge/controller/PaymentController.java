@@ -3,23 +3,20 @@ package com.linked.classbridge.controller;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
-import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
-import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.service.PaymentService;
-import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.service.KakaoPaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+//import org.springframework.security.core.Authentication;
 
 @Slf4j
 @RestController
@@ -27,59 +24,50 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final PaymentService paymentService;
+    private final KakaoPaymentService paymentService;
+
+    private PaymentPrepareDto.Response paymentResponse;
 
     @Operation(summary = "결제 요청")
     @PostMapping("/prepare")
-    public String initiatePayment(@RequestBody Request paymentRequest, Authentication authentication,
-                                  HttpServletRequest request) {
-        Response initiatedPayment = paymentService.initiatePayment(paymentRequest, authentication);
-        String token = UUID.randomUUID().toString();
-        HttpSession session = request.getSession();
-        session.setAttribute("paymentToken", token);
-        session.setAttribute("initiatedPaymentResponse", initiatedPayment);
-        log.info("Session attribute 'initiatedPaymentResponse' set: {}, Token: {}", initiatedPayment, token);
+    public String initiatePayment(@RequestBody Request paymentRequest) {
+        paymentResponse = paymentService.initiatePayment(paymentRequest);
+        paymentResponse.setPartnerOrderId(paymentRequest.getPartnerOrderId());
+        paymentResponse.setPartnerUserId(paymentRequest.getPartnerUserId());
 
-
-        // 세션에 저장
-//        request.getSession().setAttribute("initiatedPaymentResponse", initiatedPayment);
-//        log.info("Session attribute 'initiatedPaymentResponse' set: {}", initiatedPayment);
-//        log.info("Session attribute 'initiatedPaymentResponse' set: {}, Session ID: {}", initiatedPayment, session.getId());
-        String redirectUrl = initiatedPayment.getNext_redirect_pc_url() + "?token=" + token;
-        return redirectUrl;
-
-//        return initiatedPayment.getNext_redirect_pc_url();
+        return paymentResponse.getNext_redirect_pc_url();
     }
 
     /**
      * 결제 성공
      */
     @GetMapping("/complete")
-    public String approvePayment(HttpServletRequest request, Authentication authentication,
-                                                     @RequestParam("pg_token") String pgToken,
-                                 @RequestParam("token") String token) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            log.error("Session not found or expired.");
-            throw new RestApiException(ErrorCode.MISSING_PAY_RESPONSE_IN_SESSION);
-        }
-        String sessionToken = (String) session.getAttribute("paymentToken");
-        if (sessionToken == null || !sessionToken.equals(token)) {
-            log.error("Invalid or missing token.");
-            throw new RestApiException(ErrorCode.INVALID_TOKEN);
-        }
-//        PaymentPrepareDto.Response paymentResponse = (Response) request.getSession().getAttribute("initiatedPaymentResponse");
-        PaymentPrepareDto.Response paymentResponse = (Response) session.getAttribute("initiatedPaymentResponse");
+    public ResponseEntity<String> approvePayment(HttpServletRequest request,
+                                                 @RequestParam("pg_token") String pgToken) throws Exception {
         if (paymentResponse == null) {
-            log.error("Session attribute 'initiatedPaymentResponse' not found");
-
-            throw new RestApiException(ErrorCode.MISSING_PAY_RESPONSE_IN_SESSION);
+            // 초기화되지 않은 경우에 대한 예외 처리
+            throw new IllegalStateException("Payment response is not initialized");
         }
+        paymentResponse.setCid("TC0ONETIME");
         paymentResponse.setPgToken(pgToken);
 
-        log.info("success :: {}", pgToken);
-        return paymentService.approveResponse(paymentResponse, authentication, request.getHeader("Authorization"), token);
+        return paymentService.approvePayment(paymentResponse, request.getHeader("Authorization"));
     }
+
+    @PostMapping("/complete")
+    public ResponseEntity<String> completePayment(
+            @RequestBody PaymentApproveDto.Response paymentResponse) {
+
+        try {
+            // 결제 승인 응답 데이터 처리
+            return ResponseEntity.ok("Payment processed successfully.");
+        } catch (Exception e) {
+            // 예외 처리 및 에러 응답
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing payment: " + e.getMessage());
+        }
+    }
+
 
 //    @PostMapping("/approve")
 //    public ResponseEntity<PaymentResponse> approvePayment(@RequestParam String transactionId) {
