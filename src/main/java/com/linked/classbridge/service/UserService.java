@@ -4,6 +4,7 @@ import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static com.linked.classbridge.util.AgeUtil.calculateAge;
 
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
@@ -16,10 +17,13 @@ import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
+import com.linked.classbridge.util.AgeUtil;
 import com.linked.classbridge.util.CookieUtil;
 import com.linked.classbridge.util.JWTUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +34,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -51,6 +56,19 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
+    public void updateAges() {
+
+        log.info("Updating ages of all users");
+
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            int age = calculateAge(user.getBirthDate());
+            user.setAge(age);
+            userRepository.save(user);
+        }
     }
 
     public String checkNickname(String nickname) {
@@ -139,10 +157,6 @@ public class UserService {
         UserDto userDto = signupRequest.getUserDto();
         AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDto();
 
-        List<UserRole> roles = new ArrayList<>();
-        roles.add(UserRole.ROLE_USER);
-        Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
-
         if (userRepository.existsByEmail(userDto.getEmail())) {
             log.warn("Email '{}' is already registered", userDto.getEmail());
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
@@ -152,6 +166,14 @@ public class UserService {
             log.warn("Nickname '{}' already exists", additionalInfoDTO.getNickname());
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
+
+        List<UserRole> roles = new ArrayList<>();
+        roles.add(UserRole.ROLE_USER);
+        Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
+
+        // 만 나이 계산
+        String birthDateString = additionalInfoDTO.getBirthDate();
+        int age = calculateAge(birthDateString);
 
         User user = User.builder()
                 .provider(userDto.getProvider())
@@ -164,6 +186,7 @@ public class UserService {
                 .phone(additionalInfoDTO.getPhoneNumber())
                 .gender(gender)
                 .birthDate(additionalInfoDTO.getBirthDate())
+                .age(age)
                 .interests(additionalInfoDTO.getInterests())
                 .profileImageUrl(additionalInfoDTO.getProfilePictureUrl())
                 .build();
