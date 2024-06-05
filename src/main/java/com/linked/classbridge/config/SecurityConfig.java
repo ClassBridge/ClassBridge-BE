@@ -1,6 +1,8 @@
 package com.linked.classbridge.config;
 
 import com.linked.classbridge.oauth2.CustomSuccessHandler;
+import com.linked.classbridge.security.CustomAccessDeniedHandler;
+import com.linked.classbridge.security.CustomAuthenticationEntryPoint;
 import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
 import com.linked.classbridge.util.JWTUtil;
@@ -87,7 +89,13 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/users/auth/**").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated())
+                .exceptionHandling((exception) -> exception
+                        // 인증되지 않은 사용자가 보호된 리소스에 액세스하려고 할 때 호출
+                        .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                        // 인증은 되었지만, 해당 리소스에 접근할 권한이 없을 때 호출
+                        .accessDeniedHandler(new CustomAccessDeniedHandler())
+                );
         //세션 설정 : STATELESS
         http
                 .sessionManagement((session) -> session
