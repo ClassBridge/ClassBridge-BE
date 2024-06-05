@@ -1,11 +1,10 @@
 package com.linked.classbridge.domain;
 
-import com.linked.classbridge.dto.payment.PaymentPrepareDto;
+import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,17 +50,20 @@ public class Payment extends BaseEntity{
     private String tid;
 
     //        @Column(nullable = false)
-    private LocalDateTime createdAt;
+//    private LocalDateTime createdAt;
 
     //        @Column(nullable = false, length = 255, columnDefinition = "varchar(255) default 'PENDING'")
     private String status;
 
-    public static Payment convertToPaymentEntity(PaymentPrepareDto.Request request) {
+    public static Payment convertToPaymentEntity(PaymentApproveDto.Response response) {
         return Payment.builder()
-                .cid(request.getCid())
-                .tid(request.getTid())
-                .partnerOrderId(request.getPartnerOrderId())
-                .partnerUserId(request.getPartnerUserId())
+                .cid(response.getCid())
+                .tid(response.getTid())
+                .partnerOrderId(response.getPartnerOrderId())
+                .partnerUserId(response.getPartnerUserId())
+                .quantity(response.getQuantity())
+                .totalAmount(response.getAmount().getTotal())
+                .paymentMethodType(response.getPaymentMethodType())
                 .status("COMPLETED")
                 .build();
     }

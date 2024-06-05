@@ -27,7 +27,7 @@ pay:
   ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
   approve-url: https://open-api.kakaopay.com/online/v1/payment/approve
   cancel-url: http://localhost:8080/payment/kakao/cancel
-  cid: TC0ONETIME
-  dev-key: DEVKEY
+  cid: ${KAKAO_PAY_CID}
+  dev-key: ${KAKAO_PAY_DEV_KEY}
 
 
