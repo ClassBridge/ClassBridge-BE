@@ -1,11 +1,14 @@
 package com.linked.classbridge.service;
 
 import com.linked.classbridge.config.PayProperties;
+import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.dto.payment.CreatePaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +40,7 @@ public class KakaoPaymentService {
 
     private final PayProperties payProperties;
     private final WebClient.Builder webClient;
-    private PaymentPrepareDto.Response paymentResponse;
+    private final PaymentRepository paymentRepository;
 
     /**
      * 카카오페이 결제 요청 로직
@@ -65,6 +68,9 @@ public class KakaoPaymentService {
         }
     }
 
+    /**
+     * 카카오페이 결제 승인 로직
+     */
     public ResponseEntity<String> approvePayment(PaymentPrepareDto.Response response, String header) {
         try {
             // 카카오 요청
@@ -125,6 +131,20 @@ public class KakaoPaymentService {
         }
     }
 
+    /**
+     * 카카오페이 승인 결과 저장
+     */
+    public CreatePaymentResponse savePayment(PaymentApproveDto.Response response) {
+        Payment payment = Payment.convertToPaymentEntity(response);
+        Payment saved = paymentRepository.save(payment);
+        return toCreatePaymentResponse(saved);
+    }
+    public CreatePaymentResponse toCreatePaymentResponse(Payment payment) {
+        return new CreatePaymentResponse(payment.getPaymentId());
+    }
+    /**
+     * 카카오페이 결제 요청 시 필요한 파라미터
+     */
     private Map<String, String> getInitiateParameters(Request request) {
 
         request.setPartnerUserId("payservice1");
@@ -145,6 +165,9 @@ public class KakaoPaymentService {
         return parameters;
     }
 
+    /**
+     * 카카오페이 결제 시 필요한 헤더
+     */
     private HttpHeaders getHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
         String auth = "SECRET_KEY " + payProperties.getDevKey();

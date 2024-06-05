@@ -1,0 +1,43 @@
+### 회원가입 테스트
+POST http://localhost:8080/api/users/auth/signup
+Content-Type: application/json
+
+{
+  "userDto": {
+    "provider": "email",
+    "providerId": "user_provider_id",
+    "email": "testuser@example.com",
+    "username": "testuser",
+    "authType": "EMAIL",
+    "password": "password123"
+  },
+  "additionalInfoDto": {
+    "nickname": "testnickname",
+    "phoneNumber": "01012345678",
+    "gender": "MALE",
+    "birthDate": "1990-01-01",
+    "interests": "coding",
+    "profilePictureUrl": "http://example.com/profile.jpg"
+  }
+}
+
+### 로그인 테스트
+POST http://localhost:8080/api/users/auth/signin
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 이메일 중복 확인 테스트
+GET http://localhost:8080/api/users/auth/check-email?email=testuser@example.com
+Content-Type: application/json
+
+### 닉네임 중복 확인 테스트
+GET http://localhost:8080/api/users/auth/check-nickname?nickname=testnickname
+Content-Type: application/json
+
+### 회원 리뷰 조회 테스트
+GET http://localhost:8080/api/users/reviews?page=0&size=5&sort=createdAt,desc
+Content-Type: application/json

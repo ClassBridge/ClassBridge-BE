@@ -1,9 +1,12 @@
 package com.linked.classbridge.controller;
 
+import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.payment.CreatePaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.service.KakaoPaymentService;
+import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -44,10 +47,6 @@ public class PaymentController {
     @GetMapping("/complete")
     public ResponseEntity<String> approvePayment(HttpServletRequest request,
                                                  @RequestParam("pg_token") String pgToken) throws Exception {
-        if (paymentResponse == null) {
-            // 초기화되지 않은 경우에 대한 예외 처리
-            throw new IllegalStateException("Payment response is not initialized");
-        }
         paymentResponse.setCid("TC0ONETIME");
         paymentResponse.setPgToken(pgToken);
 
@@ -55,17 +54,16 @@ public class PaymentController {
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<String> completePayment(
+    public ResponseEntity<SuccessResponse<CreatePaymentResponse>> completePayment(
             @RequestBody PaymentApproveDto.Response paymentResponse) {
 
-        try {
             // 결제 승인 응답 데이터 처리
-            return ResponseEntity.ok("Payment processed successfully.");
-        } catch (Exception e) {
-            // 예외 처리 및 에러 응답
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing payment: " + e.getMessage());
-        }
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    SuccessResponse.of(
+                            ResponseMessage.PAYMENT_SUCCESS,
+                            paymentService.savePayment(paymentResponse)
+                    )
+            );
     }
 
 
