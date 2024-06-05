@@ -1,7 +1,6 @@
 package com.linked.classbridge.domain;
 
 import com.linked.classbridge.type.AuthType;
-import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
 import jakarta.persistence.Column;
