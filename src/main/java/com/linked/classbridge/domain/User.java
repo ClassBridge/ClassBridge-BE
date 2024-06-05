@@ -1,6 +1,7 @@
 package com.linked.classbridge.domain;
 
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
 import jakarta.persistence.Column;
@@ -16,6 +17,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -81,7 +85,13 @@ public class User extends BaseEntity {
 
     private String profileImageUrl;
 
-    private String interests; // 카테고리 테이블 추가 시 수정
+    @ManyToMany
+    @JoinTable(
+            name = "user_interests",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<Category> interests;
 
     private String selfIntroduction;
 

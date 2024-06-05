@@ -6,6 +6,7 @@ import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 import static com.linked.classbridge.util.AgeUtil.calculateAge;
 
+import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
@@ -13,8 +14,10 @@ import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.GoogleResponse;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
 import com.linked.classbridge.util.CookieUtil;
@@ -45,16 +48,19 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final CategoryRepository categoryRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     private final JWTUtil jwtUtil;
 
     private final S3Service s3Service;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTUtil jwtUtil,
-                       S3Service s3Service) {
+    public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
+                       JWTUtil jwtUtil, S3Service s3Service) {
 
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.s3Service = s3Service;
@@ -177,6 +183,11 @@ public class UserService {
         String birthDateString = additionalInfoDto.getBirthDate();
         int age = calculateAge(birthDateString);
 
+        // 관심 카테고리 String -> Category 변환
+        List<Category> interests = additionalInfoDto.getInterests().stream()
+                .map(interest -> categoryRepository.findByName(CategoryType.valueOf(interest)))
+                .collect(Collectors.toList());
+
         User user = User.builder()
                 .provider(userDto.getProvider())
                 .providerId(userDto.getProviderId())
@@ -189,7 +200,7 @@ public class UserService {
                 .gender(gender)
                 .birthDate(additionalInfoDto.getBirthDate())
                 .age(age)
-                .interests(additionalInfoDto.getInterests())
+                .interests(interests)
                 .build();
 
         MultipartFile profileImage = signupRequest.getAdditionalInfoDto().getProfileImage();
