@@ -1,6 +1,5 @@
 package com.linked.classbridge.security;
 
-import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.util.JWTUtil;
 import jakarta.servlet.FilterChain;

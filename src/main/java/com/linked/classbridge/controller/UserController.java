@@ -47,6 +47,7 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    @Operation(summary = "닉네임 중복 확인", description = "DB에 중복된 닉네임이 있는지 확인")
     @GetMapping("/auth/check-nickname")
     public ResponseEntity<SuccessResponse<String>> checkNickname(@RequestParam String nickname) {
 
@@ -58,6 +59,7 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "이메일 중복 확인", description = "DB에 중복된 이메일이 있는지 확인")
     @GetMapping("/auth/check-email")
     public ResponseEntity<SuccessResponse<String>> checkEmail(@RequestParam String email) {
 
@@ -69,6 +71,7 @@ public class UserController {
         );
     }
 
+    @Operation(summary = "회원가입", description = "구글 회원가입 사용자와 일반 회원가입 사용자를 구분하여 회원가입 처리")
     @PostMapping("/auth/signup")
     public ResponseEntity<SuccessResponse<String>> signup(
             @RequestPart("signupRequest") AuthDto.SignUp signupRequest,
@@ -135,6 +138,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인")
     @PostMapping("/auth/signin")
     public ResponseEntity<SuccessResponse<String>> signin(@RequestBody AuthDto.SignIn signinRequest) {
 
