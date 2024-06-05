@@ -77,23 +77,23 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         //토큰에서 username과 roles 획득
-        String username = jwtUtil.getUsername(token);
+        String email = jwtUtil.getEmail(token);
         List<String> roles = jwtUtil.getRoles(token);
-        log.info("Token validated. Username: {}, Roles: {}", username, roles);
+        log.info("Token validated. UserEmail: {}, Roles: {}", email, roles);
 
         //userDTO를 생성하여 값 set
-        UserDto userDTO = new UserDto();
-        userDTO.setUsername(username);
-        userDTO.setRoles(roles);
+        UserDto userDto = new UserDto();
+        userDto.setEmail(email);
+        userDto.setRoles(roles);
 
         //UserDetails에 회원 정보 객체 담기
-        CustomOAuth2User customOAuth2User = new CustomOAuth2User(userDTO);
+        CustomUserDetails customUserDetails = new CustomUserDetails(userDto);
 
         //스프링 시큐리티 인증 토큰 생성
-        Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
+        Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
         //세션에 사용자 등록
         SecurityContextHolder.getContext().setAuthentication(authToken);
-        log.info("User authenticated and set in SecurityContext: {}", username);
+        log.info("User authenticated and set in SecurityContext: {}", email);
 
         filterChain.doFilter(request, response);
         log.info("Completed JWTFilter for request: {}", request.getRequestURI());

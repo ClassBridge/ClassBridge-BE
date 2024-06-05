@@ -4,7 +4,6 @@ import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
-import static com.linked.classbridge.util.AgeUtil.calculateAge;
 
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.User;
