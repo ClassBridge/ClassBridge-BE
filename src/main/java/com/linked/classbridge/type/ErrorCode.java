@@ -11,6 +11,8 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서부 오류가 발생했습니다."),
+    NOT_AUTHENTICATED_USER(HttpStatus.BAD_REQUEST, "인증된 사용자가 없습니다."),
+    UNEXPECTED_PRINCIPAL_TYPE(HttpStatus.BAD_REQUEST, "예상하지 못한 Principal 타입입니다."),
 
     ALREADY_REGISTERED_EMAIL(HttpStatus.BAD_REQUEST, "이미 등록된 이메일 입니다."),
     ALREADY_EXIST_NICKNAME(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임 입니다."),

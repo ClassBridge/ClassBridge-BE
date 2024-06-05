@@ -2,7 +2,9 @@ package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
+import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
+import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Category;
@@ -15,6 +17,7 @@ import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.security.CustomUserDetails;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
@@ -33,6 +36,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -231,6 +236,21 @@ public class UserService {
         if (response != null) {
             response.addCookie(cookie);
             log.info("JWT token added to response for user '{}'", user.getUsername());
+        }
+    }
+
+    public String getCurrentUserEmail() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RestApiException(NOT_AUTHENTICATED_USER);
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            return ((CustomUserDetails) principal).getUsername();
+        } else {
+            throw new RestApiException(UNEXPECTED_PRINCIPAL_TYPE);
         }
     }
 }
