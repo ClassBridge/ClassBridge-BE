@@ -7,6 +7,7 @@ import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +18,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.mock.web.MockPart;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -99,7 +99,7 @@ class UserControllerTest {
         additionalInfoDto.setPhoneNumber("010-1234-5678");
         additionalInfoDto.setGender("MALE");
         additionalInfoDto.setBirthDate("2001-01-01");
-        additionalInfoDto.setInterests("Coding");
+        additionalInfoDto.setInterests(Collections.singletonList("COOKING"));
 
         signupRequest = new AuthDto.SignUp();
         signupRequest.setUserDto(userDto);
