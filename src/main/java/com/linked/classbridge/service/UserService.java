@@ -34,7 +34,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -64,19 +63,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.s3Service = s3Service;
-    }
-
-    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행
-    public void updateAges() {
-
-        log.info("Updating ages of all users");
-
-        List<User> users = userRepository.findAll();
-        for (User user : users) {
-            int age = calculateAge(user.getBirthDate());
-            user.setAge(age);
-            userRepository.save(user);
-        }
     }
 
     public String checkNickname(String nickname) {
@@ -179,10 +165,6 @@ public class UserService {
         roles.add(UserRole.ROLE_USER);
         Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
 
-        // 만 나이 계산
-        String birthDateString = additionalInfoDto.getBirthDate();
-        int age = calculateAge(birthDateString);
-
         // 관심 카테고리 String -> Category 변환
         List<Category> interests = additionalInfoDto.getInterests().stream()
                 .map(interest -> categoryRepository.findByName(CategoryType.valueOf(interest)))
@@ -199,7 +181,6 @@ public class UserService {
                 .phone(additionalInfoDto.getPhoneNumber())
                 .gender(gender)
                 .birthDate(additionalInfoDto.getBirthDate())
-                .age(age)
                 .interests(interests)
                 .build();
 
