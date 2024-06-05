@@ -47,11 +47,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             Cookie cookie = CookieUtil.createCookie("Authorization", token);
             response.addCookie(cookie);
 
-            response.sendRedirect("http://localhost:3000/");
+            response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=false");
         } else {
             HttpSession session = request.getSession();
             session.setAttribute("customOAuth2User", customOAuth2User);
-            response.sendRedirect("http://localhost:3000/user/auth/additional-info");
+            response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=true");
         }
     }
 }
