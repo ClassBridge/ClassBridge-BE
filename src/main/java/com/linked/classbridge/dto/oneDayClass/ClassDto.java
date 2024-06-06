@@ -30,7 +30,7 @@ public class ClassDto {
     private String address;
     private int timeTaken;
     private int price;
-    private String parkingInformation;
+    private boolean parkingInformation;
     private String introduction;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -43,9 +43,9 @@ public class ClassDto {
         this.classId = oneDayClass.getClassId();
         this.className = oneDayClass.getClassName();
         this.address = oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3();
-        this.timeTaken = oneDayClass.getTimeTaken();
+        this.timeTaken = oneDayClass.getDuration();
         this.price = oneDayClass.getPrice();
-        this.parkingInformation = oneDayClass.getParkingInformation();
+        this.parkingInformation = oneDayClass.isHasParking();
         this.introduction = oneDayClass.getIntroduction();
         this.startDate = oneDayClass.getStartDate();
         this.endDate = oneDayClass.getEndDate();
@@ -79,18 +79,22 @@ public class ClassDto {
 
             @Schema(description = "소요 시간", example = "20", minimum = "0")
             @NotNull(message = "소요 시간(분)을 입력해 주세요.")
-            Integer timeTaken,
+            Integer duration,
 
             @Schema(description = "가격", example = "50000", minimum = "0")
             @NotNull(message = "가격을 입력해 주세요.")
             Integer price,
 
-            @Schema(description = "주차장 정보", example = "저희 건물 앞 주차장을 이용하시면 됩니다.")
-            String parkingInformation,
+            @Schema(description = "최대 인원", example = "6", minimum = "0")
+            @NotNull(message = "최대 인원을 입력해 주세요.")
+            Integer personal,
+
+            @Schema(description = "주차장 정보", example = "true")
+            boolean hasParking,
 
             @Schema(description = "클래스 소개", example = "저희 클래스는 1대1 운동으로, 참여자의 상태에 맞춰 클래스를 진행합니다.", minLength = 2)
             @NotBlank(message = "클래스 소개를 입력해 주세요.")
-            @Size(min = 2, message = "클래스 소개는 두 글자 이상 입력해 주세요.")
+            @Size(min = 20, max=500, message = "클래스 소개는 20 글자 이상 500 글자 이하로 입력해 주세요.")
             String introduction,
 
             @Schema(description = "클래스 시작일", example = "2024-05-29")
@@ -106,7 +110,7 @@ public class ClassDto {
             CategoryType categoryType,
 
             @Schema(description = "반복 요일 강의 시간", example = "Mon = {14:00:00, 18:00:00}")
-            RepeatClassDto repeatClassDto,
+            RepeatClassDto lesson,
 
             @Schema(description = "faq", example = "faq = {{ title=제목, content = 내용}, { }, ...}")
             List<ClassFAQ> faqList,
@@ -121,9 +125,10 @@ public class ClassDto {
                     .address1(request.address1)
                     .address2(request.address2)
                     .address3(request.address3)
-                    .timeTaken(request.timeTaken)
+                    .duration(request.duration)
                     .price(request.price)
-                    .parkingInformation(request.parkingInformation)
+                    .personal(request.personal)
+                    .hasParking(request.hasParking)
                     .introduction(request.introduction)
                     .totalStarRate(0.0)
                     .totalReviews(0)
@@ -145,14 +150,15 @@ public class ClassDto {
             double latitude,    // 위도
             double longitude,   // 경도
 
-            int timeTaken,     // 소요 시간
+            int duration,     // 소요 시간
 
             int price,         // 가격
+            int personal,
 
             Double totalStarRate, // 총 별점 수
             Integer totalReviews,  // 총 리뷰 수
 
-            String parkingInformation,  // 주차장 정보
+            boolean parkingInformation,  // 주차장 정보
             String introduction,        // 클래스 소개
 
             LocalDate startDate,   // 시작일
@@ -174,11 +180,12 @@ public class ClassDto {
                     oneDayClass.getAddress3(),
                     oneDayClass.getLatitude(),
                     oneDayClass.getLongitude(),
-                    oneDayClass.getTimeTaken(),
+                    oneDayClass.getDuration(),
                     oneDayClass.getPrice(),
+                    oneDayClass.getPersonal(),
                     oneDayClass.getTotalStarRate(),
                     oneDayClass.getTotalReviews(),
-                    oneDayClass.getParkingInformation(),
+                    oneDayClass.isHasParking(),
                     oneDayClass.getIntroduction(),
                     oneDayClass.getStartDate(),
                     oneDayClass.getEndDate(),
