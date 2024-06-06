@@ -31,6 +31,5 @@ public class RepeatClassDto {
     @AllArgsConstructor
     public static class dayList {
         private List<LocalTime> times;
-        private int personal;
     }
 }
