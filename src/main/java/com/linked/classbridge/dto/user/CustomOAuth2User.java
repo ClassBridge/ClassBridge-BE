@@ -11,11 +11,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 public class CustomOAuth2User implements OAuth2User {
 
-    private final UserDto userDTO;
+    private final UserDto userDto;
 
     public CustomOAuth2User(UserDto userDTO) {
 
-        this.userDTO = userDTO;
+        this.userDto = userDTO;
     }
 
     // 사용자의 속성을 반환
@@ -23,12 +23,12 @@ public class CustomOAuth2User implements OAuth2User {
     public Map<String, Object> getAttributes() {
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("provider", userDTO.getProvider());
-        attributes.put("providerId", userDTO.getProviderId());
-        attributes.put("email", userDTO.getEmail());
-        attributes.put("username", userDTO.getUsername());
-        attributes.put("authType", userDTO.getAuthType());
-        attributes.put("roles", userDTO.getRoles());
+        attributes.put("provider", userDto.getProvider());
+        attributes.put("providerId", userDto.getProviderId());
+        attributes.put("email", userDto.getEmail());
+        attributes.put("username", userDto.getUsername());
+        attributes.put("authType", userDto.getAuthType());
+        attributes.put("roles", userDto.getRoles());
         return attributes;
     }
 
@@ -37,7 +37,7 @@ public class CustomOAuth2User implements OAuth2User {
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
-        List<String> roles = userDTO.getRoles();
+        List<String> roles = userDto.getRoles();
 
         if (roles != null) {
             for (String role : roles) {
@@ -51,12 +51,12 @@ public class CustomOAuth2User implements OAuth2User {
     @Override
     public String getName() {
 
-        return userDTO.getUsername();
+        return userDto.getUsername();
     }
 
     public String getEmail() {
 
-        return userDTO.getEmail();
+        return userDto.getEmail();
     }
 
 }

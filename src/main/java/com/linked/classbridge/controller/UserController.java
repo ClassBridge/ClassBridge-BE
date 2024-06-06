@@ -5,12 +5,14 @@ import static com.linked.classbridge.type.ErrorCode.SESSION_DOES_NOT_CONTAIN_CUS
 import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.ResponseMessage;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,23 +22,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
-import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
@@ -50,24 +47,37 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    @Operation(summary = "닉네임 중복 확인", description = "DB에 중복된 닉네임이 있는지 확인")
     @GetMapping("/auth/check-nickname")
-    public ResponseEntity<SuccessResponse<?>> checkNickname(@RequestParam String nickname) {
+    public ResponseEntity<SuccessResponse<String>> checkNickname(@RequestParam String nickname) {
 
-        return ResponseEntity.ok(
-                SuccessResponse.of(userService.checkNickname(nickname))
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.NO_MATCHED_NICKNAME,
+                        userService.checkNickname(nickname)
+                )
         );
     }
 
+    @Operation(summary = "이메일 중복 확인", description = "DB에 중복된 이메일이 있는지 확인")
     @GetMapping("/auth/check-email")
-    public ResponseEntity<SuccessResponse<?>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<SuccessResponse<String>> checkEmail(@RequestParam String email) {
 
-        return ResponseEntity.ok(
-                SuccessResponse.of(userService.checkEmail(email))
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.NO_MATCHED_EMAIL,
+                        userService.checkEmail(email)
+                )
         );
     }
 
+    @Operation(summary = "회원가입", description = "구글 회원가입 사용자와 일반 회원가입 사용자를 구분하여 회원가입 처리")
     @PostMapping("/auth/signup")
-    public ResponseEntity<SuccessResponse<?>> signup(@RequestBody AuthDto.SignUp signupRequest, HttpSession session) {
+    public ResponseEntity<SuccessResponse<String>> signup(
+            @RequestPart("signupRequest") AuthDto.SignUp signupRequest,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            HttpSession session
+    ) {
 
         UserDto userDto = signupRequest.getUserDto();
 
@@ -79,10 +89,16 @@ public class UserController {
             userDto = userService.getUserDto(customOAuth2User);
         }
 
-        if (userDto != null && userDto.getAuthType() == AuthType.GOOGLE) {
-            signupRequest.setUserDto(userDto);
+        AdditionalInfoDto additionalInfoDto = signupRequest.getAdditionalInfoDto();
 
-            if(signupRequest.getAdditionalInfoDto().getPhoneNumber() == null
+        if (additionalInfoDto == null) {
+            throw new RestApiException(REQUIRED_USER_INFO);
+        } else {
+            if(profileImage != null) {
+                additionalInfoDto.setProfileImage(profileImage);
+            }
+
+            if(additionalInfoDto.getPhoneNumber() == null
                     || signupRequest.getAdditionalInfoDto().getPhoneNumber().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
@@ -91,36 +107,47 @@ public class UserController {
                     || signupRequest.getAdditionalInfoDto().getNickname().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
+        }
 
+        signupRequest.setUserDto(userDto);
+        signupRequest.setAdditionalInfoDto(additionalInfoDto);
+
+        if (userDto != null && userDto.getAuthType() == AuthType.GOOGLE) {
+
+            // 구글 회원가입 방식 처리
             userService.addUser(signupRequest);
             session.removeAttribute("customOAuth2User"); // 회원가입 후 세션에서 유저 기본 정보 제거
-            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    SuccessResponse.of(
+                            ResponseMessage.SIGNUP_SUCCESS,
+                            "success"
+                    )
+            );
         } else if (userDto != null && userDto.getAuthType() == AuthType.EMAIL) {
-
-            if(signupRequest.getAdditionalInfoDto().getPhoneNumber() == null
-                    || signupRequest.getAdditionalInfoDto().getPhoneNumber().isEmpty()) {
-                throw new RestApiException(REQUIRED_USER_INFO);
-            }
-
-            if(signupRequest.getAdditionalInfoDto().getNickname() == null
-                    || signupRequest.getAdditionalInfoDto().getNickname().isEmpty()) {
-                throw new RestApiException(REQUIRED_USER_INFO);
-            }
 
             // 일반 회원가입 방식 처리
             userService.addUser(signupRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(SuccessResponse.of("success"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    SuccessResponse.of(
+                            ResponseMessage.SIGNUP_SUCCESS,
+                            "success"
+                    )
+            );
         } else {
             throw new RestApiException(REQUIRED_USER_INFO);
         }
     }
 
+    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인")
     @PostMapping("/auth/signin")
-    public ResponseEntity<SuccessResponse<?>> signin(@RequestBody AuthDto.SignIn signinRequest) {
+    public ResponseEntity<SuccessResponse<String>> signin(@RequestBody AuthDto.SignIn signinRequest) {
 
         userService.signin(signinRequest);
         return ResponseEntity.status(OK).body(
-                SuccessResponse.of("success")
+                SuccessResponse.of(
+                        ResponseMessage.LOGIN_SUCCESS,
+                        "success"
+                )
         );
     }
 
