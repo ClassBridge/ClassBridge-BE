@@ -157,7 +157,7 @@ public class ClassDto {
             Double totalStarRate, // 총 별점 수
             Integer totalReviews,  // 총 리뷰 수
 
-            boolean parkingInformation,  // 주차장 정보
+            boolean hasParking,  // 주차장 정보
             String introduction,        // 클래스 소개
 
             LocalDate startDate,   // 시작일
