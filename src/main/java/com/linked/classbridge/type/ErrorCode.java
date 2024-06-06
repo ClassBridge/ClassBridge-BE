@@ -42,7 +42,18 @@ public enum ErrorCode {
     KAKAO_MAP_ERROR(HttpStatus.BAD_REQUEST, "카카오맵 api 불러오기 중 실패했습니다."),
     CANNOT_CONVERT_FILE(HttpStatus.BAD_REQUEST, "파일 변환에 실패했습니다."),
     FILE_DELETE_FAILED(HttpStatus.BAD_REQUEST, "파일 제거에 실패했습니다."),
-    CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "원데이 클래스를 찾을 수 없습니다.");
+    CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "원데이 클래스를 찾을 수 없습니다."),
+    CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "변경할 종료일 이후의 레슨에 예약된 사람이 존재합니다."),
+    CANNOT_CHANGE_START_DATE(HttpStatus.BAD_REQUEST, "시작일을 변경할 수 없습니다."),
+    CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "현재 날짜 이후의 레슨에 예약된 사람이 존재합니다."),
+
+    CANNOT_FOUND_FAQ(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
+    MISMATCH_CLASS_FAQ(HttpStatus.BAD_REQUEST, "클래스 id와 faq의 클래스 id가 일치하지 않습니다."),
+    MISMATCH_USER_FAQ(HttpStatus.BAD_REQUEST, "해당 유저와 faq 작성자가 다릅니다."),
+    MISMATCH_USER_CLASS(HttpStatus.BAD_REQUEST, "해당 유저와 클래스 생성자가 다릅니다."),
+    INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
+    INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
+    INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다.");
     private final HttpStatus httpStatus;
     private final String description;
 }
