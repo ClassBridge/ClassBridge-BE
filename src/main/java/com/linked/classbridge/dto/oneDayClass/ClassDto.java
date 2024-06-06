@@ -1,6 +1,5 @@
 package com.linked.classbridge.dto.oneDayClass;
 
-import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.ClassFAQ;
 import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.OneDayClass;
@@ -163,7 +162,7 @@ public class ClassDto {
 
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
-            Category category,
+            CategoryType category,
             Long userId,
 
             List<ClassImageDto> imageList,
@@ -189,7 +188,7 @@ public class ClassDto {
                     oneDayClass.getIntroduction(),
                     oneDayClass.getStartDate(),
                     oneDayClass.getEndDate(),
-                    oneDayClass.getCategory(),
+                    oneDayClass.getCategory().getName(),
                     oneDayClass.getTutor().getUserId(),
                     oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
                     oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
