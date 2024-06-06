@@ -1,5 +1,6 @@
 package com.linked.classbridge.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +10,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,4 +41,6 @@ public class ChatRoom extends BaseEntity {
     @JoinColumn(name = "initiated_to")
     private User initiatedTo;
 
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    private List<UserChatRoom> userChatRooms;
 }
