@@ -21,12 +21,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -64,11 +66,13 @@ public class TutorController {
      * @return ResponseEntity<SuccessResponse<Page<ClassDto>>
      */
     @Operation(summary = "Class list 조회", description = "Class list 조회")
-    @GetMapping
+    @GetMapping("/class")
     public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(/* Authentication authentication, */ Pageable pageable) {
+        User tutor = userRepository.findById(1L).orElse(null);
+
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
-                oneDayClassService.getOneDayClassList(/*authentication, */ pageable))
+                oneDayClassService.getOneDayClassList(/*authentication, */tutor, pageable))
         );
     }
 
@@ -78,12 +82,14 @@ public class TutorController {
      * @return ResponseEntity<SuccessResponse<ClassDto.Response>
      */
     @Operation(summary = "Class 조회", description = "Class 조회")
-    @GetMapping("/{classId}")
+    @GetMapping("/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(/*Authentication authentication, */
             @PathVariable String classId) {
+        User tutor = userRepository.findById(1L).orElse(null);
+
         return ResponseEntity.status(OK).body(SuccessResponse.of(
-                ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(/*authentication, */ Long.parseLong(classId)))
+                ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
+                oneDayClassService.getOneDayClass(/*authentication, */tutor, Long.parseLong(classId)))
         );
     }
 
@@ -93,20 +99,18 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class 등록", description = "Class 등록")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/class", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> registerClass(
             /* Authentication authentication, */
             @RequestPart(value = "request") @Valid ClassDto.ClassRequest request,
             @RequestPart(value = "file1", required = false) MultipartFile file1,
             @RequestPart(value = "file2", required = false) MultipartFile file2,
-            @RequestPart(value = "file3", required = false) MultipartFile file3,
-            @RequestPart(value = "file4", required = false) MultipartFile file4,
-            @RequestPart(value = "file5", required = false) MultipartFile file5
+            @RequestPart(value = "file3", required = false) MultipartFile file3
     ) {
-        List<MultipartFile> fileList = Arrays.stream((new MultipartFile[] {file1, file2, file3, file4, file5}))
+        List<MultipartFile> fileList = Arrays.stream((new MultipartFile[] {file1, file2, file3}))
                 .filter(item -> item != null && !item.isEmpty()).toList();
 
-        User user = userRepository.findById(1L).orElse(userRepository.save(User.builder().email("example@example.com").password("1234").nickname("닉네임").build()));
+        User user = userRepository.findById(1L).orElse(null);
 
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
@@ -115,20 +119,22 @@ public class TutorController {
     }
 
     /**
-     * Class 정보 수정
+     * Class 세부 정보 수정
      * @param   request
-     * @return  ResponseEntity<SuccessResponse<ClassDto>>
+     * @return  ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>>
      */
-    @Operation(summary = "Class 정보 수정", description = "Class 정보 수정")
-    @PostMapping(path = "/{classId}")
+    @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
+    @PutMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
             /* Authentication authentication, */
             @PathVariable String classId,
             @RequestBody @Valid ClassUpdateDto.ClassRequest request
     ) throws IOException {
-        return ResponseEntity.status(CREATED).body(SuccessResponse.of(
-                ResponseMessage.CLASS_REGISTER_SUCCESS,
-                oneDayClassService.updateClass(request, Long.parseLong(classId)))
+        User user = userRepository.findById(1L).orElse(null);
+
+        return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_UPDATE_SUCCESS,
+                oneDayClassService.updateClass(user, request, Long.parseLong(classId)))
         );
     }
 
@@ -138,14 +144,16 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class 삭제", description = "Class 삭제")
-    @DeleteMapping(path = "/{classId}")
-    public ResponseEntity<SuccessResponse<Boolean>> updateClass(
+    @DeleteMapping(path = "/class/{classId}")
+    public ResponseEntity<SuccessResponse<Boolean>> deleteClass(
             /* Authentication authentication, */
             @PathVariable String classId
     ) throws IOException {
+        User user = userRepository.findById(1L).orElse(null);
+
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_DELETE_SUCCESS,
-                oneDayClassService.deleteClass(Long.parseLong(classId)))
+                oneDayClassService.deleteClass(user, Long.parseLong(classId)))
         );
     }
 
