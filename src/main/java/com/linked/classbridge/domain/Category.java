@@ -32,9 +32,6 @@ public class Category extends BaseEntity {
     private Long categoryId;
 
     @Column(nullable = false)
-    private int sequence;
-
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private CategoryType name;
 }

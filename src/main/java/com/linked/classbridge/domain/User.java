@@ -16,7 +16,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -44,6 +49,7 @@ public class User extends BaseEntity {
     private Long userId;
 
     @Column(unique = true, nullable = false)
+    @Email(message = "유효한 이메일 주소 형식이어야 합니다.")
     private String email;
 
     private String password;
@@ -64,18 +70,25 @@ public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "생년월일은 yyyy-mm-dd 형식이어야 합니다.")
     private String birthDate;
 
-    private String age;
-
     @Column(nullable = false)
+    @Pattern(regexp = "^010-\\d{4}-\\d{4}$", message = "전화번호는 010-xxxx-xxxx 형식이어야 합니다.")
     private String phone;
 
     private String profileImageUrl;
 
-    private String interests; // 카테고리 테이블 추가 시 수정
+    @ManyToMany
+    @JoinTable(
+            name = "user_interests",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private List<Category> interests;
 
     private String selfIntroduction;
 
@@ -88,7 +101,7 @@ public class User extends BaseEntity {
     @ElementCollection(targetClass = UserRole.class)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Fetch(FetchMode.JOIN) // 즉시로딩 설정
+    @Fetch(FetchMode.JOIN)
     private List<UserRole> roles;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
