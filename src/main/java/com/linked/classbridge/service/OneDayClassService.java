@@ -298,6 +298,8 @@ public class OneDayClassService {
 
         imageRepository.deleteAllByOneDayClassClassId(classId);
 
+        classRepository.deleteById(classId);
+
         return true;
     }
 
