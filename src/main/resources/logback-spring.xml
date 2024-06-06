@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <property name="LOGS_PATH" value="${user.home}/var/log/classBridge"/>
+  <property name="LOGS_PATH" value="${USER_HOME}/var/log/classBridge"/>
   <property name="LOGS_LEVEL" value="INFO"/>
   <!-- Console Appender -->
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
