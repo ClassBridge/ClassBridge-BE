@@ -2,9 +2,12 @@ package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
+import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
+import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
+import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
@@ -12,8 +15,11 @@ import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.GoogleResponse;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.security.CustomUserDetails;
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
 import com.linked.classbridge.util.CookieUtil;
@@ -30,11 +36,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -42,15 +51,22 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final CategoryRepository categoryRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     private final JWTUtil jwtUtil;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTUtil jwtUtil) {
+    private final S3Service s3Service;
+
+    public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
+                       JWTUtil jwtUtil, S3Service s3Service) {
 
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.s3Service = s3Service;
     }
 
     public String checkNickname(String nickname) {
@@ -63,7 +79,7 @@ public class UserService {
         }
 
         log.info("Nickname '{}' is available", nickname);
-        return "you can use this nickname";
+        return "Use this nickname";
     }
 
     public String checkEmail(String email) {
@@ -76,7 +92,7 @@ public class UserService {
         }
 
         log.info("Email '{}' is available", email);
-        return "you can use this email";
+        return "Use this email";
     }
 
     public Optional<User> findByEmail(String email) {
@@ -136,37 +152,47 @@ public class UserService {
 
         log.info("Adding new user with email '{}'", signupRequest.getUserDto().getEmail());
 
-        UserDto userDTO = signupRequest.getUserDto();
-        AdditionalInfoDto additionalInfoDTO = signupRequest.getAdditionalInfoDto();
+        UserDto userDto = signupRequest.getUserDto();
+        AdditionalInfoDto additionalInfoDto = signupRequest.getAdditionalInfoDto();
 
-        List<UserRole> roles = new ArrayList<>();
-        roles.add(UserRole.ROLE_USER);
-        Gender gender = additionalInfoDTO.getGender() != null ? Gender.valueOf(additionalInfoDTO.getGender().toUpperCase()) : null;
-
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            log.warn("Email '{}' is already registered", userDTO.getEmail());
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            log.warn("Email '{}' is already registered", userDto.getEmail());
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
 
-        if(userRepository.existsByNickname(additionalInfoDTO.getNickname())) {
-            log.warn("Nickname '{}' already exists", additionalInfoDTO.getNickname());
+        if(userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+            log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
 
+        List<UserRole> roles = new ArrayList<>();
+        roles.add(UserRole.ROLE_USER);
+        Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
+
+        // 관심 카테고리 String -> Category 변환
+        List<Category> interests = additionalInfoDto.getInterests().stream()
+                .map(interest -> categoryRepository.findByName(CategoryType.valueOf(interest)))
+                .collect(Collectors.toList());
+
         User user = User.builder()
-                .provider(userDTO.getProvider())
-                .providerId(userDTO.getProviderId())
-                .email(userDTO.getEmail())
-                .username(userDTO.getUsername())
-                .authType(userDTO.getAuthType())
+                .provider(userDto.getProvider())
+                .providerId(userDto.getProviderId())
+                .email(userDto.getEmail())
+                .username(userDto.getUsername())
+                .authType(userDto.getAuthType())
                 .roles(roles)
-                .nickname(additionalInfoDTO.getNickname())
-                .phone(additionalInfoDTO.getPhoneNumber())
+                .nickname(additionalInfoDto.getNickname())
+                .phone(additionalInfoDto.getPhoneNumber())
                 .gender(gender)
-                .birthDate(additionalInfoDTO.getBirthDate())
-                .interests(additionalInfoDTO.getInterests())
-                .profileImageUrl(additionalInfoDTO.getProfilePictureUrl())
+                .birthDate(additionalInfoDto.getBirthDate())
+                .interests(interests)
                 .build();
+
+        MultipartFile profileImage = signupRequest.getAdditionalInfoDto().getProfileImage();
+        if (profileImage != null) {
+            String profileImageUrl = s3Service.uploadUserProfileImage(profileImage);
+            user.setProfileImageUrl(profileImageUrl);
+        }
 
         if(signupRequest.getUserDto().getPassword() != null) {
             user.setPassword(passwordEncoder.encode(signupRequest.getUserDto().getPassword()));
@@ -175,7 +201,7 @@ public class UserService {
         log.info("User '{}' added successfully", user.getUsername());
 
         // 회원가입 완료 후 JWT 토큰 발급
-        String token = jwtUtil.createJwt(userDTO.getEmail(), userDTO.getRoles(), 60 * 60 * 24L * 1000);
+        String token = jwtUtil.createJwt(userDto.getEmail(), userDto.getRoles(), 60 * 60 * 24L * 1000);
         // JWT 토큰을 클라이언트로 전송
         Cookie cookie = CookieUtil.createCookie("Authorization", token);
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
@@ -210,6 +236,21 @@ public class UserService {
         if (response != null) {
             response.addCookie(cookie);
             log.info("JWT token added to response for user '{}'", user.getUsername());
+        }
+    }
+
+    public String getCurrentUserEmail() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RestApiException(NOT_AUTHENTICATED_USER);
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof CustomUserDetails) {
+            return ((CustomUserDetails) principal).getUsername();
+        } else {
+            throw new RestApiException(UNEXPECTED_PRINCIPAL_TYPE);
         }
     }
 }
