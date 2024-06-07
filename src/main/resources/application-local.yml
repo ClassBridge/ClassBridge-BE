@@ -49,6 +49,13 @@ cloud:
       access-key: ${AWS_ACCESS_KEY}
       secret-key: ${AWS_SECRET_KEY}
 
+pay:
+  ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
+  approve-url: https://open-api.kakaopay.com/online/v1/payment/approve
+  cancel-url: http://localhost:8080/payment/kakao/cancel
+  cid: ${KAKAO_PAY_CID}
+  dev-key: ${KAKAO_PAY_DEV_KEY}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -63,3 +70,4 @@ springdoc:
   default-produces-media-type: application/json
   paths-to-match:
     - /**
+
