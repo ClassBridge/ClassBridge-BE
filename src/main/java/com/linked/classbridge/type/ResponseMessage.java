@@ -20,8 +20,8 @@ public enum ResponseMessage {
     CLASS_REGISTER_SUCCESS("클래스 등록 성공"),
     CLASS_DELETE_SUCCESS("클래스 삭제 성공"),
     REVIEW_GET_SUCCESS("리뷰 조회 성공"),
-
     PAYMENT_SUCCESS("결제 승인"),
+    ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     ;
 
     private final String message;
