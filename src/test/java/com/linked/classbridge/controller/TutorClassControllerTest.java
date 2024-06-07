@@ -23,10 +23,14 @@ import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto.dayList;
 import com.linked.classbridge.repository.CategoryRepository;
+import com.linked.classbridge.repository.ClassFAQRepository;
+import com.linked.classbridge.repository.ClassTagRepository;
+import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +38,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +52,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.client.RestTemplate;
 
 @WebMvcTest(TutorController.class)
 @TestPropertySource(properties = "spring.config.location=classpath:application-test.yml")
@@ -73,7 +77,22 @@ class TutorClassControllerTest {
     private OneDayClassRepository classRepository;
 
     @MockBean
+    private UserService userService;
+
+    @MockBean
     private ReviewService reviewService;
+
+    @MockBean
+    private RestTemplate restTemplate;
+
+    @MockBean
+    LessonRepository lessonRepository;
+
+    @MockBean
+    ClassFAQRepository classFAQRepository;
+
+    @MockBean
+    ClassTagRepository classTagRepository;
 
     private User tutor;
     private Category category;
@@ -89,8 +108,7 @@ class TutorClassControllerTest {
     @WithMockUser
     void registerClass() throws Exception {
         // given
-        given(userRepository.findById(1L)).willReturn(Optional.of(tutor));
-        given(categoryRepository.findById(1L)).willReturn(Optional.of(category));
+        User mockUser = User.builder().email("example@example.com").userId(1L).build();
 
         // 파일들을 포함한 요청 객체 생성
         ClassDto.ClassRequest request = ClassDto.ClassRequest.builder()
@@ -103,12 +121,12 @@ class TutorClassControllerTest {
                 .personal(4)
                 .hasParking(true)
                 .introduction("클래스 소개글 입니다.")
-                .startDate(LocalDate.of(2024, 5, 30))
-                .endDate(LocalDate.of(2024, 7, 31))
+                .startDate(LocalDate.of(2024, 6, 29))
+                .endDate(LocalDate.of(2024, 7, 1))
                 .categoryType(CategoryType.FITNESS)
                 .lesson(
                         RepeatClassDto.builder()
-                                .mon(dayList.builder().times(Arrays.asList(LocalTime.of(18, 0, 0), LocalTime.of(19, 30, 0))).build())
+                                .mon(dayList.builder().times(Arrays.asList(LocalTime.of(14, 0, 0), LocalTime.of(19, 30, 0))).build())
                                 .build()
                 )
                 .faqList(Arrays.asList(
@@ -140,14 +158,14 @@ class TutorClassControllerTest {
                 0,                 // totalReviews
                 true,       // parkingInformation
                 "클래스 소개글 입니다.", // introduction
-                LocalDate.of(2024, 5, 30), // startDate
-                LocalDate.of(2024, 7, 31), // endDate
+                LocalDate.of(2024, 6, 29), // startDate
+                LocalDate.of(2024, 7, 1), // endDate
                 CategoryType.FITNESS, // category
                 1L, // userId
-                Collections.emptyList(),
+                new ArrayList<>(),
                 Arrays.asList(
-                        new LessonDto(1L, LocalDate.of(2024, 6, 3), LocalTime.of(14, 0, 0), LocalTime.of(15, 0, 0), 0),
-                        new LessonDto(2L, LocalDate.of(2024, 6, 3), LocalTime.of(18, 0, 0), LocalTime.of(19, 0, 0), 0)
+                        new LessonDto(1L, LocalDate.of(2024, 7, 1), LocalTime.of(14, 0, 0), LocalTime.of(15, 30, 0), 0),
+                        new LessonDto(2L, LocalDate.of(2024, 7, 1), LocalTime.of(19, 30, 0), LocalTime.of(21, 0, 0), 0)
                 ),
                 Arrays.asList(
                         new ClassFAQDto(1L, "faq 제목1", "faq 내용"),
@@ -160,7 +178,7 @@ class TutorClassControllerTest {
         );
 
         // Mocking: classService.registerClass 메서드가 호출되면 위에서 생성한 응답 객체를 반환하도록 설정
-        given(classService.registerClass(tutor, request, new ArrayList<>())).willReturn(response);
+        given(classService.registerClass(tutor.getEmail(), request, new ArrayList<>())).willReturn(response);
 
         mockMvc.perform(MockMvcRequestBuilders.
                         multipart(HttpMethod.POST,"/api/tutors/class")
@@ -182,7 +200,7 @@ class TutorClassControllerTest {
     @DisplayName("클래스 수정 성공")
     void updateClass_success() throws Exception {
         // Given
-        User mockUser = User.builder().userId(1L).build();
+        User mockUser = User.builder().email("example@example.com").userId(1L).build();
         Category mockCategory = Category.builder().name(CategoryType.COOKING).build();
         OneDayClass mockBeforeClass = OneDayClass.builder().classId(1L).className("클래스 이름").tutor(mockUser).build();
 
@@ -224,7 +242,7 @@ class TutorClassControllerTest {
         given(userRepository.findById(mockUser.getUserId())).willReturn(Optional.of(mockUser));
         given(categoryRepository.findById(mockCategory.getCategoryId())).willReturn(Optional.of(mockCategory));
         given(classRepository.findById(mockBeforeClass.getClassId())).willReturn(Optional.of(mockBeforeClass));
-        given(classService.updateClass(mockUser, request, 1L)).willReturn(response);
+        given(classService.updateClass(mockUser.getEmail(), request, 1L)).willReturn(response);
 
         // When & Then
         mockMvc.perform(put("/api/tutors/class/{classId}", 1L)
@@ -255,10 +273,10 @@ class TutorClassControllerTest {
     @DisplayName("클래스 삭제 성공")
     void deleteClass_success() throws Exception {
         // Given
-        User mockUser = User.builder().userId(1L).build();
+        User mockUser = User.builder().userId(1L).email("example@example.com").build();
 
         given(userRepository.findById(mockUser.getUserId())).willReturn(Optional.of(mockUser));
-        given(classService.deleteClass(mockUser, 1L)).willReturn(true);
+        given(classService.deleteClass(mockUser.getEmail(), 1L)).willReturn(true);
 
         // When & Then
         mockMvc.perform(delete("/api/tutors/class/{classId}", 1L)

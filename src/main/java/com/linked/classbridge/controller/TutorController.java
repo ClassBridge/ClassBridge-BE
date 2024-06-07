@@ -11,10 +11,10 @@ import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +43,7 @@ public class TutorController {
     private final ReviewService reviewService;
     private final OneDayClassService oneDayClassService;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @Operation(summary = "강사 리뷰 조회", description = "강사 리뷰 조회")
     @GetMapping("/reviews")
@@ -68,11 +69,9 @@ public class TutorController {
     @Operation(summary = "Class list 조회", description = "Class list 조회")
     @GetMapping("/class")
     public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(/* Authentication authentication, */ Pageable pageable) {
-        User tutor = userRepository.findById(1L).orElse(null);
-
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
-                oneDayClassService.getOneDayClassList(/*authentication, */tutor, pageable))
+                oneDayClassService.getOneDayClassList(userService.getCurrentUserEmail(), pageable))
         );
     }
 
@@ -83,13 +82,13 @@ public class TutorController {
      */
     @Operation(summary = "Class 조회", description = "Class 조회")
     @GetMapping("/class/{classId}")
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(/*Authentication authentication, */
+    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(
             @PathVariable String classId) {
         User tutor = userRepository.findById(1L).orElse(null);
 
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(/*authentication, */tutor, Long.parseLong(classId)))
+                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))
         );
     }
 
@@ -101,7 +100,6 @@ public class TutorController {
     @Operation(summary = "Class 등록", description = "Class 등록")
     @PostMapping(path = "/class", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> registerClass(
-            /* Authentication authentication, */
             @RequestPart(value = "request") @Valid ClassDto.ClassRequest request,
             @RequestPart(value = "file1", required = false) MultipartFile file1,
             @RequestPart(value = "file2", required = false) MultipartFile file2,
@@ -109,12 +107,9 @@ public class TutorController {
     ) {
         List<MultipartFile> fileList = Arrays.stream((new MultipartFile[] {file1, file2, file3}))
                 .filter(item -> item != null && !item.isEmpty()).toList();
-
-        User user = userRepository.findById(1L).orElse(null);
-
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
-                oneDayClassService.registerClass(user, request, fileList))
+                oneDayClassService.registerClass(userService.getCurrentUserEmail(), request, fileList))
         );
     }
 
@@ -126,15 +121,12 @@ public class TutorController {
     @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
     @PutMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
-            /* Authentication authentication, */
             @PathVariable String classId,
             @RequestBody @Valid ClassUpdateDto.ClassRequest request
-    ) throws IOException {
-        User user = userRepository.findById(1L).orElse(null);
-
+    ) {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_UPDATE_SUCCESS,
-                oneDayClassService.updateClass(user, request, Long.parseLong(classId)))
+                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, Long.parseLong(classId)))
         );
     }
 
@@ -146,14 +138,11 @@ public class TutorController {
     @Operation(summary = "Class 삭제", description = "Class 삭제")
     @DeleteMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteClass(
-            /* Authentication authentication, */
             @PathVariable String classId
-    ) throws IOException {
-        User user = userRepository.findById(1L).orElse(null);
-
+    ) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_DELETE_SUCCESS,
-                oneDayClassService.deleteClass(user, Long.parseLong(classId)))
+                oneDayClassService.deleteClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))
         );
     }
 
