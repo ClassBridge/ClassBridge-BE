@@ -3,6 +3,7 @@ package com.linked.classbridge.config;
 import com.linked.classbridge.oauth2.CustomSuccessHandler;
 import com.linked.classbridge.security.CustomAccessDeniedHandler;
 import com.linked.classbridge.security.CustomAuthenticationEntryPoint;
+import com.linked.classbridge.security.CustomLogoutFilter;
 import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
 import com.linked.classbridge.util.JWTUtil;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -91,6 +93,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("api/tutors/**").permitAll()
                         .requestMatchers("/CB-websocket/**").permitAll()
+                        .requestMatchers("/", "/api/users/auth/**", "/swagger-ui/*", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())
@@ -104,6 +108,10 @@ public class SecurityConfig {
         http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // 로그아웃 설정
+        http
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil), LogoutFilter.class);
 
         return http.build();
     }
