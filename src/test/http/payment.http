@@ -1,0 +1,20 @@
+### 결제
+POST http://localhost:8080/api/payments/prepare
+Content-Type: application/json
+
+{
+  "quantity": 1,
+  "totalAmount": 10000,
+  "itemName": "코딩클래스"
+}
+
+### test
+POST http://localhost:8080/api/payments/complete
+Content-Type: application/json
+
+{
+    "tid": "test_tid",
+    "partner_order_id": "test_order_id",
+    "partner_user_id": "test_user_id",
+    "pg_token": "test_pg_token"
+}
