@@ -38,7 +38,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +80,6 @@ public class OneDayClassService {
 
         oneDayClass = classRepository.save(oneDayClass);
 
-        AtomicInteger idx = new AtomicInteger(1);
         for(ClassFAQ faq : request.faqList()) {
             faq.setOneDayClass(oneDayClass);
         }
@@ -191,7 +190,7 @@ public class OneDayClassService {
         // user 정보와 변경할 class 의 user 정보 비교 추가 예정
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        if(user.getUserId() != oneDayClass.getTutor().getUserId()) {
+        if(!Objects.equals(user.getUserId(), oneDayClass.getTutor().getUserId())) {
             throw new RestApiException(MISMATCH_USER_CLASS);
         }
 
@@ -206,11 +205,11 @@ public class OneDayClassService {
         validateClassName(changeClass.getClassName());
         validateClassIntroduction(changeClass.getIntroduction());
 
-        if(changeClass.getPersonal() < oneDayClass.getPersonal()) {
-            // 최대 인원이 1보다 작거나 변경할 최대 인원이 현재 날짜 이후에 예약된 사람보다 작은 경우 변경 불가
-            if(changeClass.getPersonal() < 1 || lessonRepository.existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(classId, changeClass.getPersonal(), LocalDate.now())) {
-                throw new RestApiException(INVALIDATE_CLASS_PERSONAL);
-            }
+        // 최대 인원이 1보다 작거나 변경할 최대 인원이 현재 날짜 이후에 예약된 사람보다 작은 경우 변경 불가
+        if(changeClass.getPersonal() < oneDayClass.getPersonal() &&
+                (changeClass.getPersonal() < 1
+                || lessonRepository.existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(classId, changeClass.getPersonal(), LocalDate.now()))) {
+            throw new RestApiException(INVALIDATE_CLASS_PERSONAL);
         }
 
         // 시작일이 변경된 경우
@@ -218,22 +217,21 @@ public class OneDayClassService {
             // 기존 시작일이 현재 날짜 이전인 경우 변경 불가
             if(oneDayClass.getStartDate().isBefore(LocalDate.now())) {
                 throw new RestApiException(CANNOT_CHANGE_START_DATE);
-            } else {
-                // 변경된 시작일이 현재 날짜 이전인 경우 변경 불가
-                if(changeClass.getStartDate().isBefore(LocalDate.now())) {
-                    throw new RestApiException(CANNOT_CHANGE_START_DATE);
-                } else {
-                    if(oneDayClass.getStartDate().isBefore(changeClass.getStartDate())) {
-                        // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하는 경우 변경 불가
-                        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(classId, oneDayClass.getStartDate(), changeClass.getStartDate(), 0)) {
-                            throw new RestApiException(CANNOT_CHANGE_START_DATE);
-                        } else {
-                            // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하지 않는 경우 해당 기간 사이의 레슨 삭제
-                            lessonRepository.deleteAllByOneDayClassClassIdAndLessonDateIsBefore(classId, changeClass.getStartDate());
-                        }
-                    }
-                }
             }
+
+            // 변경된 시작일이 현재 날짜 이전인 경우 변경 불가
+            if(changeClass.getStartDate().isBefore(LocalDate.now())) {
+                throw new RestApiException(CANNOT_CHANGE_START_DATE);
+            }
+
+            // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하는 경우 변경 불가
+            if(oneDayClass.getStartDate().isBefore(changeClass.getStartDate()) &&
+                    lessonRepository.existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(classId, oneDayClass.getStartDate(), changeClass.getStartDate(), 0)) {
+                    throw new RestApiException(CANNOT_CHANGE_START_DATE);
+            }
+
+            // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하지 않는 경우 해당 기간 사이의 레슨 삭제
+            lessonRepository.deleteAllByOneDayClassClassIdAndLessonDateIsBefore(classId, changeClass.getStartDate());
         }
 
         // 종료일 수정한 경우
@@ -277,7 +275,7 @@ public class OneDayClassService {
     public boolean deleteClass(User user, long classId) {
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        if(oneDayClass.getTutor().getUserId() != user.getUserId()) {
+        if(!Objects.equals(oneDayClass.getTutor().getUserId(), user.getUserId())) {
             throw new RestApiException(MISMATCH_USER_CLASS);
         }
 
@@ -307,7 +305,7 @@ public class OneDayClassService {
         // user 정보와 변경할 class 의 user 정보 비교 추가 예정
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        if(tutor.getUserId() != oneDayClass.getTutor().getUserId()) {
+        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
             throw new RestApiException(MISMATCH_USER_CLASS);
         }
 
