@@ -108,8 +108,8 @@ public class ClassDto {
             @NotNull
             CategoryType categoryType,
 
-            @Schema(description = "반복 요일 강의 시간", example = "Mon = {14:00:00, 18:00:00}")
-            RepeatClassDto lesson,
+            @Schema(description = "반복 요일 강의 시간", example = "{{dayOfWeek=MONDAY, times={14:00:00, 18:00:00}, { }, ...}")
+            List<RepeatClassDto> lesson,
 
             @Schema(description = "faq", example = "faq = {{ title=제목, content = 내용}, { }, ...}")
             List<ClassFAQ> faqList,
