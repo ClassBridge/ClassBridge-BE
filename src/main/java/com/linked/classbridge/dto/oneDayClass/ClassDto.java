@@ -29,7 +29,7 @@ public class ClassDto {
     private String address;
     private int timeTaken;
     private int price;
-    private boolean parkingInformation;
+    private boolean hasParking;
     private String introduction;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -44,7 +44,7 @@ public class ClassDto {
         this.address = oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3();
         this.timeTaken = oneDayClass.getDuration();
         this.price = oneDayClass.getPrice();
-        this.parkingInformation = oneDayClass.isHasParking();
+        this.hasParking = oneDayClass.isHasParking();
         this.introduction = oneDayClass.getIntroduction();
         this.startDate = oneDayClass.getStartDate();
         this.endDate = oneDayClass.getEndDate();
