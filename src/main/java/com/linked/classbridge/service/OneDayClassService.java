@@ -226,7 +226,9 @@ public class OneDayClassService {
 
             // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하는 경우 변경 불가
             if(oneDayClass.getStartDate().isBefore(changeClass.getStartDate()) &&
-                    lessonRepository.existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(classId, oneDayClass.getStartDate(), changeClass.getStartDate(), 0)) {
+                    lessonRepository.existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(
+                            classId,oneDayClass.getStartDate().isBefore(LocalDate.now()) ? LocalDate.now() : oneDayClass.getStartDate(),
+                            changeClass.getStartDate(), 0)) {
                     throw new RestApiException(CANNOT_CHANGE_START_DATE);
             }
 
