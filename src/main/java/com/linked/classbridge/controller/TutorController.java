@@ -3,7 +3,6 @@ package com.linked.classbridge.controller;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
-import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
@@ -50,13 +49,10 @@ public class TutorController {
     public ResponseEntity<SuccessResponse<Page<GetReviewResponse>>> getClassReviews(
             @PageableDefault Pageable pageable
     ) {
-
-        User tutor = userRepository.findById(1L).orElse(null);
-
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_GET_SUCCESS,
-                        reviewService.getTutorReviews(tutor, pageable)
+                        reviewService.getTutorReviews(userService.getCurrentUserEmail(), pageable)
                 )
         );
     }
@@ -68,7 +64,7 @@ public class TutorController {
      */
     @Operation(summary = "Class list 조회", description = "Class list 조회")
     @GetMapping("/class")
-    public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(/* Authentication authentication, */ Pageable pageable) {
+    public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(Pageable pageable) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_LIST_GET_SUCCESS,
                 oneDayClassService.getOneDayClassList(userService.getCurrentUserEmail(), pageable))
@@ -84,8 +80,6 @@ public class TutorController {
     @GetMapping("/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(
             @PathVariable String classId) {
-        User tutor = userRepository.findById(1L).orElse(null);
-
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
                 oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))

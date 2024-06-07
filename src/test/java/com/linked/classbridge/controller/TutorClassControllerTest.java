@@ -22,6 +22,7 @@ import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto.dayList;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
 import com.linked.classbridge.repository.ClassTagRepository;
@@ -33,6 +34,7 @@ import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
+import com.linked.classbridge.type.ErrorCode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -194,6 +196,58 @@ class TutorClassControllerTest {
                 .andExpect(jsonPath("$.data.className").value("클래스 이름")) // 응답 JSON에서 클래스 이름 확인
                 .andExpect(jsonPath("$.data.classId").value(1L));
     }
+
+    @Test
+    @WithMockUser
+    void registerClass_whenUserNotFound_shouldReturnUserNotFound() throws Exception {
+        // given
+        ClassDto.ClassRequest request = ClassDto.ClassRequest.builder()
+                .className("클래스 이름")
+                .address1("서울특별시")
+                .address2("송파구")
+                .address3("올림픽로 300 롯데타워 1층")
+                .duration(90)
+                .price(45000)
+                .personal(4)
+                .hasParking(true)
+                .introduction("클래스 소개글 입니다.")
+                .startDate(LocalDate.of(2024, 6, 29))
+                .endDate(LocalDate.of(2024, 7, 1))
+                .categoryType(CategoryType.FITNESS)
+                .lesson(
+                        RepeatClassDto.builder()
+                                .mon(dayList.builder().times(Arrays.asList(LocalTime.of(14, 0, 0), LocalTime.of(19, 30, 0))).build())
+                                .build()
+                )
+                .faqList(Arrays.asList(
+                        ClassFAQ.builder().title("faq 제목1").content("faq 내용").build(),
+                        ClassFAQ.builder().title("faq 제목2").content("faq 내용").build()
+                ))
+                .tagList(Arrays.asList(
+                        ClassTag.builder().name("태그 이름1").build(),
+                        ClassTag.builder().name("태그 이름2").build()
+                ))
+                .build();
+
+        // 요청 객체를 JSON으로 직렬화
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // Mocking: userService.getCurrentUserEmail()이 USER_NOT_FOUND 예외를 던지도록 설정
+        given(userService.getCurrentUserEmail()).willThrow(new RestApiException(ErrorCode.USER_NOT_FOUND));
+
+        mockMvc.perform(MockMvcRequestBuilders.
+                        multipart(HttpMethod.POST,"/api/tutors/class")
+                        .file(new MockMultipartFile("request", "", "application/json", requestJson.getBytes(StandardCharsets.UTF_8)))
+                        .contentType("multipart/form-data")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .with(csrf())
+                )
+                .andExpect(status().isNotFound()) // HTTP 상태코드가 404(NOT FOUND)인지 확인
+                .andExpect(jsonPath("$.code").value("USER_NOT_FOUND")) // 응답 JSON에서 에러 코드 확인
+                .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다.")); // 응답 JSON에서 에러 메시지 확인
+    }
+
 
     @Test
     @WithMockUser
