@@ -87,7 +87,7 @@ class TutorControllerTest {
     void getUserReviews() throws Exception {
         // given
         given(userRepository.findById(1L)).willReturn(Optional.of(mockTutor1));
-        given(reviewService.getTutorReviews(mockTutor1, pageable)).willReturn(new PageImpl<>(
+        given(reviewService.getTutorReviews(mockTutor1.getEmail(), pageable)).willReturn(new PageImpl<>(
                 Arrays.asList(reviewResponse1, reviewResponse2, reviewResponse3, reviewResponse4)
                 , pageable, 4)
         );

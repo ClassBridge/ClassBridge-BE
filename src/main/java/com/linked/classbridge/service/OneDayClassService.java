@@ -1,6 +1,14 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS;
+import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_START_DATE;
+import static com.linked.classbridge.type.ErrorCode.CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
+import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
+import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
+import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_CLASS;
+import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.ClassFAQ;
@@ -31,7 +39,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,22 +65,22 @@ public class OneDayClassService {
     private final ClassImageRepository classImageRepository;
 
     @Transactional
-    public ClassDto.ClassResponse registerClass(/* Authentication authentication, */User user,  ClassRequest request,
-                                                                                      List<MultipartFile> files)
+    public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
     {
-        // auth 받아서 유저 정보 업데이트 예정.
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         OneDayClass oneDayClass = ClassDto.ClassRequest.toEntity(request);
-        oneDayClass.setTutor(user);
+        oneDayClass.setTutor(tutor);
         Category category = categoryRepository.findByName(request.categoryType());
         oneDayClass.setCategory(category);
+
+        validateClassName(oneDayClass.getClassName());
+        validateClassIntroduction(oneDayClass.getIntroduction());
 
         kakaoMapService.extracted(oneDayClass);
 
         oneDayClass = classRepository.save(oneDayClass);
 
-        AtomicInteger idx = new AtomicInteger(1);
         for(ClassFAQ faq : request.faqList()) {
-            faq.setSequence(idx.getAndIncrement());
             faq.setOneDayClass(oneDayClass);
         }
 
@@ -88,6 +96,18 @@ public class OneDayClassService {
 
         oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
+    }
+
+    private void validateClassName(String className) {
+        if (className == null || className.length() > 20 || className.length() < 2) {
+            throw new RestApiException(INVALIDATE_CLASS_NAME);
+        }
+    }
+
+    private void validateClassIntroduction(String classIntroduction) {
+        if (classIntroduction == null || classIntroduction.length() > 500 || classIntroduction.length() < 20) {
+            throw new RestApiException(INVALIDATE_CLASS_INTRODUCTION);
+        }
     }
 
     private List<ClassImage> saveImages(OneDayClass oneDayClass, List<MultipartFile> files) {
@@ -109,7 +129,7 @@ public class OneDayClassService {
         Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(request.startDate(), request.endDate());
 
         List<Lesson> lessonList = new ArrayList<>();
-        RepeatClassDto repeatClassDto = request.repeatClassDto();
+        RepeatClassDto repeatClassDto = request.lesson();
         if(repeatClassDto.getMon() != null && !repeatClassDto.getMon().getTimes().isEmpty()) {
             addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getMon(), DayOfWeek.MONDAY, oneDayClass);
         }
@@ -141,18 +161,17 @@ public class OneDayClassService {
                 Lesson lesson = new Lesson();
                 lesson.setLessonDate(date);
                 lesson.setStartTime(time);
-                lesson.setEndTime(time.plusMinutes(oneDayClass.getTimeTaken()));
+                lesson.setEndTime(time.plusMinutes(oneDayClass.getDuration()));
                 lesson.setOneDayClass(oneDayClass);
-                lesson.setPersonnel(dayList.getPersonal());
                 lesson.setParticipantNumber(0);
                 lessonList.add(lesson);
             }
         }
     }
 
-    public Page<ClassDto> getOneDayClassList(Pageable pageable) {
-        // auth 받아서 유저의 클래스 리스트 반환 -> 추가 예정
-        Page<OneDayClass> classList = classRepository.findAllByTutorUserId(1L, pageable);
+    public Page<ClassDto> getOneDayClassList(String email, Pageable pageable) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+        Page<OneDayClass> classList = classRepository.findAllByTutorUserId(tutor.getUserId(), pageable);
         Map<Long, String> imageMap = (classImageRepository.findAllByOneDayClassClassIdInAndSequence(classList.map(OneDayClass::getClassId).toList(), 1))
                 .stream().collect(Collectors.toMap(ClassImage::getClassImageId, ClassImage::getUrl));
 
@@ -166,18 +185,67 @@ public class OneDayClassService {
     }
 
     @Transactional
-    public ClassUpdateDto.ClassResponse updateClass(ClassUpdateDto.ClassRequest request, long classId) {
-        // user 정보와 변경할 class 의 user 정보 비교 추가 예정
+    public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request, long classId) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-        List<Integer> changeImageIdList = new ArrayList<>();
 
-        imageRepository.deleteAllByOneDayClassAndSequenceIn(oneDayClass, changeImageIdList);
+        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
+            throw new RestApiException(MISMATCH_USER_CLASS);
+        }
 
         OneDayClass changeClass = ClassUpdateDto.ClassRequest.toEntity(request);
         changeClass.setClassId(classId);
         changeClass.setTotalReviews(oneDayClass.getTotalReviews());
         changeClass.setTotalStarRate(oneDayClass.getTotalStarRate());
+        changeClass.setTutor(tutor);
 
+        changeClass.setCategory(categoryRepository.findByName(request.categoryType()));
+
+        validateClassName(changeClass.getClassName());
+        validateClassIntroduction(changeClass.getIntroduction());
+
+        // 최대 인원이 1보다 작거나 변경할 최대 인원이 현재 날짜 이후에 예약된 사람보다 작은 경우 변경 불가
+        if(changeClass.getPersonal() < oneDayClass.getPersonal() &&
+                (changeClass.getPersonal() < 1
+                || lessonRepository.existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(classId, changeClass.getPersonal(), LocalDate.now()))) {
+            throw new RestApiException(INVALIDATE_CLASS_PERSONAL);
+        }
+
+        // 시작일이 변경된 경우
+        if(!oneDayClass.getStartDate().isEqual(changeClass.getStartDate())) {
+            // 기존 시작일이 현재 날짜 이전인 경우 변경 불가
+            if(oneDayClass.getStartDate().isBefore(LocalDate.now())) {
+                throw new RestApiException(CANNOT_CHANGE_START_DATE);
+            }
+
+            // 변경된 시작일이 현재 날짜 이전인 경우 변경 불가
+            if(changeClass.getStartDate().isBefore(LocalDate.now())) {
+                throw new RestApiException(CANNOT_CHANGE_START_DATE);
+            }
+
+            // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하는 경우 변경 불가
+            if(oneDayClass.getStartDate().isBefore(changeClass.getStartDate()) &&
+                    lessonRepository.existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(
+                            classId, oneDayClass.getStartDate(), changeClass.getStartDate(), 0)) {
+                    throw new RestApiException(CANNOT_CHANGE_START_DATE);
+            }
+
+            // 기존 시작일이 변경된 시작일보다 이전이고 기존 시작일과 변경된 시작일 사이의 레슨 중 예약된 사람이 존재하지 않는 경우 해당 기간 사이의 레슨 삭제
+            lessonRepository.deleteAllByOneDayClassClassIdAndLessonDateIsBefore(classId, changeClass.getStartDate());
+        }
+
+        // 종료일 수정한 경우
+        if(!oneDayClass.getEndDate().isEqual(changeClass.getEndDate())) {
+            // 해당 종료일 이후에 레슨에 예약된 인원이 있는 경우
+            if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsGreaterThan(changeClass.getClassId(), changeClass.getEndDate(), 0)) {
+                throw new RestApiException(CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS);
+            } else {
+                // 변경일 이후 lesson 은 삭제처리
+                lessonRepository.deleteAllByOneDayClassClassIdAndLessonDateIsAfter(classId, changeClass.getEndDate());
+            }
+        }
+
+        // 주소를 수정한 경우
         if(!changeClass.getAddress1().equals(oneDayClass.getAddress1())
                 || !changeClass.getAddress2().equals(oneDayClass.getAddress2())
                 || !changeClass.getAddress3().equals(oneDayClass.getAddress3())) {
@@ -187,25 +255,35 @@ public class OneDayClassService {
             changeClass.setLongitude(oneDayClass.getLongitude());
         }
 
-        // 만약 시작일 전 수업이 있는 경우 -> 레슨 예약자가 있는 경우, 없는 경우 생각해야 할 듯
+        changeClass = classRepository.save(changeClass);
 
-        oneDayClass = classRepository.save(changeClass);
+        // 소요시간이 변경 된 경우 현재 날짜 이후의 모든 레슨의 종료 시간 변경
+        if(oneDayClass.getDuration() != changeClass.getDuration()) {
+            List<Lesson> lessonList = lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfter(classId,
+                    LocalDate.now().minusDays(1));
 
-        tagRepository.deleteAllByOneDayClassClassId(classId);
-
-        List<ClassTag> classTagList = tagRepository.saveAll(request.tagList());
-
-        oneDayClass.setTagList(classTagList);
-
-        return ClassUpdateDto.ClassResponse.fromEntity(oneDayClass);
+            for (Lesson lesson : lessonList) {
+                lesson.setEndTime(lesson.getEndTime()
+                        .plusMinutes((long) (oneDayClass.getDuration() - changeClass.getDuration())));
+            }
+            lessonRepository.saveAll(lessonList);
+        }
+        return ClassUpdateDto.ClassResponse.fromEntity(changeClass);
     }
 
     @Transactional
-    public boolean deleteClass(long classId) {
-        // user 정보와 변경할 class 의 user 정보 비교 추가 예정
+    public boolean deleteClass(String email, long classId) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        // 아직 수강 완료되지 않은 예약이 존재하는 경우 실패 추가 예정
+        if(!Objects.equals(oneDayClass.getTutor().getUserId(), user.getUserId())) {
+            throw new RestApiException(MISMATCH_USER_CLASS);
+        }
+
+        // 현재 날짜 이후의 레슨 중 예약한 사람이 있는 경우 삭제 불가
+        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsGreaterThan(classId, LocalDate.now().minusDays(1), 0)) {
+            throw new RestApiException(CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS);
+        }
 
         lessonRepository.deleteAllByOneDayClassClassIdAndLessonDateIsAfter(oneDayClass.getClassId(), LocalDate.now());
         tagRepository.deleteAllByOneDayClassClassId(classId);
@@ -219,14 +297,20 @@ public class OneDayClassService {
 
         imageRepository.deleteAllByOneDayClassClassId(classId);
 
+        classRepository.deleteById(classId);
+
         return true;
     }
 
-    public ClassDto.ClassResponse getOneDayClass(long classId) {
+    public ClassDto.ClassResponse getOneDayClass(String email, long classId) {
         // user 정보와 변경할 class 의 user 정보 비교 추가 예정
-
-
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+
+        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
+            throw new RestApiException(MISMATCH_USER_CLASS);
+        }
+
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
     }
 

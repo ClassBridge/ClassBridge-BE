@@ -628,7 +628,7 @@ class ReviewServiceTest {
         given(reviewRepository.findByTutor(tutor, pageable)).willReturn(reviewPage);
 
         // when
-        Page<GetReviewResponse> responses = reviewService.getTutorReviews(tutor, pageable);
+        Page<GetReviewResponse> responses = reviewService.getTutorReviews(tutor.getEmail(), pageable);
 
         // then
         assertThat(responses).hasSize(4);

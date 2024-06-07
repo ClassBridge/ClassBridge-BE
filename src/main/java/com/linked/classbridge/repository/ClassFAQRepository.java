@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ClassFAQRepository extends JpaRepository<ClassFAQ, Long> {
-    void deleteAllByOneDayClassAndSequenceIn(OneDayClass oneDayClass, List<Integer> sequenceList);
+    void deleteAllByOneDayClass(OneDayClass oneDayClass);
 
     List<ClassFAQ> findAllByOneDayClassClassId(Long classId);
 

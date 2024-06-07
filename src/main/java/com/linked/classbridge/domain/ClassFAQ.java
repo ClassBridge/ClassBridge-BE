@@ -32,7 +32,6 @@ public class ClassFAQ extends BaseEntity {
 
     private String title;
     private String content;
-    private int sequence;
 
     @JoinColumn(name = "class_id")
     @ManyToOne
