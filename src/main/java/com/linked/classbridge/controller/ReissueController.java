@@ -7,6 +7,7 @@ import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import com.linked.classbridge.service.JWTService;
+import com.linked.classbridge.type.TokenType;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -44,19 +45,19 @@ public class ReissueController {
             throw new RestApiException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
-        String category = jwtService.getCategory(refresh);
-        if (!category.equals("refresh")) {
+        String tokenType = jwtService.getTokenType(refresh);
+        if (!tokenType.equals("refresh")) {
             throw new RestApiException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         String email = jwtService.getEmail(refresh);
         List<String> roles = jwtService.getRoles(refresh);
 
-        String newAccess = jwtService.createJwt("access", email, roles, 600000L);
-        String newRefresh = jwtService.createJwt("refresh", email, roles, 86400000L);
+        String newAccess = jwtService.createJwt(TokenType.ACCESS.getValue(), email, roles, TokenType.ACCESS.getExpiryTime());
+        String newRefresh = jwtService.createJwt(TokenType.REFRESH.getValue(), email, roles, TokenType.REFRESH.getExpiryTime());
 
-        response.setHeader("access", newAccess);
-        response.addCookie(createCookie("refresh", newRefresh));
+        response.setHeader(TokenType.ACCESS.getValue(), newAccess);
+        response.addCookie(createCookie(TokenType.REFRESH.getValue(), newRefresh));
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(

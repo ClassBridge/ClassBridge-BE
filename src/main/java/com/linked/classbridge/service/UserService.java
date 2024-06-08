@@ -22,6 +22,7 @@ import com.linked.classbridge.security.CustomUserDetails;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
+import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -199,14 +200,13 @@ public class UserService {
         userRepository.save(user);
         log.info("User '{}' added successfully", user.getUsername());
 
-        // 회원가입 완료 후 JWT 토큰 발급
-        String access = jwtService.createJwt("access", user.getEmail(), userDto.getRoles(), 600000L);
-        String refresh = jwtService.createJwt("refresh", user.getEmail(), userDto.getRoles(), 86400000L);
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(), TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(), TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
-            response.addCookie(createCookie("refresh", refresh));
-            response.setHeader("access", access);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
+            response.setHeader(TokenType.ACCESS.getValue(), access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }
@@ -230,13 +230,13 @@ public class UserService {
                 .map(Enum::name)
                 .collect(Collectors.toList());
 
-        String access = jwtService.createJwt("access", user.getEmail(), roles, 600000L);
-        String refresh = jwtService.createJwt("refresh", user.getEmail(), roles, 86400000L);
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles, TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles, TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
-            response.addCookie(createCookie("refresh", refresh));
-            response.setHeader("access", access);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
+            response.setHeader(TokenType.ACCESS.getValue(), access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }

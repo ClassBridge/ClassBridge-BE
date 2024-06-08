@@ -30,7 +30,7 @@ public class ReissueControllerTest {
     public void reissue_success() throws Exception {
 
         when(jwtService.isExpired("validRefreshToken")).thenReturn(false);
-        when(jwtService.getCategory("validRefreshToken")).thenReturn("refresh");
+        when(jwtService.getTokenType("validRefreshToken")).thenReturn("refresh");
         when(jwtService.getEmail("validRefreshToken")).thenReturn("test@example.com");
         when(jwtService.getRoles("validRefreshToken")).thenReturn(Arrays.asList("ROLE_USER"));
         when(jwtService.createJwt("access", "test@example.com", Arrays.asList("ROLE_USER"), 600000L)).thenReturn("newAccessToken");
@@ -71,7 +71,7 @@ public class ReissueControllerTest {
 
         when(jwtService.isExpired("invalidRefreshToken")).thenReturn(false);
         // refresh 토큰이 아닌 access 토큰이 있는 경우
-        when(jwtService.getCategory("invalidRefreshToken")).thenReturn("access");
+        when(jwtService.getTokenType("invalidRefreshToken")).thenReturn("access");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/users/auth/reissue")
                         .contentType(MediaType.APPLICATION_JSON)

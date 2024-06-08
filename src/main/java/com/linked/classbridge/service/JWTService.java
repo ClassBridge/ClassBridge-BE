@@ -47,15 +47,15 @@ public class JWTService {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
 
-    public String getCategory(String token) {
+    public String getTokenType(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("tokenType", String.class);
     }
 
-    public String createJwt(String category, String email, List<String> roles, Long expiredMs) {
+    public String createJwt(String tokenType, String email, List<String> roles, Long expiredMs) {
 
         return Jwts.builder()
-                .claim("category", category)
+                .claim("tokenType", tokenType)
                 .claim("email", email)
                 .claim("roles", roles)
                 .issuedAt(new Date(System.currentTimeMillis()))
