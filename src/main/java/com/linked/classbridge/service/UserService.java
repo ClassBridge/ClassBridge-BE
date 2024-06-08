@@ -39,6 +39,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -130,7 +131,7 @@ public class UserService {
         return userDto;
     }
 
-    public UserDto getUserDto(CustomOAuth2User customOAuth2User) {
+    public UserDto getUserDtoFromOAuth2User(CustomOAuth2User customOAuth2User) {
 
         log.info("Getting user DTO from CustomOAuth2User");
 
@@ -227,7 +228,7 @@ public class UserService {
         }
 
         List<String> roles = user.getRoles().stream()
-                .map(role -> role.name().substring(5)) // "ROLE_" 부분을 제거
+                .map(Enum::name)
                 .collect(Collectors.toList());
 
         String access = jwtUtil.createJwt("access", user.getEmail(), roles, 600000L);
@@ -239,6 +240,49 @@ public class UserService {
             response.setHeader("access", access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
+    }
+
+    @Transactional
+    public void updateUser(AdditionalInfoDto additionalInfoDto, MultipartFile profileImage) {
+
+        log.info("Updating user information");
+
+        String email = getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("User with email '{}' not found", email);
+                    return new RestApiException(USER_NOT_FOUND);
+                });
+
+        if (additionalInfoDto != null) {
+            System.out.println(additionalInfoDto.getNickname());
+            if (additionalInfoDto.getNickname() != null && !additionalInfoDto.getNickname().equals(user.getNickname())) {
+                System.out.println(additionalInfoDto.getNickname());
+                if (userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+                    log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
+                    throw new RestApiException(ALREADY_EXIST_NICKNAME);
+                }
+                user.setNickname(additionalInfoDto.getNickname());
+            }
+
+            user.setPhone(additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
+            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender()) : user.getGender());
+            user.setBirthDate(additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
+
+            if (additionalInfoDto.getInterests() != null) {
+                List<Category> interests = additionalInfoDto.getInterests().stream()
+                        .map(interest -> categoryRepository.findByName(CategoryType.valueOf(interest)))
+                        .collect(Collectors.toList());
+                user.setInterests(interests);
+            }
+        }
+
+        if (profileImage != null) {
+            String profileImageUrl = s3Service.uploadUserProfileImage(profileImage);
+            user.setProfileImageUrl(profileImageUrl);
+        }
+
+        userRepository.save(user);
     }
 
     public String getCurrentUserEmail() {
