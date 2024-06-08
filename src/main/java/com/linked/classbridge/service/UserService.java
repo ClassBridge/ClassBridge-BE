@@ -6,6 +6,7 @@ import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static com.linked.classbridge.util.CookieUtil.createCookie;
 
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.User;
@@ -21,10 +22,8 @@ import com.linked.classbridge.security.CustomUserDetails;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
+import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
-import com.linked.classbridge.util.CookieUtil;
-import com.linked.classbridge.util.JWTUtil;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,17 +54,17 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
     private final S3Service s3Service;
 
     public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
-                       JWTUtil jwtUtil, S3Service s3Service) {
+                       JWTService jwtService, S3Service s3Service) {
 
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
         this.s3Service = s3Service;
     }
 
@@ -200,13 +199,13 @@ public class UserService {
         userRepository.save(user);
         log.info("User '{}' added successfully", user.getUsername());
 
-        // 회원가입 완료 후 JWT 토큰 발급
-        String token = jwtUtil.createJwt(userDto.getEmail(), userDto.getRoles(), 60 * 60 * 24L * 1000);
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(), TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(), TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
-        Cookie cookie = CookieUtil.createCookie("Authorization", token);
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
-            response.addCookie(cookie);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
+            response.setHeader(TokenType.ACCESS.getValue(), access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }
@@ -230,11 +229,13 @@ public class UserService {
                 .map(role -> role.name().substring(5)) // "ROLE_" 부분을 제거
                 .collect(Collectors.toList());
 
-        String token = jwtUtil.createJwt(user.getEmail(), roles, 60 * 60 * 24L * 1000); // 24 시간
-        Cookie cookie = CookieUtil.createCookie("Authorization", token);
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles, TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles, TokenType.REFRESH.getExpiryTime());
+        // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
-            response.addCookie(cookie);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
+            response.setHeader(TokenType.ACCESS.getValue(), access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
     }

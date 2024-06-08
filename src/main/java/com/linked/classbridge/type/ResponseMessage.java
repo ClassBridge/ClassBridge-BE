@@ -26,8 +26,8 @@ public enum ResponseMessage {
     CLASS_FAQ_DELETE_SUCCESS("클래스 FAQ 삭제 성공"),
     CLASS_TAG_UPDATE_SUCCESS("클래스 Tag 수정 성공"),
     CLASS_TAG_DELETE_SUCCESS("클래스 Tag 삭제 성공"),
-
     PAYMENT_SUCCESS("결제 승인"),
+    ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     ;
 
     private final String message;

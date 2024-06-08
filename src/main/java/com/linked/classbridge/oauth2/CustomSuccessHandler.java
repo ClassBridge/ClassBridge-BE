@@ -1,17 +1,19 @@
 package com.linked.classbridge.oauth2;
 
+import static com.linked.classbridge.util.CookieUtil.createCookie;
+
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.util.CookieUtil;
-import com.linked.classbridge.util.JWTUtil;
-import jakarta.servlet.http.Cookie;
+import com.linked.classbridge.service.JWTService;
+import com.linked.classbridge.type.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,11 +24,11 @@ import org.springframework.stereotype.Component;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
-    public CustomSuccessHandler(UserRepository userRepository, JWTUtil jwtUtil) {
+    public CustomSuccessHandler(UserRepository userRepository, JWTService jwtService) {
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -42,10 +44,14 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .map(role -> role.name().substring(5))
                     .collect(Collectors.toList());
 
-            String token = jwtUtil.createJwt(email, roles, 60 * 60 * 24L * 1000); // 24시간
+            //토큰 생성
+            String access = jwtService.createJwt(TokenType.ACCESS.getValue(), email, roles, TokenType.ACCESS.getExpiryTime());
+            String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), email, roles, TokenType.REFRESH.getExpiryTime());
 
-            Cookie cookie = CookieUtil.createCookie("Authorization", token);
-            response.addCookie(cookie);
+            //응답 설정
+            response.setHeader(TokenType.ACCESS.getValue(), access);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
+            response.setStatus(HttpStatus.OK.value());
 
             response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=false");
         } else {

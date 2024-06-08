@@ -2,8 +2,6 @@ spring:
   config:
     activate:
       on-profile: local
-    import:
-      - "classpath:application-oauth.yml"
   jwt:
     secret: ${JWT_SECRET}
   datasource:
@@ -29,6 +27,17 @@ spring:
         use_sql_comments: true
         jdbc:
           time_zone: UTC
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - https://www.googleapis.com/auth/userinfo.profile
+              - https://www.googleapis.com/auth/userinfo.email
+            redirect-uri: "http://localhost:8080/api/users/auth/google"
 
   servlet:
     multipart:
@@ -70,4 +79,3 @@ springdoc:
   default-produces-media-type: application/json
   paths-to-match:
     - /**
-
