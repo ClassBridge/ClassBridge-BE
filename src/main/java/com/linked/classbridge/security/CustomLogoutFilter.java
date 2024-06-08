@@ -61,8 +61,8 @@ public class CustomLogoutFilter extends GenericFilterBean {
         }
 
         // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtService.getCategory(refresh);
-        if (!category.equals("refresh")) { // 토큰 카테고리가 refresh가 아니면 400 에러 반환
+        String tokenType = jwtService.getTokenType(refresh);
+        if (!tokenType.equals("refresh")) { // 토큰 카테고리가 refresh가 아니면 400 에러 반환
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }

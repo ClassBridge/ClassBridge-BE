@@ -49,9 +49,9 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        String category = jwtService.getCategory(accessToken);
+        String tokenType = jwtService.getTokenType(accessToken);
 
-        if (!category.equals("access")) {
+        if (!tokenType.equals("access")) {
             PrintWriter writer = response.getWriter();
             writer.print("invalid access token");
 
