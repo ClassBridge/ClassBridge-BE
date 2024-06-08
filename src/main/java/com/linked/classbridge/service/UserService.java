@@ -23,7 +23,6 @@ import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
-import com.linked.classbridge.util.JWTUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,17 +53,17 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
     private final S3Service s3Service;
 
     public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
-                       JWTUtil jwtUtil, S3Service s3Service) {
+                       JWTService jwtService, S3Service s3Service) {
 
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
         this.s3Service = s3Service;
     }
 
@@ -200,8 +199,8 @@ public class UserService {
         log.info("User '{}' added successfully", user.getUsername());
 
         // 회원가입 완료 후 JWT 토큰 발급
-        String access = jwtUtil.createJwt("access", user.getEmail(), userDto.getRoles(), 600000L);
-        String refresh = jwtUtil.createJwt("refresh", user.getEmail(), userDto.getRoles(), 86400000L);
+        String access = jwtService.createJwt("access", user.getEmail(), userDto.getRoles(), 600000L);
+        String refresh = jwtService.createJwt("refresh", user.getEmail(), userDto.getRoles(), 86400000L);
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
@@ -230,8 +229,8 @@ public class UserService {
                 .map(role -> role.name().substring(5)) // "ROLE_" 부분을 제거
                 .collect(Collectors.toList());
 
-        String access = jwtUtil.createJwt("access", user.getEmail(), roles, 600000L);
-        String refresh = jwtUtil.createJwt("refresh", user.getEmail(), roles, 86400000L);
+        String access = jwtService.createJwt("access", user.getEmail(), roles, 600000L);
+        String refresh = jwtService.createJwt("refresh", user.getEmail(), roles, 86400000L);
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {

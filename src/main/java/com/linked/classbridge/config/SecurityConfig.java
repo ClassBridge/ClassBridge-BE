@@ -6,7 +6,7 @@ import com.linked.classbridge.security.CustomAuthenticationEntryPoint;
 import com.linked.classbridge.security.CustomLogoutFilter;
 import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
@@ -27,13 +27,13 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler,
-                          JWTUtil jwtUtil) {
+                          JWTService jwtService) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     // CORS 설정 및 CSRF, FormLogin, HTTP Basic 인증 방식 disable, JWTFilter, oauth2, 경로별 인가 작업, 세션 설정
@@ -71,7 +71,7 @@ public class SecurityConfig {
                 .httpBasic((auth) -> auth.disable());
         //JWTFilter
         http
-                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+                .addFilterAfter(new JWTFilter(jwtService), OAuth2LoginAuthenticationFilter.class);
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
@@ -108,7 +108,7 @@ public class SecurityConfig {
 
         // 로그아웃 설정
         http
-                .addFilterBefore(new CustomLogoutFilter(jwtUtil), LogoutFilter.class);
+                .addFilterBefore(new CustomLogoutFilter(jwtService), LogoutFilter.class);
 
         return http.build();
     }

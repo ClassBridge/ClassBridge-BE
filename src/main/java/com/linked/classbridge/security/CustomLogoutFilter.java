@@ -1,6 +1,6 @@
 package com.linked.classbridge.security;
 
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -14,10 +14,10 @@ import org.springframework.web.filter.GenericFilterBean;
 
 public class CustomLogoutFilter extends GenericFilterBean {
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
-    public CustomLogoutFilter(JWTUtil jwtUtil) {
-        this.jwtUtil = jwtUtil; // JWT 유틸리티 객체 초기화
+    public CustomLogoutFilter(JWTService jwtService) {
+        this.jwtService = jwtService; // JWT 유틸리티 객체 초기화
     }
 
     @Override
@@ -55,13 +55,13 @@ public class CustomLogoutFilter extends GenericFilterBean {
         }
 
         // 만료 체크
-        if(jwtUtil.isExpired(refresh)) { // refresh 토큰이 만료되었으면 400 에러 반환
+        if(jwtService.isExpired(refresh)) { // refresh 토큰이 만료되었으면 400 에러 반환
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
         // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
+        String category = jwtService.getCategory(refresh);
         if (!category.equals("refresh")) { // 토큰 카테고리가 refresh가 아니면 400 에러 반환
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
