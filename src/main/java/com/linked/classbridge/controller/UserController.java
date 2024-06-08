@@ -14,11 +14,14 @@ import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.ResponseMessage;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,7 +77,7 @@ public class UserController {
     @Operation(summary = "회원가입", description = "구글 회원가입 사용자와 일반 회원가입 사용자를 구분하여 회원가입 처리")
     @PostMapping("/auth/signup")
     public ResponseEntity<SuccessResponse<String>> signup(
-            @RequestPart("signupRequest") AuthDto.SignUp signupRequest,
+            @RequestPart("signupRequest") @Valid AuthDto.SignUp signupRequest,
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             HttpSession session
     ) {
@@ -86,7 +89,7 @@ public class UserController {
             if (customOAuth2User == null) {
                 throw new RestApiException(SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER);
             }
-            userDto = userService.getUserDto(customOAuth2User);
+            userDto = userService.getUserDtoFromOAuth2User(customOAuth2User);
         }
 
         AdditionalInfoDto additionalInfoDto = signupRequest.getAdditionalInfoDto();
@@ -146,6 +149,22 @@ public class UserController {
         return ResponseEntity.status(OK).body(
                 SuccessResponse.of(
                         ResponseMessage.LOGIN_SUCCESS,
+                        "success"
+                )
+        );
+    }
+
+    @Operation(summary = "유저 정보 수정", description = "유저 정보 수정")
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/update")
+    public ResponseEntity<SuccessResponse<String>> updateUser(
+            @RequestPart(value = "additionalInfo", required = false) @Valid AdditionalInfoDto additionalInfoDto,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage
+    ) {
+        userService.updateUser(additionalInfoDto, profileImage);
+        return ResponseEntity.status(OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.USER_UPDATE_SUCCESS,
                         "success"
                 )
         );

@@ -322,6 +322,30 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("유저 정보 수정 성공")
+    @WithMockUser(username = "test", roles = {"ROLE_USER", "ROLE_TUTOR"})
+    public void updateUser_success() throws Exception {
+
+        // given
+        AdditionalInfoDto additionalInfoDto = new AdditionalInfoDto();
+        MockMultipartFile profileImage = new MockMultipartFile(
+                "profileImage",
+                "profileImage.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "profileImage".getBytes()
+        );
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/update")
+                        .file(profileImage)
+                        .param("additionalInfo", new ObjectMapper().writeValueAsString(additionalInfoDto))
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("유저 리뷰 목록 조회")
     void getUserReviews() throws Exception {
         // given

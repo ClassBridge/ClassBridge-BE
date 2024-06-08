@@ -32,6 +32,8 @@ public enum ResponseMessage {
 
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
 
+    USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
+
     ;
 
     private final String message;
