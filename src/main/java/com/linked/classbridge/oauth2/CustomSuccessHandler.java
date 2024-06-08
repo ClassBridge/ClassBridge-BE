@@ -5,7 +5,8 @@ import static com.linked.classbridge.util.CookieUtil.createCookie;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
+import com.linked.classbridge.type.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -23,11 +24,11 @@ import org.springframework.stereotype.Component;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
-    public CustomSuccessHandler(UserRepository userRepository, JWTUtil jwtUtil) {
+    public CustomSuccessHandler(UserRepository userRepository, JWTService jwtService) {
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -44,12 +45,12 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                     .collect(Collectors.toList());
 
             //토큰 생성
-            String access = jwtUtil.createJwt("access", email, roles, 600000L);
-            String refresh = jwtUtil.createJwt("refresh", email, roles, 86400000L);
+            String access = jwtService.createJwt(TokenType.ACCESS.getValue(), email, roles, TokenType.ACCESS.getExpiryTime());
+            String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), email, roles, TokenType.REFRESH.getExpiryTime());
 
             //응답 설정
-            response.setHeader("Authorization", "Bearer " + access);
-            response.addCookie(createCookie("refresh", refresh));
+            response.setHeader(TokenType.ACCESS.getValue(), access);
+            response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
             response.setStatus(HttpStatus.OK.value());
 
             response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=false");

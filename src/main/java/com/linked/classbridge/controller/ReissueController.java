@@ -6,7 +6,8 @@ import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
+import com.linked.classbridge.type.TokenType;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ReissueController {
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
     @Operation(summary = "토큰 재발급", description = "refresh 토큰을 통해 access 토큰을 재발급")
     @PostMapping("/api/users/auth/reissue")
@@ -40,23 +41,23 @@ public class ReissueController {
             throw new RestApiException(ErrorCode.REFRESH_TOKEN_NULL);
         }
 
-        if(jwtUtil.isExpired(refresh)) {
+        if(jwtService.isExpired(refresh)) {
             throw new RestApiException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
-        String category = jwtUtil.getCategory(refresh);
-        if (!category.equals("refresh")) {
+        String tokenType = jwtService.getTokenType(refresh);
+        if (!tokenType.equals("refresh")) {
             throw new RestApiException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        String email = jwtUtil.getEmail(refresh);
-        List<String> roles = jwtUtil.getRoles(refresh);
+        String email = jwtService.getEmail(refresh);
+        List<String> roles = jwtService.getRoles(refresh);
 
-        String newAccess = jwtUtil.createJwt("access", email, roles, 600000L);
-        String newRefresh = jwtUtil.createJwt("refresh", email, roles, 86400000L);
+        String newAccess = jwtService.createJwt(TokenType.ACCESS.getValue(), email, roles, TokenType.ACCESS.getExpiryTime());
+        String newRefresh = jwtService.createJwt(TokenType.REFRESH.getValue(), email, roles, TokenType.REFRESH.getExpiryTime());
 
-        response.setHeader("access", newAccess);
-        response.addCookie(createCookie("refresh", newRefresh));
+        response.setHeader(TokenType.ACCESS.getValue(), newAccess);
+        response.addCookie(createCookie(TokenType.REFRESH.getValue(), newRefresh));
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(

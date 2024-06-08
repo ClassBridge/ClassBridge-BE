@@ -12,12 +12,18 @@ public class ClassFAQDto {
     private Long faqId;
     private String title;
     private String content;
-    private int sequence;
 
     public ClassFAQDto(ClassFAQ classFAQ) {
         this.faqId = classFAQ.getFaqId();
         this.title = classFAQ.getTitle();
         this.content = classFAQ.getContent();
-        this.sequence = classFAQ.getSequence();
+    }
+
+    public ClassFAQ toEntity(ClassFAQDto classFAQDto) {
+        return ClassFAQ.builder()
+                .faqId(classFAQDto.getFaqId())
+                .title(classFAQDto.title)
+                .content(classFAQDto.content)
+                .build();
     }
 }

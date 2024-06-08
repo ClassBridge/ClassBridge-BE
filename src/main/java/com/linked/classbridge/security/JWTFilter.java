@@ -1,7 +1,7 @@
 package com.linked.classbridge.security;
 
 import com.linked.classbridge.dto.user.UserDto;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,11 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Slf4j
 public class JWTFilter extends OncePerRequestFilter {
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
-    public JWTFilter(JWTUtil jwtUtil) {
+    public JWTFilter(JWTService jwtService) {
 
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        if(jwtUtil.isExpired(accessToken)) {
+        if(jwtService.isExpired(accessToken)) {
             PrintWriter writer = response.getWriter();
             writer.print("access token expired");
 
@@ -49,9 +49,9 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        String category = jwtUtil.getCategory(accessToken);
+        String tokenType = jwtService.getTokenType(accessToken);
 
-        if (!category.equals("access")) {
+        if (!tokenType.equals("access")) {
             PrintWriter writer = response.getWriter();
             writer.print("invalid access token");
 
@@ -60,8 +60,8 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        String email = jwtUtil.getEmail(accessToken);
-        List<String> roles = jwtUtil.getRoles(accessToken);
+        String email = jwtService.getEmail(accessToken);
+        List<String> roles = jwtService.getRoles(accessToken);
         log.info("Token validated. UserEmail: {}, Roles: {}", email, roles);
 
         UserDto userDto = new UserDto();

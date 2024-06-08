@@ -15,7 +15,6 @@ public class LessonDto {
     private LocalDate lessonDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private int personnel;
     private int participantNumber;
 
     public LessonDto(Lesson lesson) {
@@ -23,7 +22,6 @@ public class LessonDto {
         lessonDate = lesson.getLessonDate();
         startTime = lesson.getStartTime();
         endTime = lesson.getEndTime();
-        personnel = lesson.getPersonnel();
         participantNumber = lesson.getParticipantNumber();
     }
 }

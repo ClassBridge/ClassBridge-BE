@@ -1,4 +1,4 @@
-package com.linked.classbridge.util;
+package com.linked.classbridge.service;
 
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 
 // JWT 발급 및 검증 클래스
 @Component
-public class JWTUtil {
+public class JWTService {
 
     private SecretKey secretKey;
 
     @Autowired
-    public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
+    public JWTService(@Value("${spring.jwt.secret}")String secret) {
 
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
@@ -47,15 +47,15 @@ public class JWTUtil {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
 
-    public String getCategory(String token) {
+    public String getTokenType(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("tokenType", String.class);
     }
 
-    public String createJwt(String category, String email, List<String> roles, Long expiredMs) {
+    public String createJwt(String tokenType, String email, List<String> roles, Long expiredMs) {
 
         return Jwts.builder()
-                .claim("category", category)
+                .claim("tokenType", tokenType)
                 .claim("email", email)
                 .claim("roles", roles)
                 .issuedAt(new Date(System.currentTimeMillis()))
