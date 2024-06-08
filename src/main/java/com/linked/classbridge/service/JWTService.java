@@ -1,4 +1,4 @@
-package com.linked.classbridge.util;
+package com.linked.classbridge.service;
 
 import io.jsonwebtoken.Jwts;
 import java.nio.charset.StandardCharsets;
@@ -14,12 +14,12 @@ import org.springframework.stereotype.Component;
 
 // JWT 발급 및 검증 클래스
 @Component
-public class JWTUtil {
+public class JWTService {
 
     private SecretKey secretKey;
 
     @Autowired
-    public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
+    public JWTService(@Value("${spring.jwt.secret}")String secret) {
 
         secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
