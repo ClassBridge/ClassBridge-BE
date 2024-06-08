@@ -47,8 +47,6 @@ public class Lesson extends BaseEntity {
     @Column(nullable = false)
     private LocalTime endTime;
 
-    @Column(nullable = false)
-    private int personnel;
     @Column(nullable = false, columnDefinition = "int default 0")
     private int participantNumber;
 

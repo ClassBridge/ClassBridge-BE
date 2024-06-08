@@ -23,11 +23,9 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'io.jsonwebtoken:jjwt:0.12.3'
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
@@ -36,28 +34,22 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3.1'
     implementation "io.netty:netty-resolver-dns-native-macos:4.1.68.Final:osx-aarch_64"
-    implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     implementation 'org.mariadb.jdbc:mariadb-java-client'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.9.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
-    implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.3.1'
 
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
     implementation("io.github.cdimascio:java-dotenv:5.2.2")
-
-    // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
 
-    // https://mvnrepository.com/artifact/com.h2database/h2
     testImplementation group: 'com.h2database', name: 'h2', version: '2.1.214'
 
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.1'
+    implementation group: 'org.apache.httpcomponents.core5', name: 'httpcore5', version: '5.2.4'
+
 }
 
 tasks.named('test') {

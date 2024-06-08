@@ -12,6 +12,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -54,15 +55,18 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private double longitude;   // 경도
     @Column(nullable = false)
-    private int timeTaken;      // 소요 시간
+    private int duration;      // 소요 시간
     @Column(nullable = false)
     private int price;          // 가격
+    @Column(nullable = false)
+    @Min(0)
+    private int personal;   // 수강 최대 인원
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Double totalStarRate; // 총 별점 수
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Integer totalReviews;  // 총 리뷰 수
 
-    private String parkingInformation;  // 주차장 정보
+    private boolean hasParking;  // 주차장
     @Column(nullable = false)
     private String introduction;        // 클래스 소개
 
