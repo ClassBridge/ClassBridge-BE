@@ -26,6 +26,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER(HttpStatus.BAD_REQUEST, "세션에 CustomOAuth2User가 존재하지 않습니다."),
     REQUIRED_USER_INFO(HttpStatus.BAD_REQUEST, "가입시 필요한 사용자 필수 정보가 빠져있습니다."),
+    NO_INFORMATION_TO_UPDATE(HttpStatus.BAD_REQUEST, "수정할 정보가 없습니다."),
 
     HELLO_NAME_IS_REQUIRED(HttpStatus.BAD_REQUEST, "Hello 이름은 필수입니다."),
     HELLO_NOT_FOUND(HttpStatus.BAD_REQUEST, "Hello를 찾을 수 없습니다."),
