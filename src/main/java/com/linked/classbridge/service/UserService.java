@@ -3,6 +3,7 @@ package com.linked.classbridge.service;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
 import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
+import static com.linked.classbridge.type.ErrorCode.NO_INFORMATION_TO_UPDATE;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
@@ -252,11 +253,14 @@ public class UserService {
                     return new RestApiException(USER_NOT_FOUND);
                 });
 
+        if(additionalInfoDto == null && profileImage == null) {
+            log.warn("No information to update");
+            throw new RestApiException(NO_INFORMATION_TO_UPDATE);
+        }
+
         if (additionalInfoDto != null) {
-            System.out.println(additionalInfoDto.getNickname());
-            if (additionalInfoDto.getNickname() != null && !additionalInfoDto.getNickname().equals(user.getNickname())) {
-                System.out.println(additionalInfoDto.getNickname());
-                if (userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+            if (additionalInfoDto.getNickname() != null) {
+                if (additionalInfoDto.getNickname().equals(user.getNickname())) {
                     log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
                     throw new RestApiException(ALREADY_EXIST_NICKNAME);
                 }
