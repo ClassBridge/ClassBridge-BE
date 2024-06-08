@@ -22,7 +22,6 @@ import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
-import com.linked.classbridge.dto.oneDayClass.RepeatClassDto.dayList;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
@@ -129,35 +128,17 @@ public class OneDayClassService {
         Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(request.startDate(), request.endDate());
 
         List<Lesson> lessonList = new ArrayList<>();
-        RepeatClassDto repeatClassDto = request.lesson();
-        if(repeatClassDto.getMon() != null && !repeatClassDto.getMon().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getMon(), DayOfWeek.MONDAY, oneDayClass);
+        for(RepeatClassDto repeatClassDto : request.lesson()) {
+            addLesson(dayOfWeekListMap, lessonList, repeatClassDto, oneDayClass);
         }
-        if(repeatClassDto.getTue() != null && !repeatClassDto.getTue().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getTue(), DayOfWeek.TUESDAY, oneDayClass);
-        }
-        if(repeatClassDto.getWed() != null && !repeatClassDto.getWed().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getWed(), DayOfWeek.WEDNESDAY, oneDayClass);
-        }
-        if(repeatClassDto.getThu() != null && !repeatClassDto.getThu().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getThu(), DayOfWeek.THURSDAY, oneDayClass);
-        }
-        if(repeatClassDto.getFri() != null && !repeatClassDto.getFri().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getFri(), DayOfWeek.FRIDAY, oneDayClass);
-        }
-        if(repeatClassDto.getSat() != null && !repeatClassDto.getSat().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getSat(), DayOfWeek.SATURDAY, oneDayClass);
-        }
-        if(repeatClassDto.getSun() != null && !repeatClassDto.getSun().getTimes().isEmpty()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto.getSun(), DayOfWeek.SUNDAY, oneDayClass);
-        }
+
         return lessonList;
     }
 
-    private void addLesson(Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap, List<Lesson> lessonList, dayList dayList,
-                           DayOfWeek dayOfWeek, OneDayClass oneDayClass) {
-        for(LocalDate date : dayOfWeekListMap.get(dayOfWeek)) {
-            for (LocalTime time : dayList.getTimes()) {
+    private void addLesson(Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap, List<Lesson> lessonList,
+                           RepeatClassDto repeatClassDto, OneDayClass oneDayClass) {
+        for(LocalDate date : dayOfWeekListMap.get(repeatClassDto.getDayOfWeek())) {
+            for (LocalTime time : repeatClassDto.getTimes()) {
                 Lesson lesson = new Lesson();
                 lesson.setLessonDate(date);
                 lesson.setStartTime(time);
