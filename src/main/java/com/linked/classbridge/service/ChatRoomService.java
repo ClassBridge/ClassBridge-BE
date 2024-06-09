@@ -60,7 +60,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public JoinChatRoom.Response joinChatRoom(User user, Long chatRoomId) {
+    public JoinChatRoom.Response joinChatRoomAndGetMessages(User user, Long chatRoomId) {
         ChatRoom chatRoom = findChatRoomById(chatRoomId);
 
         // 내가 생성하거나 초대된 채팅방이 아닌 경우
@@ -70,15 +70,16 @@ public class ChatRoomService {
         }
 
         // 채팅방 메시지 조회
-        List<ChatMessage> chatMessages = chatService.findLatestChatMessagesByChatRoom(chatRoom);
+        List<ChatMessage> chatMessages = chatService.findLatestChatMessagesByChatRoom(chatRoomId);
 
         // 메시지 읽음 처리
         chatMessages.stream()
-                .filter(chatMessage -> !chatMessage.getSender().getUserId()
-                        .equals(user.getUserId()))
+                .filter(chatMessage -> !chatMessage.isRead())
+                .filter(chatMessage -> !chatMessage.getSenderId().equals(user.getUserId()))
                 .forEach(chatService::markAsRead);
 
         // 나를 온라인 상태로 변경
+        // TODO : 추후 redis로 관리
         chatRoom.getUserChatRooms().stream()
                 .filter(userChatRoom -> userChatRoom.getUser().getUserId().equals(user.getUserId()))
                 .findFirst()

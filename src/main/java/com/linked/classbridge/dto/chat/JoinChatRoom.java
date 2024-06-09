@@ -14,7 +14,7 @@ public class JoinChatRoom {
             Long initiatedTo,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            List<ChatMessageDto> chatMessages
+            List<ChatMessageDto> messages
     ) {
         public static Response fromEntity(ChatRoom chatRoom, List<ChatMessage> chatMessages) {
             return new Response(

@@ -1,13 +1,12 @@
 package com.linked.classbridge.domain;
 
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "chat_message")
@@ -15,19 +14,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class ChatMessage {
-
 
     @Id
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "chat_room_id")
-    private ChatRoom chatRoom;
+    private Long chatRoomId;
 
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
-    private User sender;
+    private Long senderId;
 
     private String message;
 
