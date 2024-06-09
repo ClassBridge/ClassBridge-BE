@@ -1,4 +1,3 @@
-/*
 package com.linked.classbridge.dataloader;
 
 import com.linked.classbridge.domain.Category;
@@ -13,11 +12,13 @@ import com.linked.classbridge.repository.ClassTagRepository;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,20 +37,34 @@ public class InitDataLoader implements CommandLineRunner {
 
     private final ClassTagRepository tagRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
 
     @Override
     public void run(String... args) throws Exception {
         User savedUser = userRepository.findById(1L)
                 .orElseGet(() -> userRepository.save(User.builder()
-                        .email("admin@mail.com")
-                        .password("admin")
-                        .nickname("admin")
+                        .email("tutor@mail.com")
+                        .password(passwordEncoder.encode("123123"))
+                        .nickname("tutor")
+                        .username("tutor")
+                        .authType(AuthType.EMAIL)
+                        .phone("010-1234-5678")
+                        .build()));
+
+        User savedUser2 = userRepository.findById(2L)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .email("user@mail.com")
+                        .password(passwordEncoder.encode("123123"))
+                        .nickname("user")
+                        .username("user")
+                        .authType(AuthType.EMAIL)
+                        .phone("010-1234-5618")
                         .build()));
 
         Category category = categoryRepository.findById(1L)
                 .orElseGet(() -> categoryRepository.save(Category.builder()
                         .name(CategoryType.FITNESS)
-                        .sequence(1)
                         .build()));
 
         OneDayClass saveOneDayClass = oneDayClassRepository.findById(1L)
@@ -58,8 +73,8 @@ public class InitDataLoader implements CommandLineRunner {
                         .className("클래스 이름입니다.")
                         .price(30000)
                         .timeTaken(60)
-                        .startDate(LocalDate.of(2024,5,31))
-                        .endDate(LocalDate.of(2024,6,30))
+                        .startDate(LocalDate.of(2024, 5, 31))
+                        .endDate(LocalDate.of(2024, 6, 30))
                         .parkingInformation("주차장 정보")
                         .introduction("강의 소개글 입니다. 많이 찾아와주세요.")
                         .address1("서울특별시")
@@ -75,8 +90,8 @@ public class InitDataLoader implements CommandLineRunner {
         Lesson savedLesson = lessonRepository.findById(1L)
                 .orElseGet(() -> lessonRepository.save(Lesson.builder()
                         .oneDayClass(saveOneDayClass)
-                        .startTime(LocalTime.of(15,0))
-                        .endTime(LocalTime.of(16,0))
+                        .startTime(LocalTime.of(15, 0))
+                        .endTime(LocalTime.of(16, 0))
                         .personnel(6)
                         .participantNumber(0)
                         .lessonDate(LocalDate.now())
@@ -97,4 +112,4 @@ public class InitDataLoader implements CommandLineRunner {
                         .build()));
     }
 }
-*/
+

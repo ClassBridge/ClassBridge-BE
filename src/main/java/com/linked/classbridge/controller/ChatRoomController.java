@@ -4,7 +4,10 @@ import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.ChatRoomService;
+import com.linked.classbridge.service.UserService;
+import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -24,12 +27,16 @@ public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
+    private final UserService userService;
+
     @Operation(summary = "채팅방 생성", description = "채팅방을 생성합니다.")
     @PostMapping
     public ResponseEntity<SuccessResponse<CreateChatRoom.Response>> createChatRoom(
             @Valid @RequestBody CreateChatRoom.Request request
     ) {
-        User user = User.builder().userId(2L).build();
+
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
         // 채팅방 생성
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
@@ -44,12 +51,13 @@ public class ChatRoomController {
     public ResponseEntity<SuccessResponse<JoinChatRoom.Response>> joinChatRoom(
             @PathVariable Long chatRoomId
     ) {
-        User user = User.builder().userId(1L).build();
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
         // 채팅방 참여
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.CHAT_ROOM_JOIN_SUCCESS,
-                        chatRoomService.joinChatRoom(user, chatRoomId)
+                        chatRoomService.joinChatRoomAndGetMessages(user, chatRoomId)
                 )
         );
     }

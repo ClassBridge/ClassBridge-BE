@@ -12,8 +12,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/chatRooms", "chatRoom"); //
-        config.setApplicationDestinationPrefixes("/send"); //
+        config.enableSimpleBroker("/chatRooms", "/chatRoom");
+        config.setApplicationDestinationPrefixes("/send");
     }
 
     @Override
@@ -21,7 +21,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry
                 .addEndpoint("/CB-websocket")
                 .setAllowedOrigins("http://localhost:3000")
-                //.addInterceptors(new JwtHandshakeInterceptor()) // TODO JWT 인증을 위한 인터셉터 추가
                 .withSockJS();
     }
 }
