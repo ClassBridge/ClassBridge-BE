@@ -56,6 +56,7 @@ public class SecurityConfig {
 
                         configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
                         configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                        configuration.setExposedHeaders(Collections.singletonList("access"));
 
                         return configuration;
                     }
