@@ -259,7 +259,8 @@ public class UserService {
 
         if (additionalInfoDto != null) {
             if (additionalInfoDto.getNickname() != null) {
-                if (additionalInfoDto.getNickname().equals(user.getNickname())) {
+                if (userRepository.existsByNickname(additionalInfoDto.getNickname())
+                        && !user.getNickname().equals(additionalInfoDto.getNickname())) {
                     log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
                     throw new RestApiException(ALREADY_EXIST_NICKNAME);
                 }
