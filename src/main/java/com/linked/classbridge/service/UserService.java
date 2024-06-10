@@ -3,6 +3,7 @@ package com.linked.classbridge.service;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
 import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
+import static com.linked.classbridge.type.ErrorCode.NO_INFORMATION_TO_UPDATE;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
@@ -130,7 +131,7 @@ public class UserService {
         return userDto;
     }
 
-    public UserDto getUserDto(CustomOAuth2User customOAuth2User) {
+    public UserDto getUserDtoFromOAuth2User(CustomOAuth2User customOAuth2User) {
 
         log.info("Getting user DTO from CustomOAuth2User");
 
@@ -226,7 +227,7 @@ public class UserService {
         }
 
         List<String> roles = user.getRoles().stream()
-                .map(role -> role.name().substring(5)) // "ROLE_" 부분을 제거
+                .map(Enum::name)
                 .collect(Collectors.toList());
 
         String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles, TokenType.ACCESS.getExpiryTime());
@@ -238,6 +239,52 @@ public class UserService {
             response.setHeader(TokenType.ACCESS.getValue(), access);
             log.info("JWT token added to response for user '{}'", user.getUsername());
         }
+    }
+
+    public void updateUser(AdditionalInfoDto additionalInfoDto, MultipartFile profileImage) {
+
+        log.info("Updating user information");
+
+        String email = getCurrentUserEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("User with email '{}' not found", email);
+                    return new RestApiException(USER_NOT_FOUND);
+                });
+
+        if(additionalInfoDto == null && profileImage == null) {
+            log.warn("No information to update");
+            throw new RestApiException(NO_INFORMATION_TO_UPDATE);
+        }
+
+        if (additionalInfoDto != null) {
+            if (additionalInfoDto.getNickname() != null) {
+                if (userRepository.existsByNickname(additionalInfoDto.getNickname())
+                        && !user.getNickname().equals(additionalInfoDto.getNickname())) {
+                    log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
+                    throw new RestApiException(ALREADY_EXIST_NICKNAME);
+                }
+                user.setNickname(additionalInfoDto.getNickname());
+            }
+
+            user.setPhone(additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
+            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender()) : user.getGender());
+            user.setBirthDate(additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
+
+            if (additionalInfoDto.getInterests() != null) {
+                List<Category> interests = additionalInfoDto.getInterests().stream()
+                        .map(interest -> categoryRepository.findByName(CategoryType.valueOf(interest)))
+                        .collect(Collectors.toList());
+                user.setInterests(interests);
+            }
+        }
+
+        if (profileImage != null) {
+            String profileImageUrl = s3Service.uploadUserProfileImage(profileImage);
+            user.setProfileImageUrl(profileImageUrl);
+        }
+
+        userRepository.save(user);
     }
 
     public String getCurrentUserEmail() {
