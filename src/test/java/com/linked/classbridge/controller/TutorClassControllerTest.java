@@ -285,8 +285,9 @@ class TutorClassControllerTest {
                         .build();
 
         given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
-        given(categoryRepository.findById(mockCategory.getCategoryId())).willReturn(Optional.of(mockCategory));
+        given(categoryRepository.findByName(mockCategory.getName())).willReturn(mockCategory);
         given(classRepository.findById(mockBeforeClass.getClassId())).willReturn(Optional.of(mockBeforeClass));
+        given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
         given(classService.updateClass(mockUser.getEmail(), request, 1L)).willReturn(response);
 
         // When & Then
@@ -321,6 +322,7 @@ class TutorClassControllerTest {
         User mockUser = User.builder().userId(1L).email("example@example.com").build();
 
         given(userRepository.findById(mockUser.getUserId())).willReturn(Optional.of(mockUser));
+        given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
         given(classService.deleteClass(mockUser.getEmail(), 1L)).willReturn(true);
 
         // When & Then
