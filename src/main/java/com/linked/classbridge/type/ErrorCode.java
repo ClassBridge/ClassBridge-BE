@@ -13,6 +13,9 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서부 오류가 발생했습니다."),
     NOT_AUTHENTICATED_USER(HttpStatus.BAD_REQUEST, "인증된 사용자가 없습니다."),
     UNEXPECTED_PRINCIPAL_TYPE(HttpStatus.BAD_REQUEST, "예상하지 못한 Principal 타입입니다."),
+    REFRESH_TOKEN_NULL(HttpStatus.BAD_REQUEST, "Refresh 토큰이 없습니다."),
+    REFRESH_TOKEN_EXPIRED(HttpStatus.BAD_REQUEST, "Refresh 토큰이 만료되었습니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 Refresh 토큰입니다."),
 
     ALREADY_REGISTERED_EMAIL(HttpStatus.BAD_REQUEST, "이미 등록된 이메일 입니다."),
     ALREADY_EXIST_NICKNAME(HttpStatus.BAD_REQUEST, "이미 존재하는 닉네임 입니다."),
@@ -23,6 +26,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER(HttpStatus.BAD_REQUEST, "세션에 CustomOAuth2User가 존재하지 않습니다."),
     REQUIRED_USER_INFO(HttpStatus.BAD_REQUEST, "가입시 필요한 사용자 필수 정보가 빠져있습니다."),
+    NO_INFORMATION_TO_UPDATE(HttpStatus.BAD_REQUEST, "수정할 정보가 없습니다."),
 
     HELLO_NAME_IS_REQUIRED(HttpStatus.BAD_REQUEST, "Hello 이름은 필수입니다."),
     HELLO_NOT_FOUND(HttpStatus.BAD_REQUEST, "Hello를 찾을 수 없습니다."),

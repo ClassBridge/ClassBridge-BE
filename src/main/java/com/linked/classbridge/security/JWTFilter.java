@@ -1,13 +1,13 @@
 package com.linked.classbridge.security;
 
 import com.linked.classbridge.dto.user.UserDto;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,11 +18,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Slf4j
 public class JWTFilter extends OncePerRequestFilter {
 
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
-    public JWTFilter(JWTUtil jwtUtil) {
+    public JWTFilter(JWTService jwtService) {
 
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -31,66 +31,47 @@ public class JWTFilter extends OncePerRequestFilter {
 
         log.info("Starting JWTFilter for request: {}", request.getRequestURI());
 
-        //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
-        String authorization = null;
-        Cookie[] cookies = request.getCookies();
+        String accessToken = request.getHeader("access");
 
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                System.out.println(cookie.getName());
-                if (cookie.getName().equals("Authorization")) {
-                    authorization = cookie.getValue();
-                    log.info("Authorization cookie found with value: {}", authorization);
-                }
-            }
-        }
-
-        //Authorization 헤더 검증
-        if (authorization == null) {
-
-            log.info("Authorization token is null, proceeding without authentication.");
-            filterChain.doFilter(request, response);
-
-            log.info("Completed JWTFilter for request: {}", request.getRequestURI());
-            return;
-        }
-
-        //토큰
-        String token = authorization;
-
-        //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
-
-            log.info("Authorization token is expired.");
-
-            // 토큰이 만료되었을 경우, 쿠키 삭제
-            Cookie expiredCookie = new Cookie("Authorization", null);
-            expiredCookie.setMaxAge(0); // 만료 시간 0으로 설정
-            expiredCookie.setPath("/");
-            response.addCookie(expiredCookie);
-            log.info("Expired Authorization cookie removed.");
-
+        if (accessToken == null) {
+            log.info("Access token is null, proceeding without authentication.");
             filterChain.doFilter(request, response);
             log.info("Completed JWTFilter for request: {}", request.getRequestURI());
             return;
         }
 
-        //토큰에서 username과 roles 획득
-        String email = jwtUtil.getEmail(token);
-        List<String> roles = jwtUtil.getRoles(token);
+        if(jwtService.isExpired(accessToken)) {
+            PrintWriter writer = response.getWriter();
+            writer.print("access token expired");
+
+            log.info("Access token is expired, proceeding without authentication.");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        String tokenType = jwtService.getTokenType(accessToken);
+
+        if (!tokenType.equals("access")) {
+            PrintWriter writer = response.getWriter();
+            writer.print("invalid access token");
+
+            log.info("Invalid access token, proceeding without authentication.");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        String email = jwtService.getEmail(accessToken);
+        List<String> roles = jwtService.getRoles(accessToken);
         log.info("Token validated. UserEmail: {}, Roles: {}", email, roles);
 
-        //userDTO를 생성하여 값 set
         UserDto userDto = new UserDto();
         userDto.setEmail(email);
         userDto.setRoles(roles);
 
-        //UserDetails에 회원 정보 객체 담기
         CustomUserDetails customUserDetails = new CustomUserDetails(userDto);
 
-        //스프링 시큐리티 인증 토큰 생성
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
-        //세션에 사용자 등록
+
         SecurityContextHolder.getContext().setAuthentication(authToken);
         log.info("User authenticated and set in SecurityContext: {}", email);
 

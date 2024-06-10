@@ -3,9 +3,10 @@ package com.linked.classbridge.config;
 import com.linked.classbridge.oauth2.CustomSuccessHandler;
 import com.linked.classbridge.security.CustomAccessDeniedHandler;
 import com.linked.classbridge.security.CustomAuthenticationEntryPoint;
+import com.linked.classbridge.security.CustomLogoutFilter;
 import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
-import com.linked.classbridge.util.JWTUtil;
+import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -25,13 +27,13 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
-    private final JWTUtil jwtUtil;
+    private final JWTService jwtService;
 
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler,
-                          JWTUtil jwtUtil) {
+                          JWTService jwtService) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
-        this.jwtUtil = jwtUtil;
+        this.jwtService = jwtService;
     }
 
     // CORS 설정 및 CSRF, FormLogin, HTTP Basic 인증 방식 disable, JWTFilter, oauth2, 경로별 인가 작업, 세션 설정
@@ -54,6 +56,7 @@ public class SecurityConfig {
 
                         configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
                         configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                        configuration.setExposedHeaders(Collections.singletonList("access"));
 
                         return configuration;
                     }
@@ -69,7 +72,7 @@ public class SecurityConfig {
                 .httpBasic((auth) -> auth.disable());
         //JWTFilter
         http
-                .addFilterAfter(new JWTFilter(jwtUtil), OAuth2LoginAuthenticationFilter.class);
+                .addFilterAfter(new JWTFilter(jwtService), OAuth2LoginAuthenticationFilter.class);
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
@@ -86,7 +89,10 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/", "/api/users/auth/**", "/swagger-ui/*", "/v3/api-docs/**", "api/tutors/**").permitAll()
+                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/", "/api/users/auth/**").permitAll()
+                        .requestMatchers("/api/users/auth/reissue").permitAll()
+                        .requestMatchers("api/tutors/**").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())
@@ -100,6 +106,10 @@ public class SecurityConfig {
         http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // 로그아웃 설정
+        http
+                .addFilterBefore(new CustomLogoutFilter(jwtService), LogoutFilter.class);
 
         return http.build();
     }

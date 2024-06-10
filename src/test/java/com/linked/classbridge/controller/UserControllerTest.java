@@ -322,6 +322,88 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("유저 정보 수정 성공")
+    @WithMockUser(roles = "USER")
+    public void updateUser_success() throws Exception {
+
+        // given
+        AdditionalInfoDto additionalInfoDto = new AdditionalInfoDto();
+        MockMultipartFile profileImage = new MockMultipartFile(
+                "profileImage",
+                "profileImage.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "profileImage".getBytes()
+        );
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/users/update")
+                        .file(profileImage)
+                        .param("additionalInfo", new ObjectMapper().writeValueAsString(additionalInfoDto))
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .with(request -> { request.setMethod("PUT"); return request; }))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("유저 정보 수정 실패 - 권한이 없는 경우")
+    public void updateUser_failure_forbidden() throws Exception {
+        // given
+        AdditionalInfoDto additionalInfoDto = new AdditionalInfoDto();
+        MockMultipartFile profileImage = new MockMultipartFile(
+                "profileImage",
+                "profileImage.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "profileImage".getBytes()
+        );
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/users/update")
+                        .file(profileImage)
+                        .param("additionalInfo", new ObjectMapper().writeValueAsString(additionalInfoDto))
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(request -> { request.setMethod("PUT"); return request; }))
+                .andDo(print())
+                .andExpect(status().isForbidden());
+    }
+
+    /*
+    @Test
+    @DisplayName("유저 정보 수정 실패 - 닉네임 중복")
+    @WithMockUser(roles = "USER")
+    public void updateUser_failure_nickname_already_exists() throws Exception {
+
+        // given
+        AdditionalInfoDto additionalInfoDto = new AdditionalInfoDto();
+        additionalInfoDto.setNickname("existingNickname"); // 이미 존재하는 닉네임 설정
+        MockMultipartFile profileImage = new MockMultipartFile(
+                "profileImage",
+                "profileImage.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "profileImage".getBytes()
+        );
+
+        // 닉네임 중복 시 예외 발생하도록 설정
+        doThrow(new RestApiException(ALREADY_EXIST_NICKNAME)).when(userService)
+                .updateUser(additionalInfoDto, profileImage);
+
+        // when & then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/users/update")
+                        .file(profileImage)
+                        .param("additionalInfo", new ObjectMapper().writeValueAsString(additionalInfoDto))
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                        .with(request -> { request.setMethod("PUT"); return request; }))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+    */
+
+    @Test
     @DisplayName("유저 리뷰 목록 조회")
     void getUserReviews() throws Exception {
         // given

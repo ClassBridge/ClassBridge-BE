@@ -41,3 +41,5 @@ application-test.yml
 application-personal.yml
 .env
 *.log
+
+.DS_Store
