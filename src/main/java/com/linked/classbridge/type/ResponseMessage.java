@@ -36,7 +36,7 @@ public enum ResponseMessage {
 
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
 
+    CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     ;
-
     private final String message;
 }
