@@ -3,13 +3,12 @@ package com.linked.classbridge.domain;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.UserRole;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -107,7 +106,7 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
 
-    public void addReview(Review mockReview1) {
-        this.reviewList.add(mockReview1);
+    public void addReview(Review review) {
+        this.reviewList.add(review);
     }
 }
