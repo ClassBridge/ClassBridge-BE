@@ -34,4 +34,8 @@ public class ChatRoom extends BaseEntity {
     @JoinColumn(name = "initiated_by")
     private User initiatedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "initiated_to")
+    private User initiatedTo;
+
 }
