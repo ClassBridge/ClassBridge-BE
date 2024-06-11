@@ -61,4 +61,13 @@ public class ChatRoomController {
                 )
         );
     }
+
+    @Operation(summary = "채팅방 목록 조회", description = "채팅방 목록을 조회합니다.")
+    @GetMapping
+    public ResponseEntity<?> getChatRooms() {
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+
+        return ResponseEntity.ok().body(SuccessResponse.of(chatRoomService.getChatRooms(user)));
+    }
 }

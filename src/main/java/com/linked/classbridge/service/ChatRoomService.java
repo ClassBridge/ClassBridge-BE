@@ -4,6 +4,8 @@ import com.linked.classbridge.domain.ChatMessage;
 import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
+import com.linked.classbridge.dto.chat.ChatMessageDto;
+import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
@@ -85,11 +87,34 @@ public class ChatRoomService {
                 .findFirst()
                 .ifPresent(UserChatRoom::toggleOnline);
 
-        return JoinChatRoom.Response.fromEntity(chatRoom, chatMessages);
+        return JoinChatRoom.Response.of(
+                chatRoom.getChatRoomId(),
+                user.getUserId(),
+                chatRoom.getInitiatedBy().getUserId(),
+                chatRoom.getInitiatedTo().getUserId(),
+                chatRoom.getCreatedAt(),
+                chatRoom.getUpdatedAt(),
+                chatMessages.stream()
+                        .map(ChatMessageDto::fromEntity)
+                        .toList()
+        );
     }
 
     public ChatRoom findChatRoomById(Long chatRoomId) {
         return chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new RestApiException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+    }
+
+    public ChatRoomDto getChatRooms(User user) {
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserOrderByUpdatedAtDesc(user);
+        ChatRoomDto chatRoomDto = new ChatRoomDto();
+        for (ChatRoom chatRoom : chatRooms) {
+            if (chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())) {
+                chatRoomDto.addInquiredChatRoom(chatRoom);
+            } else {
+                chatRoomDto.addReceivedInquiryChatRoom(chatRoom);
+            }
+        }
+        return chatRoomDto;
     }
 }
