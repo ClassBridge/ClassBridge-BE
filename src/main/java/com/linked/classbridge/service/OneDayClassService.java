@@ -337,10 +337,7 @@ public class OneDayClassService {
     }
 
     public ClassFAQDto updateFAQ(String email, ClassFAQDto request, long classId, long faqId) {
-        ClassFAQ classFAQ = faqRepository.findById(faqId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_FAQ));
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-
-        validateFAQ(tutor, classId, classFAQ);
+        ClassFAQ classFAQ = validateFAQ(email, classId, faqId);
 
         classFAQ.setTitle(request.getTitle());
         classFAQ.setContent(request.getContent());
@@ -349,23 +346,26 @@ public class OneDayClassService {
     }
 
     public boolean deleteFAQ(String email, long classId, long faqId) {
-        ClassFAQ classFAQ = faqRepository.findById(faqId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_FAQ));
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        validateFAQ(tutor, classId, classFAQ);
+        ClassFAQ classFAQ = validateFAQ(email, classId, faqId);
 
         faqRepository.delete(classFAQ);
 
         return true;
     }
 
-    private void validateFAQ(User user, long classId, ClassFAQ classFAQ) {
-        if(!Objects.equals(user.getUserId(), classFAQ.getOneDayClass().getTutor().getUserId())) {
+    private ClassFAQ validateFAQ(String email, long classId, long faqId) {
+        ClassFAQ classFAQ = faqRepository.findById(faqId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_FAQ));
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+
+        if(!Objects.equals(tutor.getUserId(), classFAQ.getOneDayClass().getTutor().getUserId())) {
             throw new RestApiException(MISMATCH_USER_FAQ);
         }
 
         if(!Objects.equals(classId, classFAQ.getOneDayClass().getClassId())) {
             throw new RestApiException(MISMATCH_CLASS_FAQ);
         }
+
+        return classFAQ;
     }
 
 
