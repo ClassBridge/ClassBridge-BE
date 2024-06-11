@@ -2,11 +2,13 @@ package com.linked.classbridge.dto.oneDayClass;
 
 import com.linked.classbridge.domain.ClassFAQ;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 public class ClassFAQDto {
     private Long faqId;
