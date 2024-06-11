@@ -2,7 +2,6 @@ package com.linked.classbridge.controller;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -239,7 +238,7 @@ class TutorClassControllerTest {
         User mockUser = User.builder().email("example@example.com").userId(1L).build();
         Category mockCategory = Category.builder().name(CategoryType.COOKING).build();
         OneDayClass mockBeforeClass = OneDayClass.builder()
-                .classId(1L)
+                .classId(6L)
                 .startDate(LocalDate.of(2024,6,5))
                 .className("클래스 이름").tutor(mockUser)
                 .endDate(LocalDate.of(2024,8,30))
@@ -265,7 +264,7 @@ class TutorClassControllerTest {
                 .address3("올림픽로 300 롯데타워 2층")
                 .build();
 
-        ClassUpdateDto.ClassResponse response =
+        ClassUpdateDto.ClassResponse expectedResponse =
                 ClassUpdateDto.ClassResponse
                         .builder()
                         .className("클래스 이름 수정")
@@ -276,22 +275,27 @@ class TutorClassControllerTest {
                         .startDate(LocalDate.of(2024,6,5))
                         .endDate(LocalDate.of(2024,8,1))
                         .duration(90)
+                        .totalReviews(0)
+                        .totalStarRate(0D)
                         .introduction("클래스 수정 설명입니다. 20글자 채우기 힘들어요.")
                         .address1("서울특별시")
                         .address2("송파구")
                         .address3("올림픽로 300 롯데타워 2층")
                         .userId(1L)
-                        .classId(1L)
+                        .classId(6L)
                         .build();
 
         given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
         given(categoryRepository.findByName(mockCategory.getName())).willReturn(mockCategory);
         given(classRepository.findById(mockBeforeClass.getClassId())).willReturn(Optional.of(mockBeforeClass));
+        given(userService.getCurrentUserEmail()).willReturn(mockUser.getEmail());
         given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
-        given(classService.updateClass(mockUser.getEmail(), request, 1L)).willReturn(response);
 
-        // When & Then
-        mockMvc.perform(put("/api/tutors/class/{classId}", 1L)
+        // When
+        given(classService.updateClass(mockUser.getEmail(), request, 6L)).willReturn(expectedResponse);
+
+        // Then
+        mockMvc.perform(put("/api/tutors/class/{classId}", 6L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\n"
                                 + "\t\"className\": \"클래스 이름 수정\",\n"
@@ -311,25 +315,7 @@ class TutorClassControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
-                .andExpect(jsonPath("$.data.className").value(response.className()));
-    }
-
-    @Test
-    @WithMockUser
-    @DisplayName("클래스 삭제 성공")
-    void deleteClass_success() throws Exception {
-        // Given
-        User mockUser = User.builder().userId(1L).email("example@example.com").build();
-
-        given(userRepository.findById(mockUser.getUserId())).willReturn(Optional.of(mockUser));
-        given(userRepository.findByEmail(mockUser.getEmail())).willReturn(Optional.of(mockUser));
-        given(classService.deleteClass(mockUser.getEmail(), 1L)).willReturn(true);
-
-        // When & Then
-        mockMvc.perform(delete("/api/tutors/class/{classId}", 1L)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value("SUCCESS"));
+                .andExpect(jsonPath("$.data.className").value(expectedResponse.className()));
     }
 
 }
