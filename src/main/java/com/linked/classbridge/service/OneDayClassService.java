@@ -3,14 +3,18 @@ package com.linked.classbridge.service;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_START_DATE;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS;
+import static com.linked.classbridge.type.ErrorCode.CANNOT_FOUND_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_FOUND_TAG;
+import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_TAG;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
+import static com.linked.classbridge.type.ErrorCode.MISMATCH_CLASS_FAQ;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_CLASS_TAG;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_CLASS;
+import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_FAQ;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_TAG;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
@@ -23,6 +27,7 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
+import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
@@ -331,10 +336,7 @@ public class OneDayClassService {
     }
 
     public ClassTagDto updateTag(String email, ClassTagDto request, long classId, long tagId) {
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        ClassTag classTag = tagRepository.findById(tagId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_TAG));
-
-        validateTag(tutor, classId, classTag);
+        ClassTag classTag = validateTag(email, classId, tagId);
 
         classTag.setName(request.getName());
 
@@ -342,10 +344,7 @@ public class OneDayClassService {
     }
 
     public Boolean deleteTag(String email, long classId, long tagId) {
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        ClassTag classTag = tagRepository.findById(tagId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_TAG));
-
-        validateTag(tutor, classId, classTag);
+        ClassTag classTag = validateTag(email, classId, tagId);
 
         tagRepository.delete(classTag);
 
@@ -353,14 +352,75 @@ public class OneDayClassService {
     }
 
 
-    private void validateTag(User user, long classId, ClassTag classTag) {
-        if(!Objects.equals(user.getUserId(), classTag.getOneDayClass().getTutor().getUserId())) {
+    private ClassTag validateTag(String email, long classId, long tagId) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+        ClassTag classTag = tagRepository.findById(tagId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_TAG));
+
+        if(!Objects.equals(tutor.getUserId(), classTag.getOneDayClass().getTutor().getUserId())) {
             throw new RestApiException(MISMATCH_USER_TAG);
         }
 
         if(!Objects.equals(classTag.getOneDayClass().getClassId(), classId)) {
             throw new RestApiException(MISMATCH_CLASS_TAG);
         }
+
+        return classTag;
+    }
+
+
+    public ClassFAQDto registerFAQ(String email, ClassFAQDto request, long classId) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+
+        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
+            throw new RestApiException(MISMATCH_USER_CLASS);
+        }
+
+        if(faqRepository.findAllByOneDayClassClassId(classId).size() >=5) {
+            throw new RestApiException(CLASS_HAVE_MAX_FAQ);
+        }
+
+        ClassFAQ faq = ClassFAQ.builder().
+                title(request.getTitle())
+                .content(request.getContent())
+                .oneDayClass(oneDayClass)
+                .build();
+
+        faq = faqRepository.save(faq);
+
+        return new ClassFAQDto(faq);
+    }
+
+    public ClassFAQDto updateFAQ(String email, ClassFAQDto request, long classId, long faqId) {
+        ClassFAQ classFAQ = validateFAQ(email, classId, faqId);
+
+        classFAQ.setTitle(request.getTitle());
+        classFAQ.setContent(request.getContent());
+
+        return new ClassFAQDto(faqRepository.save(classFAQ));
+    }
+
+    public boolean deleteFAQ(String email, long classId, long faqId) {
+        ClassFAQ classFAQ = validateFAQ(email, classId, faqId);
+
+        faqRepository.delete(classFAQ);
+
+        return true;
+    }
+
+    private ClassFAQ validateFAQ(String email, long classId, long faqId) {
+        ClassFAQ classFAQ = faqRepository.findById(faqId).orElseThrow(() -> new RestApiException(CANNOT_FOUND_FAQ));
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+
+        if(!Objects.equals(tutor.getUserId(), classFAQ.getOneDayClass().getTutor().getUserId())) {
+            throw new RestApiException(MISMATCH_USER_FAQ);
+        }
+
+        if(!Objects.equals(classId, classFAQ.getOneDayClass().getClassId())) {
+            throw new RestApiException(MISMATCH_CLASS_FAQ);
+        }
+
+        return classFAQ;
     }
 
 }

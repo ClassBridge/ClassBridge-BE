@@ -22,6 +22,7 @@ public enum ResponseMessage {
     CLASS_DELETE_SUCCESS("클래스 삭제 성공"),
     REVIEW_GET_SUCCESS("리뷰 조회 성공"),
     CLASS_UPDATE_SUCCESS("클래스 세부 정보 수정 성공"),
+    CLASS_FAQ_REGISTER_SUCCESS("클래스 FAQ 추가 성공"),
     CLASS_FAQ_UPDATE_SUCCESS("클래스 FAQ 수정 성공"),
     CLASS_FAQ_DELETE_SUCCESS("클래스 FAQ 삭제 성공"),
     CLASS_TAG_REGISTER_SUCCESS("클래스 Tag 추가 성공"),
