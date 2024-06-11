@@ -33,6 +33,7 @@ public class UserChatRoom {
     private ChatRoom chatRoom;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isOnline = false;
 
     public void toggleOnline() {

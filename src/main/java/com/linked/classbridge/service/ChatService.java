@@ -30,16 +30,7 @@ public class ChatService {
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     public ChatMessage saveMessage(ChatMessage chatMessage) {
-        System.out.println(chatMessage);
         return chatMessageRepository.save(chatMessage);
-    }
-
-    public List<ChatMessage> getMessages() {
-        return chatMessageRepository.findAll();
-    }
-
-    public List<ChatMessage> getMessagesByRoomId(Long roomId) {
-        return null;
     }
 
     public List<ChatMessage> findLatestChatMessagesByChatRoom(Long chatRoomId) {

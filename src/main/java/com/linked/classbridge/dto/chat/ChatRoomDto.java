@@ -14,8 +14,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ChatRoomDto {
 
+    @Builder.Default
     private List<inquiredChatRooms> inquiredChatRoomsChatRooms = new ArrayList<>();
 
+    @Builder.Default
     private List<receivedInquiryChatRooms> receivedInquiryChatRoomsChatRooms = new ArrayList<>();
 
 
