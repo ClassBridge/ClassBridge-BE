@@ -12,15 +12,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue");
-        config.setApplicationDestinationPrefixes("/app");
+        config.enableSimpleBroker("/chatRooms", "chatRoom"); //
+        config.setApplicationDestinationPrefixes("/send"); //
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
-                .addEndpoint("/ws")
+                .addEndpoint("/CB-websocket")
                 .setAllowedOrigins("http://localhost:3000")
+                //.addInterceptors(new JwtHandshakeInterceptor()) // TODO JWT 인증을 위한 인터셉터 추가
                 .withSockJS();
     }
 }

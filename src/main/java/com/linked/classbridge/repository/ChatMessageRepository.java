@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
-    List<ChatMessage> findByChatRoom(ChatRoom chatRoom);
+    List<ChatMessage> findByChatRoomOrderBySendTimeAsc(ChatRoom chatRoom);
 }
