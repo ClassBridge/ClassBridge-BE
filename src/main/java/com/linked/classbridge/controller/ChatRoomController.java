@@ -1,18 +1,17 @@
 package com.linked.classbridge.controller;
 
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.ChatMessageDto;
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
+import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.service.ChatRoomService;
-import com.linked.classbridge.service.ChatService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,9 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chatRooms")
-public class ChatController {
-
-    private final ChatService chatService;
+public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
 
@@ -32,7 +29,7 @@ public class ChatController {
     public ResponseEntity<SuccessResponse<CreateChatRoom.Response>> createChatRoom(
             @Valid @RequestBody CreateChatRoom.Request request
     ) {
-        User user = User.builder().userId(1L).build();
+        User user = User.builder().userId(2L).build();
         // 채팅방 생성
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
@@ -42,9 +39,18 @@ public class ChatController {
         );
     }
 
-    @MessageMapping("/chat")
-    @SendTo("/topic/messages")
-    public ChatMessageDto sendMessage(ChatMessageDto message) {
-        return message;
+    @Operation(summary = "채팅방 참여", description = "채팅방에 참여합니다.")
+    @GetMapping("/{chatRoomId}/join")
+    public ResponseEntity<SuccessResponse<JoinChatRoom.Response>> joinChatRoom(
+            @PathVariable Long chatRoomId
+    ) {
+        User user = User.builder().userId(1L).build();
+        // 채팅방 참여
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.CHAT_ROOM_JOIN_SUCCESS,
+                        chatRoomService.joinChatRoom(user, chatRoomId)
+                )
+        );
     }
 }

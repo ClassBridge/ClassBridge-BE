@@ -1,14 +1,16 @@
 package com.linked.classbridge.service;
 
+import com.linked.classbridge.domain.ChatMessage;
 import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
-import com.linked.classbridge.dto.chat.CreateChatRoom.Response;
+import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ChatRoomRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     private final OneDayClassService oneDayClassService;
+
+    private final ChatService chatService;
 
     @Transactional
     public CreateChatRoom.Response createOrGetChatRoom(User initiatedBy, Long classId) {
@@ -55,7 +59,36 @@ public class ChatRoomService {
         return CreateChatRoom.Response.fromEntity(chatRoom);
     }
 
-    public Response joinChatRoom(User user, Long chatRoomId) {
-        return null;
+    @Transactional
+    public JoinChatRoom.Response joinChatRoom(User user, Long chatRoomId) {
+        ChatRoom chatRoom = findChatRoomById(chatRoomId);
+
+        // 내가 생성하거나 초대된 채팅방이 아닌 경우
+        if (!chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())
+                && !chatRoom.getInitiatedTo().getUserId().equals(user.getUserId())) {
+            throw new RestApiException(ErrorCode.BAD_REQUEST);
+        }
+
+        // 채팅방 메시지 조회
+        List<ChatMessage> chatMessages = chatService.findLatestChatMessagesByChatRoom(chatRoom);
+
+        // 메시지 읽음 처리
+        chatMessages.stream()
+                .filter(chatMessage -> !chatMessage.getSender().getUserId()
+                        .equals(user.getUserId()))
+                .forEach(chatService::markAsRead);
+
+        // 나를 온라인 상태로 변경
+        chatRoom.getUserChatRooms().stream()
+                .filter(userChatRoom -> userChatRoom.getUser().getUserId().equals(user.getUserId()))
+                .findFirst()
+                .ifPresent(UserChatRoom::toggleOnline);
+
+        return JoinChatRoom.Response.fromEntity(chatRoom, chatMessages);
+    }
+
+    public ChatRoom findChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.CHAT_ROOM_NOT_FOUND));
     }
 }

@@ -1,5 +1,6 @@
 package com.linked.classbridge.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,4 +31,11 @@ public class UserChatRoom {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
+
+    @Column(nullable = false)
+    private boolean isOnline = false;
+
+    public void toggleOnline() {
+        this.isOnline = !this.isOnline;
+    }
 }

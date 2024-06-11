@@ -34,4 +34,8 @@ public class ChatMessage {
     private LocalDateTime sendTime;
 
     private boolean isRead;
+
+    public void readMessage() {
+        this.isRead = true;
+    }
 }
