@@ -2,6 +2,7 @@ package com.linked.classbridge.controller;
 
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
@@ -64,7 +65,7 @@ public class ChatRoomController {
 
     @Operation(summary = "채팅방 목록 조회", description = "채팅방 목록을 조회합니다.")
     @GetMapping
-    public ResponseEntity<?> getChatRooms() {
+    public ResponseEntity<SuccessResponse<ChatRoomDto>> getChatRooms() {
         User user = userService.findByEmail(userService.getCurrentUserEmail())
                 .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
 
