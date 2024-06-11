@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
@@ -137,6 +138,58 @@ public class TutorController {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_DELETE_SUCCESS,
                 oneDayClassService.deleteClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))
+        );
+    }
+
+    /**
+     * Class FAQ 추가
+     * @param   request
+     * @return  ResponseEntity<SuccessResponse<ClassDto>>
+     */
+    @Operation(summary = "Class FAQ 추가", description = "Class FAQ 추가")
+    @PostMapping(path = "/class/{classId}/faq")
+    public ResponseEntity<SuccessResponse<ClassFAQDto>> registerFAQ(
+            @RequestBody @Valid ClassFAQDto request,
+            @PathVariable String classId
+    ) {
+        return ResponseEntity.status(CREATED).body(SuccessResponse.of(
+                ResponseMessage.CLASS_FAQ_REGISTER_SUCCESS,
+                oneDayClassService.registerFAQ(userService.getCurrentUserEmail(), request, Long.parseLong(classId)))
+        );
+    }
+
+    /**
+     * Class FAQ 수정
+     * @param   request, classId, faqId
+     * @return  ResponseEntity<SuccessResponse<ClassFAQDto>>
+     */
+    @Operation(summary = "Class FAQ 수정", description = "Class FAQ 수정")
+    @PutMapping(path = "/class/{classId}/faq/{faqId}")
+    public ResponseEntity<SuccessResponse<ClassFAQDto>> updateFAQ(
+            @RequestBody @Valid ClassFAQDto request,
+            @PathVariable String classId,
+            @PathVariable String faqId
+    ) {
+        return ResponseEntity.status(OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_FAQ_UPDATE_SUCCESS,
+                oneDayClassService.updateFAQ(userService.getCurrentUserEmail(), request, Long.parseLong(classId), Long.parseLong(faqId)))
+        );
+    }
+
+    /**
+     * Class FAQ 삭제
+     * @param   classId, faqId
+     * @return  ResponseEntity<SuccessResponse<ClassFAQDto>>
+     */
+    @Operation(summary = "Class FAQ 삭제", description = "Class FAQ 삭제")
+    @DeleteMapping(path = "/class/{classId}/faq/{faqId}")
+    public ResponseEntity<SuccessResponse<Boolean>> deleteFAQ(
+            @PathVariable String classId,
+            @PathVariable String faqId
+    ) {
+        return ResponseEntity.status(OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_FAQ_DELETE_SUCCESS,
+                oneDayClassService.deleteFAQ(userService.getCurrentUserEmail(), Long.parseLong(classId), Long.parseLong(faqId)))
         );
     }
 

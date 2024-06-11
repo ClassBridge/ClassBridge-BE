@@ -21,4 +21,6 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
     List<Lesson> findAllByOneDayClassClassIdAndLessonDateIsAfter(long classId, LocalDate localDate);
 
     boolean existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(long classId, int personal, LocalDate now);
+
+    List<Lesson> findAllByOneDayClassClassId(long classId);
 }
