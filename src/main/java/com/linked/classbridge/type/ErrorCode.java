@@ -62,10 +62,17 @@ public enum ErrorCode {
     INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
 
     PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
+    PAY_CANCEL(HttpStatus.BAD_REQUEST, "결제 요청을 취소합니다."),
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
+    INVALID_PAYMENT_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 정보입니다."),
+    NULL_RESPONSE_FROM_PAYMENT_GATEWAY(HttpStatus.BAD_REQUEST, "결제 게이트웨이 응답이 없습니다."),
     MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
 
     CHAT_ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방을 찾을 수 없습니다."),
+    INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST,"환불 가능 수량을 확인해주세요."),
+
+    INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
+    NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
     ;
 
     private final HttpStatus httpStatus;

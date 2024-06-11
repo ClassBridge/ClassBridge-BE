@@ -1,0 +1,9 @@
+### 예약 생성
+POST http://localhost:8080/api/reservations
+Content-Type: application/json
+
+{
+  "user_id" : 1,
+  "lesson_id" : 123,
+  "quantity" : 2
+}

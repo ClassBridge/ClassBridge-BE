@@ -14,4 +14,5 @@ public class PayProperties {
     private String cid;     // 가맹점 코드
     private String readyUrl;
     private String approveUrl;
+    private String cancelUrl;
 }

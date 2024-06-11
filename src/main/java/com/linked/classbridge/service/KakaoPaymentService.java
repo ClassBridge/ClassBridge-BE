@@ -14,24 +14,17 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 /**
- * 결제 요청 생성
- * 결제 승인
- * 결제 취소
- * 결제 상태 조회
+ * 결제 요청 생성 결제 승인 결제 취소 결제 상태 조회
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -80,20 +73,19 @@ public class KakaoPaymentService {
             parameters.put("partner_order_id", response.getPartnerOrderId());
             parameters.put("partner_user_id", response.getPartnerUserId());
             parameters.put("pg_token", response.getPgToken());
+            parameters.put("item_name", response.getItemName());
+            parameters.put("quantity", String.valueOf(response.getQuantity()));
 
 //            response.setCid(payProperties.getCid());
 
             log.info("kakao payment tid :: {}", response.getTid());
             log.info("kakao payment pg token :: {}", response.getPgToken());
 
-
-
             WebClient webClient = WebClient.builder()
                     .baseUrl(payProperties.getApproveUrl())
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .defaultHeader(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + payProperties.getDevKey())
                     .build();
-
 
             PaymentApproveDto.Response kakaoResponse = webClient.post()
                     .uri(uriBuilder -> uriBuilder.path("/").build())
@@ -122,7 +114,6 @@ public class KakaoPaymentService {
                     .retrieve()
                     .toEntity(String.class);
 
-
             return entity.block();
 
         } catch (WebClientResponseException e) {
@@ -139,9 +130,11 @@ public class KakaoPaymentService {
         Payment saved = paymentRepository.save(payment);
         return toCreatePaymentResponse(saved);
     }
+
     public CreatePaymentResponse toCreatePaymentResponse(Payment payment) {
         return new CreatePaymentResponse(payment.getPaymentId());
     }
+
     /**
      * 카카오페이 결제 요청 시 필요한 파라미터
      */
@@ -154,9 +147,9 @@ public class KakaoPaymentService {
         parameters.put("cid", payProperties.getCid());
         parameters.put("partner_order_id", request.getPartnerOrderId());
         parameters.put("partner_user_id", request.getPartnerUserId());
-        parameters.put("item_name", request.getItemName());
+        parameters.put("item_name", request.getItem_name());
         parameters.put("quantity", Integer.toString(request.getQuantity()));
-        parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
+        parameters.put("total_amount", Integer.toString(request.getTotal_amount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
         parameters.put("approval_url", "http://localhost:8080/api/payments/complete"); // 성공 시 redirect url
         parameters.put("cancel_url", "http://localhost:8080/api/payments/cancel"); // 취소 시 redirect url

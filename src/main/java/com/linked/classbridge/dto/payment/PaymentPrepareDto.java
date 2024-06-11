@@ -9,9 +9,9 @@ public class PaymentPrepareDto {
     public static class Request {
         private String partnerOrderId;      // 가맹점 주문 번호
         private String partnerUserId;       // 가맹점 회원 id
-        private String itemName;            // 상품명
+        private String item_name;            // 상품명
         private int quantity;               // 상품 수량
-        private int totalAmount;            // 상품 총액
+        private int total_amount;            // 상품 총액
         private int texFreeAmount;          // 상품 비과세 금액
         private String pgToken;
         private String cid;
@@ -28,5 +28,7 @@ public class PaymentPrepareDto {
         private String next_redirect_pc_url;// pc 웹일 경우 받는 결제 페이지
         private String created_at;
         private String pgToken;
+        private String itemName;            // 상품명
+        private int quantity;               // 상품 수량
     }
 }

@@ -4,8 +4,8 @@ Content-Type: application/json
 
 {
   "quantity": 1,
-  "totalAmount": 10000,
-  "itemName": "코딩클래스"
+  "total_amount": 18000,
+  "item_name": "코딩클래스"
 }
 
 ### test

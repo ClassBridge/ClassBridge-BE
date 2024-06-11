@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 
 import com.linked.classbridge.config.PayProperties;
-import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,9 +52,9 @@ class KakaoPaymentServiceTest {
     void testInitiatePayment_Success() {
         // given
         PaymentPrepareDto.Request request = new PaymentPrepareDto.Request();
-        request.setItemName("Test Item");
+        request.setItem_name("Test Item");
         request.setQuantity(1);
-        request.setTotalAmount(1000);
+        request.setTotal_amount(1000);
         request.setTexFreeAmount(0);
 
         Map<String, String> parameters = Map.of(
