@@ -75,7 +75,7 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;      // 종료일
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
 

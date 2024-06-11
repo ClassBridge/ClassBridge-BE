@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.repository.UserRepository;
@@ -79,10 +80,10 @@ public class TutorController {
     @Operation(summary = "Class 조회", description = "Class 조회")
     @GetMapping("/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(
-            @PathVariable String classId) {
+            @PathVariable Long classId) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))
+                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), classId))
         );
     }
 
@@ -115,12 +116,12 @@ public class TutorController {
     @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
     @PutMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
-            @PathVariable String classId,
+            @PathVariable Long classId,
             @RequestBody @Valid ClassUpdateDto.ClassRequest request
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_UPDATE_SUCCESS,
-                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, Long.parseLong(classId)))
+                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, classId))
         );
     }
 
@@ -132,12 +133,61 @@ public class TutorController {
     @Operation(summary = "Class 삭제", description = "Class 삭제")
     @DeleteMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteClass(
-            @PathVariable String classId
+            @PathVariable Long classId
     ) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_DELETE_SUCCESS,
-                oneDayClassService.deleteClass(userService.getCurrentUserEmail(), Long.parseLong(classId)))
+                oneDayClassService.deleteClass(userService.getCurrentUserEmail(), classId))
         );
     }
 
+    /**
+     * Class tag 추가
+     * @param   request
+     * @return  ResponseEntity<SuccessResponse<ClassTagDto>>
+     */
+    @Operation(summary = "Class tag 추가", description = "Class tag 추가")
+    @PostMapping(path = "/class/{classId}/tag")
+    public ResponseEntity<SuccessResponse<ClassTagDto>> registerTag(
+            @PathVariable Long classId,
+            @RequestBody @Valid ClassTagDto request) {
+        return ResponseEntity.status(CREATED).body(SuccessResponse.of(
+                ResponseMessage.CLASS_TAG_REGISTER_SUCCESS,
+                oneDayClassService.registerTag(userService.getCurrentUserEmail(), request, classId))
+        );
+    }
+
+    /**
+     * Class tag 수정
+     * @param   request
+     * @return  ResponseEntity<SuccessResponse<ClassTagDto>>
+     */
+    @Operation(summary = "Class tag 수정", description = "Class tag 수정")
+    @PutMapping(path = "/class/{classId}/tag/{tagId}")
+    public ResponseEntity<SuccessResponse<ClassTagDto>> updateTag(
+            @PathVariable Long classId,
+            @RequestBody @Valid ClassTagDto request,
+            @PathVariable Long tagId) {
+        return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_TAG_UPDATE_SUCCESS,
+                oneDayClassService.updateTag(userService.getCurrentUserEmail(), request, classId, tagId))
+        );
+    }
+
+    /**
+     * Class tag 삭제
+     * @param
+     * @return  ResponseEntity<SuccessResponse<Boolean>>
+     */
+    @Operation(summary = "Class tag 삭제", description = "Class tag 삭제")
+    @DeleteMapping(path = "/class/{classId}/tag/{tagId}")
+    public ResponseEntity<SuccessResponse<Boolean>> deleteTag(
+            @PathVariable Long classId,
+            @PathVariable Long tagId ) {
+
+        return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_TAG_DELETE_SUCCESS,
+                oneDayClassService.deleteTag(userService.getCurrentUserEmail(), classId, tagId))
+        );
+    }
 }
