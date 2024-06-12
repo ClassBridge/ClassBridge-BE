@@ -135,7 +135,7 @@ public class OneDayClassService {
     }
 
     private List<Lesson> createRepeatLesson(ClassRequest request, OneDayClass oneDayClass) {
-        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(request.startDate(), request.endDate());
+        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(request.startDate(), request.endDate() != null ? request.endDate() : request.startDate().plusMonths(3));
 
         List<Lesson> lessonList = new ArrayList<>();
         for(RepeatClassDto repeatClassDto : request.lesson()) {
@@ -323,7 +323,7 @@ public class OneDayClassService {
             throw new RestApiException(MISMATCH_USER_CLASS);
         }
 
-        if(tagRepository.findALlByOneDayClassClassId(classId).size() >= 5) {
+        if(tagRepository.findAllByOneDayClassClassId(classId).size() >= 5) {
             throw new RestApiException(CLASS_HAVE_MAX_TAG);
         }
 

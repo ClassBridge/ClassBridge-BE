@@ -8,6 +8,4 @@ public interface ClassTagRepository extends JpaRepository<ClassTag, Long> {
     List<ClassTag> findAllByOneDayClassClassId(Long classId);
 
     void deleteAllByOneDayClassClassId(long classId);
-
-    List<ClassTag> findALlByOneDayClassClassId(long classId);
 }
