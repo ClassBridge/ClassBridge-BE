@@ -117,12 +117,12 @@ public class TutorController {
     @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
     @PutMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
-            @PathVariable String classId,
+            @PathVariable Long classId,
             @RequestBody @Valid ClassUpdateDto.ClassRequest request
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_UPDATE_SUCCESS,
-                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, Long.parseLong(classId)))
+                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, classId))
         );
     }
 
