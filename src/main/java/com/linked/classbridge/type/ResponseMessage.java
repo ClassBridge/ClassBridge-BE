@@ -29,6 +29,8 @@ public enum ResponseMessage {
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
+    GET_USER_BADGES_SUCCESS("사용자 뱃지 조회 성공"),
+    UPLOAD_BADGE_SUCCESS("뱃지 등록 성공"),
     ;
 
     private final String message;

@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/users/auth/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("api/tutors/**").permitAll()
+                        .requestMatchers("/api/users/badges/**").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())
