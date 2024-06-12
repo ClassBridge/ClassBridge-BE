@@ -3,7 +3,8 @@ POST http://localhost:8080/api/refunds
 Content-Type: application/json
 
 {
-  "paymentId" : 6,
-  "refundType": "REFUNDED",
-  "cancelAmount": 18000
+  "paymentId" : 18,
+  "refundType": "PARTIAL_REFUND",
+  "quantity": 1,
+  "cancelAmount": 5000
 }

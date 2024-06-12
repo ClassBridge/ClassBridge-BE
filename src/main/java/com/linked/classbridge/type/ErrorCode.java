@@ -61,6 +61,8 @@ public enum ErrorCode {
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
     INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
 
+    RESERVATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 예약입니다."),
+
     PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
     PAY_CANCEL(HttpStatus.BAD_REQUEST, "결제 요청을 취소합니다."),
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),

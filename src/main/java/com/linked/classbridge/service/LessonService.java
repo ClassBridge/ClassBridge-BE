@@ -19,4 +19,10 @@ public class LessonService {
         return lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RestApiException(ErrorCode.LESSON_NOT_FOUND));
     }
+
+    @Transactional
+    public void updateParticipantCount(Lesson lesson, int quantityChange) {
+        lesson.setParticipantNumber(lesson.getParticipantNumber() + quantityChange);
+        lessonRepository.save(lesson);
+    }
 }

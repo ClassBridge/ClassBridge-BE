@@ -1,6 +1,5 @@
 package com.linked.classbridge.domain;
 
-import com.linked.classbridge.dto.payment.PaymentStatusType;
 import com.linked.classbridge.dto.reservation.ReservationDto;
 import com.linked.classbridge.dto.reservation.ReservationStatus;
 import jakarta.persistence.Entity;
@@ -11,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,22 +29,21 @@ public class Reservation extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reservationId;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lesson_id")
     private Lesson lesson;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Enumerated(EnumType.STRING)
-    private ReservationStatus reservationStatus;
+    private ReservationStatus status;
 
     private int quantity;
 
-    @Enumerated(EnumType.STRING)
-    private PaymentStatusType status;
-
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id") // 이 부분을 추가합니다.
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
     public static Reservation createReservation(ReservationDto.Request request, Lesson lesson, User user) {
@@ -52,7 +51,7 @@ public class Reservation extends BaseEntity {
                 .lesson(lesson)
                 .user(user)
                 .quantity(request.getQuantity())
-                .status(PaymentStatusType.PENDING)
+                .status(ReservationStatus.PENDING)
                 .build();
     }
 }

@@ -40,8 +40,9 @@ public class PaymentController {
         paymentResponse = paymentService.initiatePayment(paymentRequest);
         paymentResponse.setPartnerOrderId(paymentRequest.getPartnerOrderId());
         paymentResponse.setPartnerUserId(paymentRequest.getPartnerUserId());
-        paymentResponse.setItemName(paymentRequest.getItem_name());
+        paymentResponse.setItemName(paymentRequest.getItemName());
         paymentResponse.setQuantity(paymentRequest.getQuantity());
+        paymentResponse.setReservationId(paymentRequest.getReservationId());
 
         return paymentResponse.getNext_redirect_pc_url();
     }

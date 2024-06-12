@@ -35,6 +35,7 @@ public class KakaoRefundService {
     private final PayProperties payProperties;
     private final PaymentRepository paymentRepository;
     private final RefundRepository refundRepository;
+    private final LessonService lessonService;
 
     /**
      * 결제 환불
@@ -48,20 +49,20 @@ public class KakaoRefundService {
                 .orElseThrow(() -> new RestApiException(ErrorCode.INVALID_PAYMENT_ID));
 
         // 연관된 예약
-//        Reservation reservation = payment.getReservation();
-//        if (reservation == null) {
-//            throw new RestApiException(ErrorCode.INVALID_RESERVATION_ID);
-//        }
-//
-//        // 환불 비율 계산
-//        double refundRate = RefundPolicy.calculateRefundRate(reservation.getLesson().getLessonDate(),
-//                reservation.getLesson().getStartTime(),
-//                LocalDateTime.now());
+        Reservation reservation = payment.getReservation();
+        if (reservation == null) {
+            throw new RestApiException(ErrorCode.INVALID_RESERVATION_ID);
+        }
 
-        double refundRate = 1.0;
+        // 환불 비율 계산
+        double refundRate = RefundPolicy.calculateRefundRate(reservation.getLesson().getLessonDate(),
+                reservation.getLesson().getStartTime(),
+                LocalDateTime.now());
 
+        // 카카오 결제 취소에 필요한 파라미터
         Map<String, String> parameters = getRefundParameters(request, refundRate, payment);
 
+        // 결제 취소 요청 준비(헤더 세팅)
         WebClient webClient = WebClient.builder()
                 .baseUrl(payProperties.getCancelUrl())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -76,7 +77,7 @@ public class KakaoRefundService {
                 .bodyToMono(Response.class)
                 .block());
 
-        // 응답
+        // 취소 응답
         PaymentRefundDto.Response response = refundResponseData.orElseThrow(
                 () -> new RestApiException(ErrorCode.PAY_ERROR));
 
@@ -94,37 +95,49 @@ public class KakaoRefundService {
 
             payment.setStatus(PaymentStatusType.REFUNDED);
             // 예약도 취소상태로
+            reservation.setStatus(ReservationStatus.CANCELED_BY_CUSTOMER);
         }
 
-        // Payment 상태 업데이트
-        // Partial refund일 경우 Refund 테이블에 데이터 추가
+        // 부분 환불의 경우 Refund 테이블에 데이터 추가
         if(request.getRefundType() == PaymentStatusType.PARTIAL_REFUND) {
             // 수량 업데이트
             calculatePaymentQuantity(payment, refundQuantity);
+            // 결제 상태 부분 환불로 변경
             payment.setStatus(PaymentStatusType.PARTIAL_REFUND);
-            Refund refund = new Refund();
-            refund.setPayment(payment);
-            refund.setQuantity(request.getQuantity());
-            refund.setAmount(response.getAmount().getTotal());
-            refund.setApprovedCancelAmount(response.getApproved_cancel_amount().getTotal());
-            refund.setCanceledAmount(response.getApproved_cancel_amount().getTotal());
-            refund.setCancelAvailableAmount(response.getCancel_available_amount().getTotal());
-            refund.setStatus(PaymentStatusType.PARTIAL_REFUND);
-            refund.setCanceled_at(response.getCanceled_at());
-            refund.setApproved_at(response.getApproved_at());
+            // 결제 금액 업데이트
+            int newTotalAmount = calculateNewTotalAmount(payment, request.getCancelAmount());
+            payment.setTotalAmount(newTotalAmount);
+            // 환불 정보
+            Refund refund = getRefund(request, payment, response);
             refundRepository.save(refund);
         } else if (request.getRefundType() == PaymentStatusType.REFUNDED) {
+            refundQuantity = reservation.getQuantity();
+            // 결제 상태 환불로 변경
             payment.setStatus(PaymentStatusType.REFUNDED);
+            // 예약 상태 취소로 변경
+            reservation.setStatus(ReservationStatus.CANCELED_BY_CUSTOMER);
         }
 
-        // 예약 상태 취소로 변경 추가하기
-//        reservation.setReservationStatus(ReservationStatus.CANCELED_BY_CUSTOMER);
-
-
-        paymentRepository.save(payment);
+        // 클래스 lesson 참여 인원 수정
+        lessonService.updateParticipantCount(reservation.getLesson(), refundQuantity);
 
         return response;
 
+    }
+
+    @NotNull
+    private static Refund getRefund(Requset request, Payment payment, Response response) {
+        Refund refund = new Refund();
+        refund.setPayment(payment);
+        refund.setQuantity(request.getQuantity());
+        refund.setAmount(response.getAmount().getTotal());
+        refund.setApprovedCancelAmount(response.getApproved_cancel_amount().getTotal());
+        refund.setCanceledAmount(response.getApproved_cancel_amount().getTotal());
+        refund.setCancelAvailableAmount(response.getCancel_available_amount().getTotal());
+        refund.setStatus(PaymentStatusType.PARTIAL_REFUND);
+        refund.setCanceled_at(response.getCanceled_at());
+        refund.setApproved_at(response.getApproved_at());
+        return refund;
     }
 
     @NotNull
@@ -145,5 +158,9 @@ public class KakaoRefundService {
 
     private void calculatePaymentQuantity(Payment payment, int refundQuantity) {
         payment.calculateQuantity(refundQuantity);
+    }
+
+    private int calculateNewTotalAmount(Payment payment, int cancelAmount) {
+        return payment.getTotalAmount() - cancelAmount;
     }
 }

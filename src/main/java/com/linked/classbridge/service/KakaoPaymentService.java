@@ -1,22 +1,32 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
+
 import com.linked.classbridge.config.PayProperties;
+import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.dto.payment.CreatePaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
+import com.linked.classbridge.dto.reservation.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.PaymentRepository;
+import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -34,6 +44,9 @@ public class KakaoPaymentService {
     private final PayProperties payProperties;
     private final WebClient.Builder webClient;
     private final PaymentRepository paymentRepository;
+    private final ReservationRepository reservationRepository;
+    private final LessonRepository lessonRepository;
+    private final LessonService lessonService;
 
     /**
      * 카카오페이 결제 요청 로직
@@ -94,6 +107,8 @@ public class KakaoPaymentService {
                     .bodyToMono(PaymentApproveDto.Response.class)
                     .block();
 
+            kakaoResponse.setReservationId(response.getReservationId());
+
             // POST 요청 생성
             HttpHeaders headers = new HttpHeaders();
 //            headers.set("Authorization", "SECRET_KEY " + payProperties.getDevKey());
@@ -128,6 +143,19 @@ public class KakaoPaymentService {
     public CreatePaymentResponse savePayment(PaymentApproveDto.Response response) {
         Payment payment = Payment.convertToPaymentEntity(response);
         Payment saved = paymentRepository.save(payment);
+
+        // 예약도 확정
+        Reservation reservation = reservationRepository.findById(response.getReservationId())
+                .orElseThrow(() -> new RestApiException(RESERVATION_NOT_FOUND));
+        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservation.setPayment(payment);
+        reservationRepository.save(reservation);
+
+        // Lesson 테이블 참여인원 업데이트
+        Lesson lesson = lessonRepository.findById(reservation.getLesson().getLessonId())
+                .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
+        lessonService.updateParticipantCount(lesson, -response.getQuantity());
+
         return toCreatePaymentResponse(saved);
     }
 
@@ -140,16 +168,17 @@ public class KakaoPaymentService {
      */
     private Map<String, String> getInitiateParameters(Request request) {
 
-        request.setPartnerUserId("payservice1");
-        request.setPartnerOrderId("payservice1");
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        request.setPartnerUserId(userEmail);
+        request.setPartnerOrderId(OrderNumberGenerator.generateOrderNumber(userEmail));
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put("cid", payProperties.getCid());
         parameters.put("partner_order_id", request.getPartnerOrderId());
         parameters.put("partner_user_id", request.getPartnerUserId());
-        parameters.put("item_name", request.getItem_name());
+        parameters.put("item_name", request.getItemName());
         parameters.put("quantity", Integer.toString(request.getQuantity()));
-        parameters.put("total_amount", Integer.toString(request.getTotal_amount()));
+        parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
         parameters.put("approval_url", "http://localhost:8080/api/payments/complete"); // 성공 시 redirect url
         parameters.put("cancel_url", "http://localhost:8080/api/payments/cancel"); // 취소 시 redirect url

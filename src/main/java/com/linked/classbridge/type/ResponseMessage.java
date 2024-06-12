@@ -37,7 +37,6 @@ public enum ResponseMessage {
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
 
     RESERVATION_SUCCESS("예약 생성 성공"),
-    PAYMENT_SUCCESS("결제 승인"),
     REFUND_SUCCESS("환불 승인"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),

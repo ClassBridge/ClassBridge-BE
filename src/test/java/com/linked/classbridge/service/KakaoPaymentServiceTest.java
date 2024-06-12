@@ -52,9 +52,9 @@ class KakaoPaymentServiceTest {
     void testInitiatePayment_Success() {
         // given
         PaymentPrepareDto.Request request = new PaymentPrepareDto.Request();
-        request.setItem_name("Test Item");
+        request.setItemName("Test Item");
         request.setQuantity(1);
-        request.setTotal_amount(1000);
+        request.setTotalAmount(1000);
         request.setTexFreeAmount(0);
 
         Map<String, String> parameters = Map.of(

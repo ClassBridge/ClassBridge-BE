@@ -1,5 +1,6 @@
 package com.linked.classbridge.dto.payment;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,13 +10,17 @@ public class PaymentPrepareDto {
     public static class Request {
         private String partnerOrderId;      // 가맹점 주문 번호
         private String partnerUserId;       // 가맹점 회원 id
-        private String item_name;            // 상품명
+        @JsonProperty("item_name")
+        private String itemName;            // 상품명
         private int quantity;               // 상품 수량
-        private int total_amount;            // 상품 총액
+        @JsonProperty("total_amount")
+        private int totalAmount;            // 상품 총액
         private int texFreeAmount;          // 상품 비과세 금액
         private String pgToken;
         private String cid;
         private String tid;
+        @JsonProperty("reservation_id")
+        private Long reservationId;
     }
 
     @Getter
@@ -30,5 +35,6 @@ public class PaymentPrepareDto {
         private String pgToken;
         private String itemName;            // 상품명
         private int quantity;               // 상품 수량
+        private Long reservationId;
     }
 }

@@ -3,6 +3,8 @@ package com.linked.classbridge.domain;
 import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,6 +33,7 @@ public class Refund extends BaseEntity {
     private int canceledAmount;         // 취소된 전체 누적 금액
     private int cancelAvailableAmount;  // 전체 취소 가능 금액
     private int quantity;               // 환불 수량
+    @Enumerated(EnumType.STRING)
     private PaymentStatusType status;
     private LocalDateTime approved_at;
     private LocalDateTime canceled_at;

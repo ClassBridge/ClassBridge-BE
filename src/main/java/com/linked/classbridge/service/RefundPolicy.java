@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 public class RefundPolicy {
     public static double calculateRefundRate(LocalDate lessonDate, LocalTime lessonStartTime, LocalDateTime refundRequestDate) {
@@ -19,11 +21,6 @@ public class RefundPolicy {
         } else {
             return 0.0; // 환불 없음
         }
-    }
-
-    public static void main(String[] args) {
-        Integer integer = null;
-        System.out.println(integer);
     }
 
 }
