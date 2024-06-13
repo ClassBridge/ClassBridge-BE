@@ -1,6 +1,9 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
+import static com.linked.classbridge.type.ErrorCode.LESSON_DATE_MUST_BE_AFTER_NOW;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -11,6 +14,7 @@ import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDto.Request;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
 import com.linked.classbridge.repository.ClassImageRepository;
@@ -177,6 +181,22 @@ class OneDayClassServiceTest {
     }
 
     @Test
+    void registerLesson_fail_lesson_date_must_be_after_today() {
+        // Given
+        User tutor = User.builder().userId(1L).email("example@example.com").build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+
+        LessonDto.Request request = new Request(LocalDate.now(), LocalTime.of(10,0,0));
+
+        // When
+        RestApiException response = assertThrows(RestApiException.class,
+                () -> oneDayClassService.registerLesson(tutor.getEmail(), request, 1L));
+
+        // Then
+        assertThat(response.getErrorCode()).isEqualTo(LESSON_DATE_MUST_BE_AFTER_NOW);
+    }
+
+    @Test
     void updateLesson() {
         // Given
         User tutor = User.builder().userId(1L).email("example@example.com").build();
@@ -214,6 +234,47 @@ class OneDayClassServiceTest {
         assertThat(response.getLessonId()).isEqualTo(1L);
         assertThat(response.getLessonDate()).isEqualTo(request.lessonDate());
         assertThat(response.getEndTime()).isEqualTo(request.startTime().plusMinutes(oneDayClass.getDuration()));
+    }
+
+    @Test
+    void update_lesson_fail_lesson_date_must_be_after_today() {
+        // Given
+        User tutor = User.builder().userId(1L).email("example@example.com").build();
+        LessonDto.Request request = new Request(LocalDate.now(), LocalTime.of(10,0,0));
+
+        // When
+        RestApiException response = assertThrows(RestApiException.class,
+                () -> oneDayClassService.updateLesson(tutor.getEmail(), request, 1L, 1L));
+
+        // Then
+        assertThat(response.getErrorCode()).isEqualTo(LESSON_DATE_MUST_BE_AFTER_NOW);
+    }
+
+    @Test
+    void update_lesson_fail_reserved_person_must_be_zero() {
+        // Given
+        User tutor = User.builder().userId(1L).email("example@example.com").build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+        LessonDto.Request request = new Request(LocalDate.now().plusDays(1), LocalTime.of(10,0,0));
+
+        Lesson beforeLesson = Lesson.builder()
+                .lessonId(1L)
+                .lessonDate(LocalDate.now().plusDays(1).plusDays(1))
+                .startTime(LocalTime.of(18, 0, 0))
+                .oneDayClass(oneDayClass)
+                .participantNumber(5)
+                .build();
+
+        given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
+        given(lessonRepository.findById(1L)).willReturn(Optional.of(beforeLesson));
+        given(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(oneDayClass.getClassId(), request.lessonDate(), request.startTime())).willReturn(false);
+
+        // When
+        RestApiException response = assertThrows(RestApiException.class,
+                () -> oneDayClassService.updateLesson(tutor.getEmail(), request, 1L, 1L));
+
+        // Then
+        assertThat(response.getErrorCode()).isEqualTo(EXISTS_RESERVED_PERSON);
     }
 
     @Test
