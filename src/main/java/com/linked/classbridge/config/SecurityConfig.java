@@ -94,8 +94,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("api/tutors/**").permitAll()
                         .requestMatchers("/CB-websocket/**").permitAll()
-                        .requestMatchers("/api/users").hasRole("USER")
-                        .requestMatchers("/api/users/**").hasRole("USER")
+                        .requestMatchers("/", "/api/users/auth/**", "/swagger-ui/*", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/users/auth/reissue").permitAll()
+                        .requestMatchers("/api/users").hasAnyRole("USER")
+                        .requestMatchers("/api/users/**").hasAnyRole("USER")
                         .anyRequest().authenticated())
                 .exceptionHandling((exception) -> exception
                         // 인증되지 않은 사용자가 보호된 리소스에 액세스하려고 할 때 호출
