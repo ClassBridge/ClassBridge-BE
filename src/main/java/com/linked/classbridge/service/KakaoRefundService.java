@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -73,8 +74,15 @@ public class KakaoRefundService {
         Optional<Response> refundResponseData = Optional.ofNullable(webClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/").build())
                 .bodyValue(parameters)
-                .retrieve()
-                .bodyToMono(Response.class)
+//                .retrieve()
+                .exchangeToMono(clientResponse -> {
+                    if (clientResponse.statusCode().is5xxServerError()) {
+                        return Mono.error(new RestApiException(ErrorCode.PAY_ERROR));
+                    } else {
+                        return clientResponse.bodyToMono(Response.class);
+                    }
+                })
+//                .bodyToMono(Response.class)
                 .block());
 
         // 취소 응답

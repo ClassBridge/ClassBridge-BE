@@ -7,7 +7,9 @@ import static org.mockito.BDDMockito.given;
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.PaymentRepository;
+import com.linked.classbridge.repository.ReservationRepository;
 import java.io.IOException;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
@@ -30,6 +32,15 @@ class KakaoPaymentServiceTest {
     @Mock
     private PaymentRepository paymentRepository;
 
+    @Mock
+    private ReservationRepository reservationRepository;
+
+    @Mock
+    private LessonRepository lessonRepository;
+
+    @Mock
+    private LessonService lessonService;
+
     @InjectMocks
     private KakaoPaymentService kakaoPaymentService;
 
@@ -40,7 +51,8 @@ class KakaoPaymentServiceTest {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         WebClient webClient = WebClient.builder().baseUrl(mockWebServer.url("/").toString()).build();
-        kakaoPaymentService = new KakaoPaymentService(payProperties, WebClient.builder(), paymentRepository);
+        kakaoPaymentService = new KakaoPaymentService(payProperties, WebClient.builder(), paymentRepository,
+                reservationRepository, lessonRepository, lessonService);
     }
 
     @AfterEach

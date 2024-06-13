@@ -9,6 +9,7 @@ import lombok.Setter;
 
 public class ReservationDto {
     @Getter
+    @Setter
     public static class Request {
         @JsonProperty("user_id")
         private Long userId;
