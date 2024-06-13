@@ -61,8 +61,8 @@ public class Lesson extends BaseEntity {
     @Version
     private Long version;
 
-    public void addReview(Review mockReview1) {
-        this.reviewList.add(mockReview1);
+    public void addReview(Review review) {
+        this.reviewList.add(review);
     }
 
     public int getAvailableSeats() {
