@@ -1,33 +1,39 @@
 ### 회원가입 테스트
 POST http://localhost:8080/api/users/auth/signup
-Content-Type: application/json
+Content-Type: multipart/form-data; boundary=boundary123
+
+--boundary123
+Content-Disposition: form-data; name="signupRequest"
 
 {
   "userDto": {
     "provider": "email",
-    "providerId": "user_provider_id",
-    "email": "testuser@example.com",
-    "username": "testuser",
+    "providerId": "123456788",
+    "email": "usertest@example.com",
+    "password": "securepassword",
+    "username": "exampleUser",
     "authType": "EMAIL",
-    "password": "password123"
+    "roles": [
+      "USER"
+    ]
   },
   "additionalInfoDto": {
-    "nickname": "testnickname",
-    "phoneNumber": "01012345678",
+    "nickname": "nickname",
+    "phoneNumber": "010-1234-5677",
     "gender": "MALE",
-    "birthDate": "1990-01-01",
-    "interests": "coding",
-    "profilePictureUrl": "http://example.com/profile.jpg"
+    "birthDate": "1990-01-02",
+    "interests": ["COOKING"]
   }
 }
+--boundary123--
 
 ### 로그인 테스트
 POST http://localhost:8080/api/users/auth/signin
 Content-Type: application/json
 
 {
-  "email": "testuser@example.com",
-  "password": "password123"
+  "email": "usertest@example.com",
+  "password": "securepassword"
 }
 
 ### 이메일 중복 확인 테스트

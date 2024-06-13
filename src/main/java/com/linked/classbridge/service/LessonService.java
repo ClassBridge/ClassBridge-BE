@@ -19,4 +19,16 @@ public class LessonService {
         return lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new RestApiException(ErrorCode.LESSON_NOT_FOUND));
     }
+
+    @Transactional
+    public void updateParticipantCount(Lesson lesson, int quantityChange) {
+        int maxParticipants = lesson.getOneDayClass().getPersonal();
+        int nowParticipants = lesson.getParticipantNumber() + quantityChange;
+
+        if (nowParticipants > maxParticipants) {
+            throw new RestApiException(ErrorCode.MAX_PARTICIPANTS_EXCEEDED);
+        }
+        lesson.setParticipantNumber(nowParticipants);
+        lessonRepository.save(lesson);
+    }
 }
