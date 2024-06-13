@@ -26,6 +26,7 @@ import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
