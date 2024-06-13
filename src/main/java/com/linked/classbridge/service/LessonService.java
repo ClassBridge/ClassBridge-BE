@@ -22,7 +22,13 @@ public class LessonService {
 
     @Transactional
     public void updateParticipantCount(Lesson lesson, int quantityChange) {
-        lesson.setParticipantNumber(lesson.getParticipantNumber() + quantityChange);
+        int maxParticipants = lesson.getOneDayClass().getPersonal();
+        int nowParticipants = lesson.getParticipantNumber() + quantityChange;
+
+        if (nowParticipants > maxParticipants) {
+            throw new RestApiException(ErrorCode.MAX_PARTICIPANTS_EXCEEDED);
+        }
+        lesson.setParticipantNumber(nowParticipants);
         lessonRepository.save(lesson);
     }
 }
