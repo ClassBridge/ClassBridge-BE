@@ -241,6 +241,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void updateUser(AdditionalInfoDto additionalInfoDto, MultipartFile profileImage) {
 
         log.info("Updating user information");

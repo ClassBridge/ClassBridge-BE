@@ -21,6 +21,7 @@ public enum ResponseMessage {
     CLASS_REGISTER_SUCCESS("클래스 등록 성공"),
     CLASS_DELETE_SUCCESS("클래스 삭제 성공"),
     REVIEW_GET_SUCCESS("리뷰 조회 성공"),
+
     CLASS_UPDATE_SUCCESS("클래스 세부 정보 수정 성공"),
     CLASS_FAQ_REGISTER_SUCCESS("클래스 FAQ 추가 성공"),
     CLASS_FAQ_UPDATE_SUCCESS("클래스 FAQ 수정 성공"),
@@ -31,9 +32,15 @@ public enum ResponseMessage {
     CLASS_LESSON_REGISTER_SUCCESS("클래스 레슨 추가 성공"),
     CLASS_LESSON_UPDATE_SUCCESS("클래스 레슨 수정 성공"),
     CLASS_LESSON_DELETE_SUCCESS("클래스 레슨 삭제 성공"),
+
     PAYMENT_SUCCESS("결제 승인"),
+
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
+
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
+
+    RESERVATION_SUCCESS("예약 생성 성공"),
+    REFUND_SUCCESS("환불 승인"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공");
