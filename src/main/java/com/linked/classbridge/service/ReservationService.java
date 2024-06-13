@@ -22,13 +22,16 @@ public class ReservationService {
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
+    private final UserService userService;
 
     public Reservation createReservation(ReservationDto.Request request) {
 
         Lesson lesson = lessonRepository.findById(request.getLessonId())
                 .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
 
-        User user = userRepository.findById(request.getUserId())
+        String userEmail = userService.getCurrentUserEmail();
+
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
 
         return reservationRepository.save(Reservation.createReservation(request, lesson, user));
