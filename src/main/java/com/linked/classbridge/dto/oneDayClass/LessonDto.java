@@ -19,6 +19,7 @@ public class LessonDto {
     private LocalTime startTime;
     private LocalTime endTime;
     private int participantNumber;
+    private int personal;
 
     public LessonDto(Lesson lesson) {
         lessonId = lesson.getLessonId();
@@ -26,6 +27,15 @@ public class LessonDto {
         startTime = lesson.getStartTime();
         endTime = lesson.getEndTime();
         participantNumber = lesson.getParticipantNumber();
+    }
+
+    public LessonDto(Lesson lesson, int personal) {
+        lessonId = lesson.getLessonId();
+        lessonDate = lesson.getLessonDate();
+        startTime = lesson.getStartTime();
+        endTime = lesson.getEndTime();
+        participantNumber = lesson.getParticipantNumber();
+        this.personal = personal;
     }
 
     public record Request(

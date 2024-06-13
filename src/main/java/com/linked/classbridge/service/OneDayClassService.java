@@ -379,7 +379,7 @@ public class OneDayClassService {
 
         OneDayClass oneDayClass = validateOneDayClass(email, classId);
 
-        return new LessonDto(lessonRepository.save(request.toEntity(oneDayClass)));
+        return new LessonDto(lessonRepository.save(request.toEntity(oneDayClass)), oneDayClass.getPersonal());
     }
 
     public Boolean deleteLesson(String email, Long classId, Long lessonId) {
@@ -404,7 +404,7 @@ public class OneDayClassService {
         lesson.setStartTime(request.startTime());
         lesson.setEndTime(request.startTime().plusMinutes(lesson.getOneDayClass().getDuration()));
 
-        return new LessonDto(lessonRepository.save(lesson));
+        return new LessonDto(lessonRepository.save(lesson), lesson.getOneDayClass().getPersonal());
 
     }
 

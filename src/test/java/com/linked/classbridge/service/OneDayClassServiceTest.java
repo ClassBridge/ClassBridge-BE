@@ -153,7 +153,7 @@ class OneDayClassServiceTest {
     void registerLesson() {
         // Given
         User tutor = User.builder().userId(1L).email("example@example.com").build();
-        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).personal(5).build();
 
         LessonDto.Request request = new Request(LocalDate.now().plusDays(1), LocalTime.of(10,0,0));
 
@@ -184,7 +184,7 @@ class OneDayClassServiceTest {
     void registerLesson_fail_lesson_date_must_be_after_today() {
         // Given
         User tutor = User.builder().userId(1L).email("example@example.com").build();
-        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).personal(5).build();
 
         LessonDto.Request request = new Request(LocalDate.now(), LocalTime.of(10,0,0));
 
@@ -200,7 +200,7 @@ class OneDayClassServiceTest {
     void updateLesson() {
         // Given
         User tutor = User.builder().userId(1L).email("example@example.com").build();
-        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).personal(5).build();
 
         LessonDto.Request request = new Request(LocalDate.now().plusDays(1), LocalTime.of(10,0,0));
 
@@ -254,7 +254,7 @@ class OneDayClassServiceTest {
     void update_lesson_fail_reserved_person_must_be_zero() {
         // Given
         User tutor = User.builder().userId(1L).email("example@example.com").build();
-        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).build();
+        OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).duration(90).personal(5).build();
         LessonDto.Request request = new Request(LocalDate.now().plusDays(1), LocalTime.of(10,0,0));
 
         Lesson beforeLesson = Lesson.builder()
