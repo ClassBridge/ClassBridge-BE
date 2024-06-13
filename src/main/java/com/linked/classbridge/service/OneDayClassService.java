@@ -101,13 +101,14 @@ public class OneDayClassService {
             tag.setOneDayClass(oneDayClass);
         }
 
+        oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
+
         oneDayClass.setLessonList(lessonRepository.saveAll(createRepeatLesson(request, oneDayClass)));
 
         oneDayClass.setFaqList(faqRepository.saveAll(request.faqList()));
 
         oneDayClass.setTagList(tagRepository.saveAll(request.tagList()));
 
-        oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
     }
 
