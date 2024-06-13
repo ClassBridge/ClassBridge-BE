@@ -34,7 +34,8 @@ public enum ResponseMessage {
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
-    ;
 
+    CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
+    CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공");
     private final String message;
 }
