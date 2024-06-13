@@ -85,10 +85,16 @@ public class OneDayClassService {
     public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
     {
         User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+
         OneDayClass oneDayClass = ClassDto.ClassRequest.toEntity(request);
         oneDayClass.setTutor(tutor);
+
         Category category = categoryRepository.findByName(request.categoryType());
         oneDayClass.setCategory(category);
+
+        if(oneDayClass.getEndDate() == null) {
+            oneDayClass.setEndDate(oneDayClass.getStartDate().plusMonths(3));
+        }
 
         validateClassName(oneDayClass.getClassName());
         validateClassIntroduction(oneDayClass.getIntroduction());
@@ -144,7 +150,7 @@ public class OneDayClassService {
     }
 
     private List<Lesson> createRepeatLesson(ClassRequest request, OneDayClass oneDayClass) {
-        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(request.startDate(), request.endDate() != null ? request.endDate() : request.startDate().plusMonths(3));
+        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(oneDayClass.getStartDate(), oneDayClass.getEndDate());
 
         List<Lesson> lessonList = new ArrayList<>();
         for(RepeatClassDto repeatClassDto : request.lesson()) {
