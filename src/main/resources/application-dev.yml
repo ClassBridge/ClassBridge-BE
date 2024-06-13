@@ -2,8 +2,6 @@ spring:
   config:
     activate:
       on-profile: dev
-    import:
-      - "classpath:application-oauth.yml"
   jwt:
     secret: ${JWT_SECRET}
   datasource:
@@ -43,4 +41,3 @@ pay:
   cancel-url: http://localhost:8080/payment/kakao/cancel
   cid: ${KAKAO_PAY_CID}
   dev-key: ${KAKAO_PAY_DEV_KEY}
-

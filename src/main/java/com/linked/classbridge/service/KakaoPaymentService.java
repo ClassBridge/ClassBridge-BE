@@ -21,7 +21,6 @@ import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
