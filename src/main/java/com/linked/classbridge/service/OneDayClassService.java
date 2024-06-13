@@ -372,7 +372,7 @@ public class OneDayClassService {
             throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
         }
 
-        if(request.lessonDate().isBefore(LocalDate.now())) {
+        if(request.lessonDate().isEqual(LocalDate.now()) || request.lessonDate().isBefore(LocalDate.now())) {
             throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
         }
 
@@ -390,6 +390,10 @@ public class OneDayClassService {
     }
 
     public LessonDto updateLesson(String email, Request request, Long classId, Long lessonId) {
+        if(request.lessonDate().isEqual(LocalDate.now()) || request.lessonDate().isBefore(LocalDate.now())) {
+            throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
+        }
+
         if(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(classId, request.lessonDate(), request.startTime())) {
             throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
         }
@@ -415,7 +419,7 @@ public class OneDayClassService {
             throw new RestApiException(MISMATCH_USER_LESSON);
         }
 
-        if(lesson.getLessonDate().isBefore(LocalDate.now())) {
+        if(lesson.getLessonDate().isEqual(LocalDate.now()) || lesson.getLessonDate().isBefore(LocalDate.now())) {
             throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
         }
 
