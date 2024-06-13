@@ -36,7 +36,12 @@ public class UserChatRoom {
     @Builder.Default
     private boolean isOnline = false;
 
-    public void toggleOnline() {
-        this.isOnline = !this.isOnline;
+    public void setOnline() {
+        this.isOnline = true;
     }
+
+    public void setOffline() {
+        this.isOnline = false;
+    }
+
 }

@@ -63,9 +63,12 @@ public enum ErrorCode {
 
     PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
-    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
+    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST, "세션에 결제 정보가 없습니다."),
 
     CHAT_ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방을 찾을 수 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 메시지를 찾을 수 없습니다."),
+    SENDER_CANNOT_MARK_AS_READ(HttpStatus.BAD_REQUEST, "메시지를 보낸 사람은 읽음 처리를 할 수 없습니다."),
+    USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
     ;
     private final HttpStatus httpStatus;
     private final String description;
