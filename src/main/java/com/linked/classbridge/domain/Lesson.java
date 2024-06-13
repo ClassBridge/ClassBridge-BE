@@ -12,6 +12,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -57,7 +58,14 @@ public class Lesson extends BaseEntity {
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
 
-    public void addReview(Review review) {
-        this.reviewList.add(review);
+    @Version
+    private Long version;
+
+    public void addReview(Review mockReview1) {
+        this.reviewList.add(mockReview1);
+    }
+
+    public int getAvailableSeats() {
+        return this.getOneDayClass().getPersonal() - this.getParticipantNumber();
     }
 }

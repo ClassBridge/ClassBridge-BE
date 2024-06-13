@@ -1,6 +1,7 @@
 package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.MAX_PARTICIPANTS_EXCEEDED;
 import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
 
 import com.linked.classbridge.config.PayProperties;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,18 @@ public class KakaoPaymentService {
 //    @Override
     @Transactional
     public PaymentPrepareDto.Response initiatePayment(Request request) {
+
+        Long reservationId = request.getReservationId();
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RestApiException(RESERVATION_NOT_FOUND));
+
+        Long lessonId = reservation.getLesson().getLessonId();
+        // 수용 인원 제한 확인
+        validateLessonCapacity(lessonId, request.getQuantity());
+
+        // 수용 인원 사전 예약
+        preReserveSeats(lessonId, request.getQuantity());
 
         // 카카오페이 요청 형식
         Map<String, String> parameters = getInitiateParameters(request);
@@ -141,22 +155,48 @@ public class KakaoPaymentService {
      * 카카오페이 승인 결과 저장
      */
     public CreatePaymentResponse savePayment(PaymentApproveDto.Response response) {
-        Payment payment = Payment.convertToPaymentEntity(response);
-        Payment saved = paymentRepository.save(payment);
 
-        // 예약도 확정
-        Reservation reservation = reservationRepository.findById(response.getReservationId())
-                .orElseThrow(() -> new RestApiException(RESERVATION_NOT_FOUND));
+        try {
+            Payment payment = Payment.convertToPaymentEntity(response);
+            Payment saved = paymentRepository.save(payment);
+
+            // 예약도 확정
+            Reservation reservation = confirmReservation(response.getReservationId(), payment);
+
+            // Lesson 테이블 참여인원 업데이트
+            updateLessonParticipantCount(reservation.getLesson().getLessonId(),
+                    -response.getQuantity());
+
+            return toCreatePaymentResponse(saved);
+
+        } catch (OptimisticLockingFailureException e) {
+            handleOptimisticLockingFailure(response.getReservationId(), response.getQuantity());
+            throw new RestApiException(MAX_PARTICIPANTS_EXCEEDED);
+        }
+    }
+
+    // 예약 확정
+    private Reservation confirmReservation(Long reservationId, Payment payment) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservation.setPayment(payment);
-        reservationRepository.save(reservation);
+        return reservationRepository.save(reservation);
+    }
 
-        // Lesson 테이블 참여인원 업데이트
-        Lesson lesson = lessonRepository.findById(reservation.getLesson().getLessonId())
-                .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
-        lessonService.updateParticipantCount(lesson, -response.getQuantity());
+    // 참여자 수 업데이트
+    private void updateLessonParticipantCount(Long lessonId, int quantityChange) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.LESSON_NOT_FOUND));
+        lessonService.updateParticipantCount(lesson, quantityChange);
+    }
 
-        return toCreatePaymentResponse(saved);
+    // 실패 시 예약 좌석 취소
+    private void handleOptimisticLockingFailure(Long reservationId, int quantity) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
+        Long lessonId = reservation.getLesson().getLessonId();
+        releaseSeats(lessonId, quantity);
     }
 
     public CreatePaymentResponse toCreatePaymentResponse(Payment payment) {
@@ -198,5 +238,29 @@ public class KakaoPaymentService {
         httpHeaders.set("Content-type", "application/json");
 
         return httpHeaders;
+    }
+
+    // 가능 인원 확인
+    private void validateLessonCapacity(Long lessonId, int requestedQuantity) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
+        if (lesson.getAvailableSeats() < requestedQuantity) {
+            throw new RestApiException(ErrorCode.MAX_PARTICIPANTS_EXCEEDED);
+        }
+    }
+
+    // 인원 사전 예약
+    private void preReserveSeats(Long lessonId, int quantity) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
+        lesson.setParticipantNumber(lesson.getParticipantNumber() + quantity);
+        lessonRepository.save(lesson);
+    }
+
+    private void releaseSeats(Long lessonId, int quantity) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
+        lesson.setParticipantNumber(lesson.getParticipantNumber() - quantity);
+        lessonRepository.save(lesson);
     }
 }
