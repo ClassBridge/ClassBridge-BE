@@ -7,12 +7,18 @@ import static com.linked.classbridge.type.ErrorCode.CANNOT_FOUND_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CATEGORY_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.EXISTS_LESSON_DATE_START_TIME;
+import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
+import static com.linked.classbridge.type.ErrorCode.LESSON_DATE_MUST_BE_AFTER_NOW;
+import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_CLASS_FAQ;
+import static com.linked.classbridge.type.ErrorCode.MISMATCH_CLASS_LESSON;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_CLASS;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_FAQ;
+import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_LESSON;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Category;
@@ -27,6 +33,8 @@ import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
+import com.linked.classbridge.dto.oneDayClass.LessonDto;
+import com.linked.classbridge.dto.oneDayClass.LessonDto.Request;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
@@ -173,18 +181,13 @@ public class OneDayClassService {
 
     @Transactional
     public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request, long classId) {
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
-            throw new RestApiException(MISMATCH_USER_CLASS);
-        }
+        OneDayClass oneDayClass = validateOneDayClass(email, classId);
 
         OneDayClass changeClass = ClassUpdateDto.ClassRequest.toEntity(request);
         changeClass.setClassId(classId);
         changeClass.setTotalReviews(oneDayClass.getTotalReviews());
         changeClass.setTotalStarRate(oneDayClass.getTotalStarRate());
-        changeClass.setTutor(tutor);
+        changeClass.setTutor(oneDayClass.getTutor());
 
         changeClass.setCategory(categoryRepository.findByName(request.categoryType()));
 
@@ -260,12 +263,7 @@ public class OneDayClassService {
 
     @Transactional
     public boolean deleteClass(String email, long classId) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(!Objects.equals(oneDayClass.getTutor().getUserId(), user.getUserId())) {
-            throw new RestApiException(MISMATCH_USER_CLASS);
-        }
+        OneDayClass oneDayClass = validateOneDayClass(email, classId);
 
         // 현재 날짜 이후의 레슨 중 예약한 사람이 있는 경우 삭제 불가
         if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsGreaterThan(classId, LocalDate.now().minusDays(1), 0)) {
@@ -291,12 +289,7 @@ public class OneDayClassService {
 
     public ClassDto.ClassResponse getOneDayClass(String email, long classId) {
         // user 정보와 변경할 class 의 user 정보 비교 추가 예정
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
-            throw new RestApiException(MISMATCH_USER_CLASS);
-        }
+        OneDayClass oneDayClass = validateOneDayClass(email, classId);
 
         oneDayClass.setCategory(categoryRepository.findById(oneDayClass.getCategory().getCategoryId()).orElseThrow(() -> new RestApiException(CATEGORY_NOT_FOUND)));
         oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassId(classId));
@@ -314,12 +307,7 @@ public class OneDayClassService {
     }
 
     public ClassFAQDto registerFAQ(String email, ClassFAQDto request, long classId) {
-        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
-            throw new RestApiException(MISMATCH_USER_CLASS);
-        }
+        OneDayClass oneDayClass = validateOneDayClass(email, classId);
 
         if(faqRepository.findAllByOneDayClassClassId(classId).size() >=5) {
             throw new RestApiException(CLASS_HAVE_MAX_FAQ);
@@ -368,5 +356,73 @@ public class OneDayClassService {
         return classFAQ;
     }
 
+    private OneDayClass validateOneDayClass(String email, long classId) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+        OneDayClass oneDayClass = classRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
+        if(!Objects.equals(tutor.getUserId(), oneDayClass.getTutor().getUserId())) {
+            throw new RestApiException(MISMATCH_USER_CLASS);
+        }
+
+        return oneDayClass;
+    }
+
+    public LessonDto registerLesson(String email, LessonDto.Request request, Long classId) {
+        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(classId, request.lessonDate(), request.startTime())) {
+            throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
+        }
+
+        if(request.lessonDate().isBefore(LocalDate.now())) {
+            throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
+        }
+
+        OneDayClass oneDayClass = validateOneDayClass(email, classId);
+
+        return new LessonDto(lessonRepository.save(request.toEntity(oneDayClass)));
+    }
+
+    public Boolean deleteLesson(String email, Long classId, Long lessonId) {
+        Lesson lesson = validateLesson(email, classId, lessonId);
+
+        lessonRepository.delete(lesson);
+
+        return true;
+    }
+
+    public LessonDto updateLesson(String email, Request request, Long classId, Long lessonId) {
+        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(classId, request.lessonDate(), request.startTime())) {
+            throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
+        }
+
+        Lesson lesson = validateLesson(email, classId, lessonId);
+        lesson.setLessonDate(request.lessonDate());
+        lesson.setStartTime(request.startTime());
+        lesson.setEndTime(request.startTime().plusMinutes(lesson.getOneDayClass().getDuration()));
+
+        return new LessonDto(lessonRepository.save(lesson));
+
+    }
+
+    private Lesson validateLesson(String email, Long classId, Long lessonId ) {
+        User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
+
+        if(!Objects.equals(lesson.getOneDayClass().getClassId(), classId)) {
+            throw new RestApiException(MISMATCH_CLASS_LESSON);
+        }
+
+        if(!Objects.equals(lesson.getOneDayClass().getTutor().getUserId(), tutor.getUserId())) {
+            throw new RestApiException(MISMATCH_USER_LESSON);
+        }
+
+        if(lesson.getLessonDate().isBefore(LocalDate.now())) {
+            throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
+        }
+
+        if(lesson.getParticipantNumber() > 0) {
+            throw new RestApiException(EXISTS_RESERVED_PERSON);
+        }
+
+        return lesson;
+    }
 }
