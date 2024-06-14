@@ -31,6 +31,8 @@ public enum ResponseMessage {
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
+    VALIDATE_BUSINESS_REGISTRATION_NUMBER_SUCCESS("유효한 사업자등록번호 입니다"),
+    NOT_VALID_BUSINESS_REGISTRATION_NUMBER("유효하지 않은 사업자등록번호 입니다"),
     ;
 
     private final String message;
