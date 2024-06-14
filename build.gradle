@@ -53,6 +53,8 @@ dependencies {
 
     implementation group: 'org.apache.httpcomponents.core5', name: 'httpcore5', version: '5.2.4'
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
 }
 
 tasks.named('test') {
