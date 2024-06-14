@@ -25,6 +25,7 @@ import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
@@ -54,6 +55,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -72,6 +74,7 @@ public class OneDayClassService {
     private final S3Service s3Service;
     private final LessonRepository lessonRepository;
     private final ClassImageRepository classImageRepository;
+    private final ElasticsearchOperations operations;
 
     @Transactional
     public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
@@ -104,6 +107,9 @@ public class OneDayClassService {
         oneDayClass.setTagList(tagRepository.saveAll(request.tagList()));
 
         oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
+
+        operations.save(new OneDayClassDocument(oneDayClass));
+
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
     }
 
