@@ -61,7 +61,7 @@ public class TutorController {
     }
 
     @Operation(summary = "강사 정보 수정", description = "강사 정보 수정")
-    @PreAuthorize("hasRole('TUTOR')")
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/update")
     public ResponseEntity<SuccessResponse<String>> updateTutorInfo(@RequestBody @Valid TutorInfoDto tutorInfoDto) {
 

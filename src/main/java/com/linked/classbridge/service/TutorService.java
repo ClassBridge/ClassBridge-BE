@@ -56,6 +56,10 @@ public class TutorService {
         User user = userRepository.findByEmail(userService.getCurrentUserEmail())
                 .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
 
+        if(!user.getRoles().contains(UserRole.ROLE_TUTOR)){
+            throw new RestApiException(ErrorCode.NOT_REGISTERED_TUTOR);
+        }
+
         user.setBankName(tutorInfoDto.getBank() != null ? tutorInfoDto.getBank() : user.getBankName());
         user.setAccountNumber(tutorInfoDto.getAccount() != null ? tutorInfoDto.getAccount() : user.getAccountNumber());
         user.setBusinessRegistrationNumber(tutorInfoDto.getBusinessRegistrationNumber() != null ?
