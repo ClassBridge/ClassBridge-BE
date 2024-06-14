@@ -33,6 +33,8 @@ public enum ResponseMessage {
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
     VALIDATE_BUSINESS_REGISTRATION_NUMBER_SUCCESS("유효한 사업자등록번호 입니다"),
     NOT_VALID_BUSINESS_REGISTRATION_NUMBER("유효하지 않은 사업자등록번호 입니다"),
+    TUTOR_REGISTER_SUCCESS("강사 등록 성공"),
+    TUTOR_UPDATE_SUCCESS("강사 정보 수정 성공"),
     ;
 
     private final String message;

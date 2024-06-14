@@ -67,6 +67,9 @@ public enum ErrorCode {
 
     NOT_VALID_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 사업자등록번호입니다."),
     NOT_REGISTERED_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "등록되지 않은 사업자등록번호입니다."),
+    ALREADY_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "이미 강사로 등록되어 있습니다."),
+    NOT_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "강사로 등록되어 있지 않습니다."),
+    MISSING_BANK_ACCOUNT_INFO(HttpStatus.BAD_REQUEST, "은행 이름과 계좌 번호는 필수값입니다."),
     ;
     private final HttpStatus httpStatus;
     private final String description;

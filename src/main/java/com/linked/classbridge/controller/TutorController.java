@@ -8,9 +8,10 @@ import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
-import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.dto.tutor.TutorInfoDto;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.TutorService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,8 +44,34 @@ public class TutorController {
 
     private final ReviewService reviewService;
     private final OneDayClassService oneDayClassService;
-    private final UserRepository userRepository;
     private final UserService userService;
+    private final TutorService tutorService;
+
+    @Operation(summary = "강사 등록", description = "강사 등록 및 강사 세부 정보 업로드")
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/register")
+    public ResponseEntity<SuccessResponse<String>> registerTutor(@RequestBody @Valid TutorInfoDto tutorInfoDto) {
+
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.TUTOR_REGISTER_SUCCESS,
+                        tutorService.registerTutor(tutorInfoDto)
+                )
+        );
+    }
+
+    @Operation(summary = "강사 정보 수정", description = "강사 정보 수정")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PutMapping("/update")
+    public ResponseEntity<SuccessResponse<String>> updateTutorInfo(@RequestBody @Valid TutorInfoDto tutorInfoDto) {
+
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.TUTOR_UPDATE_SUCCESS,
+                        tutorService.updateTutorInfo(tutorInfoDto)
+                )
+        );
+    }
 
     @Operation(summary = "강사 리뷰 조회", description = "강사 리뷰 조회")
     @GetMapping("/reviews")
