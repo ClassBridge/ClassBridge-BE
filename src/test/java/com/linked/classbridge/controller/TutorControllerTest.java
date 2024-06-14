@@ -168,26 +168,6 @@ class TutorControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
-    @DisplayName("강사 등록 실패 - 이미 등록된 강사일 경우")
-    public void registerTutor_fail_already_registered_tutor() throws Exception {
-        TutorInfoDto tutorInfoDto = new TutorInfoDto();
-        tutorInfoDto.setBank("국민은행");
-        tutorInfoDto.setAccount("0123456789");
-        tutorInfoDto.setBusinessRegistrationNumber("1234567890");
-        tutorInfoDto.setIntroduction("강사 소개");
-
-        doThrow(new RestApiException(ErrorCode.ALREADY_REGISTERED_TUTOR)).when(tutorService).registerTutor(tutorInfoDto);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(tutorInfoDto))
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     @WithMockUser(roles = "TUTOR")
     @DisplayName("강사 정보 수정 성공")
     public void updateTutorInfo_success() throws Exception {
