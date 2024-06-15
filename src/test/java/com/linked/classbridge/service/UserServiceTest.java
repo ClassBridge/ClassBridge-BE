@@ -1,6 +1,7 @@
 package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.CANNOT_ADD_WISH_OWN_CLASS;
+import static com.linked.classbridge.type.ErrorCode.EXISTS_WISH_CLASS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -180,7 +181,7 @@ class UserServiceTest {
                 .category(category)
                 .tutor(tutor).build();
 
-        given(userService.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
         given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
         given(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())).willReturn(false);
 
@@ -209,7 +210,7 @@ class UserServiceTest {
                 .category(category)
                 .tutor(tutor).build();
 
-        given(userService.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
+        given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
         given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
 
         // when
@@ -218,6 +219,39 @@ class UserServiceTest {
 
         // then
         assertEquals(CANNOT_ADD_WISH_OWN_CLASS, exception.getErrorCode());
+    }
+
+    @Test
+    @WithMockUser
+    void addWish_fail_exists_class() {
+        User tutor = User.builder().userId(2L).email("example1@example.com").build();
+        User user = User.builder().userId(1L).email("example@example.com").build();
+        Category category = Category.builder().name(CategoryType.FITNESS).build();
+
+        OneDayClass oneDayClass = OneDayClass.builder()
+                .classId(1L)
+                .className("클래스")
+                .totalWish(1)
+                .totalReviews(0)
+                .totalStarRate(0.0)
+                .personal(5)
+                .duration(60)
+                .address1("서울특별시")
+                .address2("강남구")
+                .address3("세부주소 ...")
+                .category(category)
+                .tutor(tutor).build();
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
+        given(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())).willReturn(true);
+
+        // when
+        RestApiException exception = assertThrows(RestApiException.class,
+                () -> userService.addWish(user.getEmail(), oneDayClass.getClassId()));
+
+        // then
+        assertEquals(EXISTS_WISH_CLASS, exception.getErrorCode());
     }
 
     @Test
@@ -244,7 +278,7 @@ class UserServiceTest {
 
         Wish wish = Wish.builder().user(user).oneDayClass(oneDayClass).id(1L).build();
 
-        given(userService.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
         given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
         given(wishRepository.findById(wish.getId())).willReturn(Optional.of(wish));
 
