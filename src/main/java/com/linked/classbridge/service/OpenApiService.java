@@ -25,7 +25,8 @@ public class OpenApiService {
     @Value("${openapi.key}")
     private String apikey;
 
-    private static final String baseUrl = "https://api.odcloud.kr/api/nts-businessman/v1/status";
+    @Value("${openapi.url}")
+    private String baseUrl;
 
     public boolean validate(String businessRegistrationNumber) throws URISyntaxException {
 

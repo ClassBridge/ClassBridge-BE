@@ -85,4 +85,5 @@ springdoc:
     - /**
 
 openapi:
+  url: ${OPEN_API_BASE_URL}
   key: ${OPEN_API_KEY}
