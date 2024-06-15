@@ -6,7 +6,9 @@ import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 import com.linked.classbridge.domain.ChatMessage;
 import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.UserChatRoom;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
+import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.ReadReceipt;
 import com.linked.classbridge.dto.chat.ReadReceiptList;
 import com.linked.classbridge.exception.RestApiException;
@@ -29,6 +31,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
 
     private final ChatMessageRepository chatMessageRepository;
+
 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
@@ -96,6 +99,27 @@ public class ChatService {
                         .build()
         );
 
+        ChatRoomUnreadCountInfoDto unreadCountInfo = ChatRoomUnreadCountInfoDto.builder()
+                .chatRoomId(chatRoom.getChatRoomId())
+                .latestMessage(savedChatMessage.getMessage())
+                .latestMessageTime(savedChatMessage.getSendTime())
+                .build();
+
+        Long senderUserId = user.getUserId();
+        List<UserChatRoom> userChatRooms = chatRoom.getUserChatRooms();
+
+        for (UserChatRoom userChatRoom : userChatRooms) {
+            Long receiverUserId = userChatRoom.getUser().getUserId();
+
+            int unreadMessageCount = userChatRoom.isOnline() || senderUserId.equals(receiverUserId)
+                    ? 0
+                    : getUnreadMessages(chatRoom.getChatRoomId(), receiverUserId).size(); // +1 : 보낼 메시지 포함
+
+            unreadCountInfo.setUnreadMessageCount(unreadMessageCount);
+
+            sendUnreadCountInfo(receiverUserId, unreadCountInfo);
+        }
+
         simpMessagingTemplate.convertAndSend("/chatRoom/" + chatRoom.getChatRoomId(),
                 ChatMessageDto.fromEntity(savedChatMessage));
     }
@@ -136,13 +160,27 @@ public class ChatService {
         messages.forEach(this::markAsReadAndSave);
     }
 
+    public List<ChatMessage> getUnreadMessages(Long chatRoomId, Long userId) {
+        return chatMessageRepository.findByChatRoomIdAndSenderIdNotAndIsReadFalse(chatRoomId, userId);
+    }
+
+    public ChatMessage getLatestMessage(Long chatRoomId) {
+        return chatMessageRepository.findByChatRoomIdOrderBySendTimeDesc(chatRoomId)
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
 
     public void sendReadReceipt(Long chatRoomId, ReadReceiptList readReceiptList) {
         simpMessagingTemplate.convertAndSend("/read/" + chatRoomId, readReceiptList);
     }
 
+    private void sendUnreadCountInfo(Long userId, ChatRoomUnreadCountInfoDto unreadCountInfo) {
+        simpMessagingTemplate.convertAndSend("/chatRooms/" + userId + "/unreadCountInfo", unreadCountInfo);
+    }
+
     private ChatRoom getChatRoomById(Long chatRoomId) {
-        return chatRoomRepository.findById(chatRoomId)
+        return chatRoomRepository.findByChatRoomId(chatRoomId)
                 .orElseThrow(() -> new RestApiException(CHAT_ROOM_NOT_FOUND));
     }
 

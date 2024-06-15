@@ -6,10 +6,12 @@ import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
 import com.linked.classbridge.dto.chat.ChatRoomDto;
+import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ChatRoomRepository;
+import com.linked.classbridge.repository.UserChatRoomRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+
+    private final UserChatRoomRepository userChatRoomRepository;
 
     private final OneDayClassService oneDayClassService;
 
@@ -76,11 +80,23 @@ public class ChatRoomService {
     public ChatRoomDto getChatRooms(User user) {
         List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserOrderByUpdatedAtDesc(user);
         ChatRoomDto chatRoomDto = new ChatRoomDto();
+        chatRoomDto.setUserId(user.getUserId());
         for (ChatRoom chatRoom : chatRooms) {
+            Long chatRoomId = chatRoom.getChatRoomId();
+
+            ChatMessage latestMessage = chatService.getLatestMessage(chatRoomId);
+            int unreadMessageCount = chatService.getUnreadMessages(chatRoomId, user.getUserId()).size();
+            ChatRoomUnreadCountInfoDto chatRoomUnreadCountInfoDto = ChatRoomUnreadCountInfoDto.builder()
+                    .chatRoomId(chatRoomId)
+                    .unreadMessageCount(unreadMessageCount)
+                    .latestMessage(latestMessage == null ? "" : latestMessage.getMessage())
+                    .latestMessageTime(latestMessage == null ? null : latestMessage.getSendTime())
+                    .build();
+
             if (chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())) {
-                chatRoomDto.addInquiredChatRoom(chatRoom);
+                chatRoomDto.addInquiredChatRoom(chatRoom, chatRoomUnreadCountInfoDto);
             } else {
-                chatRoomDto.addReceivedInquiryChatRoom(chatRoom);
+                chatRoomDto.addReceivedInquiryChatRoom(chatRoom, chatRoomUnreadCountInfoDto);
             }
         }
         return chatRoomDto;
@@ -95,7 +111,10 @@ public class ChatRoomService {
         chatRoom.getUserChatRooms().stream()
                 .filter(userChatRoom -> userChatRoom.getUser().getUserId().equals(user.getUserId()))
                 .findFirst()
-                .ifPresent(UserChatRoom::setOnline);
+                .ifPresent(userChatRoom -> {
+                    userChatRoom.setOnline();
+                    userChatRoomRepository.save(userChatRoom);
+                });
     }
 
 
@@ -143,4 +162,11 @@ public class ChatRoomService {
                 .chatRoom(chatRoom)
                 .build();
     }
+
+    public void leaveChatRoom(User user, Long chatRoomId) {
+    }
+
+    public void deleteChatRoom(User user, Long chatRoomId) {
+    }
+
 }

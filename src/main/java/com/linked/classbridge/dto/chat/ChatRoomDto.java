@@ -7,12 +7,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChatRoomDto {
+
+    @Setter
+    private Long userId;
 
     @Builder.Default
     private List<inquiredChatRooms> inquiredChatRoomsChatRooms = new ArrayList<>();
@@ -37,15 +41,18 @@ public class ChatRoomDto {
 
         private String tutorProfileImageUrl;
 
+        private ChatRoomUnreadCountInfoDto unreadCountInfo;
+
     }
 
-    public void addInquiredChatRoom(ChatRoom chatRoom) {
+    public void addInquiredChatRoom(ChatRoom chatRoom, ChatRoomUnreadCountInfoDto unreadCountInfo) {
         inquiredChatRoomsChatRooms.add(inquiredChatRooms.builder()
                 .chatRoomId(chatRoom.getChatRoomId())
                 .inquiredUserId(chatRoom.getInitiatedBy().getUserId())
                 .tutorUserId(chatRoom.getInitiatedTo().getUserId())
                 .tutorNickname(chatRoom.getInitiatedTo().getNickname())
                 .tutorProfileImageUrl(chatRoom.getInitiatedTo().getProfileImageUrl())
+                .unreadCountInfo(unreadCountInfo)
                 .build());
     }
 
@@ -63,15 +70,18 @@ public class ChatRoomDto {
         private String inquiredUserProfileImageUrl;
 
         private Long tutorUserId;
+
+        private ChatRoomUnreadCountInfoDto unreadCountInfo;
     }
 
-    public void addReceivedInquiryChatRoom(ChatRoom chatRoom) {
+    public void addReceivedInquiryChatRoom(ChatRoom chatRoom, ChatRoomUnreadCountInfoDto unreadCountInfo) {
         receivedInquiryChatRoomsChatRooms.add(receivedInquiryChatRooms.builder()
                 .chatRoomId(chatRoom.getChatRoomId())
                 .inquiredUserId(chatRoom.getInitiatedBy().getUserId())
                 .inquiredUserNickname(chatRoom.getInitiatedBy().getNickname())
                 .inquiredUserProfileImageUrl(chatRoom.getInitiatedBy().getProfileImageUrl())
                 .tutorUserId(chatRoom.getInitiatedTo().getUserId())
+                .unreadCountInfo(unreadCountInfo)
                 .build());
     }
 }

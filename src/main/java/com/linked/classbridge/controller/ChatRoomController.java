@@ -63,6 +63,30 @@ public class ChatRoomController {
         );
     }
 
+    @Operation(summary = "채팅방 나가기", description = "채팅방에서 나갑니다.")
+    @GetMapping("/{chatRoomId}/leave")
+    public ResponseEntity<SuccessResponse<String>> leaveChatRoom(
+            @PathVariable Long chatRoomId
+    ) {
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        // 채팅방 나가기
+        chatRoomService.leaveChatRoom(user, chatRoomId);
+        return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_LEAVE_SUCCESS));
+    }
+
+    @Operation(summary = "채팅방 삭제", description = "채팅방을 삭제합니다.")
+    @GetMapping("/{chatRoomId}/delete")
+    public ResponseEntity<SuccessResponse<String>> deleteChatRoom(
+            @PathVariable Long chatRoomId
+    ) {
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        // 채팅방 삭제
+        chatRoomService.deleteChatRoom(user, chatRoomId);
+        return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_DELETE_SUCCESS));
+    }
+
     @Operation(summary = "채팅방 목록 조회", description = "채팅방 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<SuccessResponse<ChatRoomDto>> getChatRooms() {
