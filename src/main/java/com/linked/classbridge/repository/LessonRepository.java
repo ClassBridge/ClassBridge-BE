@@ -2,6 +2,7 @@ package com.linked.classbridge.repository;
 
 import com.linked.classbridge.domain.Lesson;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,6 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
     boolean existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(long classId, int personal, LocalDate now);
 
     List<Lesson> findAllByOneDayClassClassId(long classId);
+
+    boolean existsByOneDayClassClassIdAndLessonDateAndStartTime(Long classId, LocalDate localDate, LocalTime localTime);
 }

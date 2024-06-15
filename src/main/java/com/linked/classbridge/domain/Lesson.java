@@ -31,9 +31,9 @@ import org.hibernate.annotations.SQLRestriction;
 @AllArgsConstructor
 @SuperBuilder
 @Inheritance(strategy = InheritanceType.JOINED)
-@SQLDelete(sql = "UPDATE lesson SET deleted_at = now() WHERE lesson_id = ?")
 @Setter
 @ToString
+@SQLDelete(sql = "UPDATE LESSON SET deleted_at = now() WHERE lesson_id = ? and version = ?")
 @SQLRestriction("deleted_at is null")
 public class Lesson extends BaseEntity {
 
