@@ -45,6 +45,8 @@ public enum ResponseMessage {
     REFUND_SUCCESS("환불 승인"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
-    CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공");
+    CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),
+
+    ATTENDANCE_CHECK_SUCCESS("출석 체크 성공");
     private final String message;
 }

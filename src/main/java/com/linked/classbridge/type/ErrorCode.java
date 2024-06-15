@@ -92,6 +92,9 @@ public enum ErrorCode {
     CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 메시지를 찾을 수 없습니다."),
     SENDER_CANNOT_MARK_AS_READ(HttpStatus.BAD_REQUEST, "메시지를 보낸 사람은 읽음 처리를 할 수 없습니다."),
     USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
+
+    NOT_TODAY_LESSON(HttpStatus.BAD_REQUEST, "레슨 당일에만 출석체크가 가능합니다."),
+    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다."),
     ;
     private final HttpStatus httpStatus;
     private final String description;
