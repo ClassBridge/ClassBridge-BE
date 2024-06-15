@@ -17,7 +17,7 @@ public class WebSocketController {
 
     private final ChatService chatService;
 
-    @MessageMapping("/{chatRoomId}")
+    @MessageMapping("/send/{chatRoomId}")
     public void sendMessage(
             @DestinationVariable Long chatRoomId,
             @Payload SendMessageDto sendRequest,
@@ -28,6 +28,18 @@ public class WebSocketController {
         }
 
         chatService.sendMessage(principal.getName(), chatRoomId, sendRequest.message());
+    }
+
+    @MessageMapping("/read/{messageId}")
+    public void markAsRead(
+            @DestinationVariable String messageId,
+            Principal principal) {
+
+        if (principal == null) {
+            throw new WebsocketException(ErrorCode.UNAUTHORIZED);
+        }
+
+        chatService.markMessageAsReadAndSendReceipt(principal.getName(), messageId);
     }
 
 }

@@ -170,15 +170,15 @@ class ChatRoomServiceTest {
                 .sendTime(LocalDateTime.now())
                 .build());
 
-        when(chatService.findLatestChatMessagesByChatRoom(1L)).thenReturn(chatMessages);
-        when(chatRoomRepository.findById(1L)).thenReturn(Optional.of(chatRoom));
+        when(chatRoomRepository.findByChatRoomId(1L)).thenReturn(Optional.of(chatRoom));
+        when(chatService.getChatMessagesAndMarkAsRead(1L, mockUserId)).thenReturn(chatMessages);
 
         // when
         JoinChatRoom.Response response = chatRoomService.joinChatRoomAndGetMessages(mockUser, 1L);
 
         // then
         Assertions.assertEquals(response.chatRoomId(), 1L);
-        verify(chatService, times(1)).findLatestChatMessagesByChatRoom(1L);
+        verify(chatService, times(1)).getChatMessagesAndMarkAsRead(1L, mockUserId);
     }
 
     @Test
@@ -196,14 +196,14 @@ class ChatRoomServiceTest {
                 .userChatRooms(new ArrayList<>())
                 .build();
 
-        when(chatRoomRepository.findById(1L)).thenReturn(Optional.of(chatRoom));
+        when(chatRoomRepository.findByChatRoomId(1L)).thenReturn(Optional.of(chatRoom));
 
         // when & then
         RestApiException exception = Assertions.assertThrows(RestApiException.class, () -> {
             chatRoomService.joinChatRoomAndGetMessages(anotherUser, 1L);
         });
 
-        Assertions.assertEquals(exception.getErrorCode(), ErrorCode.BAD_REQUEST);
+        Assertions.assertEquals(exception.getErrorCode(), ErrorCode.USER_NOT_IN_CHAT_ROOM);
     }
 
     @Test
@@ -211,7 +211,7 @@ class ChatRoomServiceTest {
     void joinChatRoomAndGetMessages_shouldThrowBadRequestException_whenChatRoomNotExist() {
         // given
 
-        when(chatRoomRepository.findById(1L)).thenReturn(Optional.empty());
+        when(chatRoomRepository.findByChatRoomId(1L)).thenReturn(Optional.empty());
 
         // when & then
         RestApiException exception = Assertions.assertThrows(RestApiException.class, () -> {

@@ -1,6 +1,7 @@
 package com.linked.classbridge.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 
@@ -8,9 +9,13 @@ import com.linked.classbridge.domain.ChatMessage;
 import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
+import com.linked.classbridge.dto.chat.ReadReceipt;
+import com.linked.classbridge.dto.chat.ReadReceiptList;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ChatMessageRepository;
 import com.linked.classbridge.repository.ChatRoomRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.type.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -105,7 +110,7 @@ class ChatServiceTest {
         given(chatMessageRepository.save(chatMessage)).willReturn(chatMessage);
 
         // when
-        chatService.markAsRead(chatMessage);
+        chatService.markAsReadAndSave(chatMessage);
 
         // then
         Mockito.verify(chatMessageRepository, times(1)).save(chatMessage);
@@ -166,5 +171,99 @@ class ChatServiceTest {
 
     }
 
+    @Test
+    @DisplayName("메시지 읽음 처리 및 읽음 표시 전송")
+    void markAsReadAndSendReceipt() {
+        // given
+        User user = User.builder()
+                .userId(1L)
+                .email("user@mail.com")
+                .build();
+
+        ChatMessage chatMessage = ChatMessage.builder()
+                .id("1")
+                .senderId(2L)
+                .chatRoomId(1L)
+                .message("message")
+                .isRead(false)
+                .sendTime(LocalDateTime.now())
+                .build();
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .chatRoomId(1L)
+                .initiatedBy(user)
+                .initiatedTo(User.builder().userId(2L).build())
+                .userChatRooms(List.of())
+                .build();
+
+        ReadReceiptList readReceiptList = new ReadReceiptList(
+                List.of(new ReadReceipt(chatMessage.getId(), user.getUserId()))
+        );
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(chatRoomRepository.findById(chatMessage.getChatRoomId())).willReturn(
+                Optional.of(chatRoom));
+        given(chatMessageRepository.findById(chatMessage.getId())).willReturn(Optional.of(chatMessage));
+        given(chatMessageRepository.save(any(ChatMessage.class))).willReturn(chatMessage);
+
+        // when
+        chatService.markMessageAsReadAndSendReceipt(user.getEmail(), chatMessage.getId());
+
+        // then
+        ArgumentCaptor<ChatMessage> chatMessageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
+        ArgumentCaptor<ReadReceiptList> readReceiptCaptor = ArgumentCaptor.forClass(ReadReceiptList.class);
+
+        Mockito.verify(chatMessageRepository, times(1)).save(chatMessageCaptor.capture());
+        ChatMessage savedChatMessage = chatMessageCaptor.getValue();
+        savedChatMessage.setSendTime(chatMessage.getSendTime());
+
+        Assertions.assertTrue(savedChatMessage.isRead());
+
+        Mockito.verify(simpMessagingTemplate, times(1))
+                .convertAndSend(eq("/read/" + chatRoom.getChatRoomId()), readReceiptCaptor.capture());
+        ReadReceiptList capturedReadReceiptList = readReceiptCaptor.getValue();
+
+        Assertions.assertEquals(readReceiptList, capturedReadReceiptList);
+    }
+
+    @Test
+    @DisplayName("메시지 읽음 처리 및 읽음 표시 전송 실패 - 메시지를 보낸 유저와 읽음 처리 할 유저가 같음")
+    void markAsReadAndSendReceiptFail() {
+        // given
+        User user = User.builder()
+                .userId(1L)
+                .email("user@mail.com")
+                .build();
+        ChatMessage chatMessage = ChatMessage.builder()
+                .id("1")
+                .senderId(1L)
+                .chatRoomId(1L)
+                .message("message")
+                .isRead(false)
+                .sendTime(LocalDateTime.now())
+                .build();
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .chatRoomId(1L)
+                .initiatedBy(user)
+                .initiatedTo(User.builder().userId(2L).build())
+                .userChatRooms(List.of())
+                .build();
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(chatMessageRepository.findById(chatMessage.getId())).willReturn(Optional.of(chatMessage));
+        given(chatRoomRepository.findById(chatMessage.getChatRoomId())).willReturn(
+                Optional.of(chatRoom));
+
+        // when
+        RestApiException exception = Assertions.assertThrows(RestApiException.class, () -> {
+            chatService.markMessageAsReadAndSendReceipt(user.getEmail(), chatMessage.getId());
+        });
+
+        // then
+        Mockito.verify(chatMessageRepository, times(0)).save(any());
+        Assertions.assertFalse(chatMessage.isRead());
+        Assertions.assertEquals(ErrorCode.SENDER_CANNOT_MARK_AS_READ, exception.getErrorCode());
+    }
 
 }
