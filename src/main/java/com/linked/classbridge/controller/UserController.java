@@ -4,22 +4,33 @@ import static com.linked.classbridge.type.ErrorCode.REQUIRED_USER_INFO;
 import static com.linked.classbridge.type.ErrorCode.SESSION_DOES_NOT_CONTAIN_CUSTOM_OAUTH2_USER;
 import static org.springframework.http.HttpStatus.OK;
 
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
+import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.ResponseMessage;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,15 +39,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.review.GetReviewResponse;
-import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.service.ReviewService;
-import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 
 
 @RestController
@@ -182,6 +184,44 @@ public class UserController {
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_GET_SUCCESS,
                         reviewService.getUserReviews(user, pageable)
+                )
+        );
+    }
+
+    @Operation(summary = "수강생 찜목록 조회", description = "수강생 찜목록 조회")
+    @GetMapping("/wish")
+    public ResponseEntity<SuccessResponse<Page<WishDto>>> getWish(
+            @PageableDefault Pageable pageable
+    ) {
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.WISH_GET_SUCCESS,
+                        userService.getWishList(userService.getCurrentUserEmail(), pageable)
+                )
+        );
+    }
+
+    @Operation(summary = "수강생 찜목록 추가", description = "수강생 찜목록 추가")
+    @PostMapping("/wish")
+    public ResponseEntity<SuccessResponse<Boolean>> addWish(
+            @RequestBody WishDto.Request request
+    ) {
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.WISH_ADD_SUCCESS,
+                        userService.addWish(userService.getCurrentUserEmail(), request.classId())
+                )
+        );
+    }
+
+    @Operation(summary = "수강생 찜목록 삭제", description = "수강생 찜목록 삭제")
+    @DeleteMapping("/wish/{wishId}")
+    public ResponseEntity<SuccessResponse<Boolean>> deleteWish(
+            @PathVariable Long wishId) {
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.WISH_DELETE_SUCCESS,
+                        userService.deleteWish(userService.getCurrentUserEmail(), wishId)
                 )
         );
     }

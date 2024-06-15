@@ -55,6 +55,10 @@ public enum ErrorCode {
     CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "변경할 종료일 이후의 레슨에 예약된 사람이 존재합니다."),
     CANNOT_CHANGE_START_DATE(HttpStatus.BAD_REQUEST, "시작일을 변경할 수 없습니다."),
     CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "현재 날짜 이후의 레슨에 예약된 사람이 존재합니다."),
+    EXISTS_WISH_CLASS(HttpStatus.BAD_REQUEST, "이미 존재하는 찜목록입니다."),
+    WISH_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 찜을 찾을 수 없습니다."),
+    MISMATCH_USER_WISH(HttpStatus.BAD_REQUEST, "로그인 한 유저와 해당 찜의 유저가 일치하지 않습니다."),
+    CANNOT_ADD_WISH_OWN_CLASS(HttpStatus.BAD_REQUEST, "자신의 클래스는 찜목록에 추가할 수 없습니다."),
 
     CANNOT_FOUND_FAQ(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
     MISMATCH_CLASS_FAQ(HttpStatus.BAD_REQUEST, "클래스 id와 faq의 클래스 id가 일치하지 않습니다."),
