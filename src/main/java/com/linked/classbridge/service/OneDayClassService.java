@@ -164,7 +164,10 @@ public class OneDayClassService {
         User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         Page<OneDayClass> classList = classRepository.findAllByTutorUserId(tutor.getUserId(), pageable);
         Map<Long, String> imageMap = (classImageRepository.findAllByOneDayClassClassIdInAndSequence(classList.map(OneDayClass::getClassId).toList(), 1))
-                .stream().collect(Collectors.toMap(ClassImage::getClassImageId, ClassImage::getUrl));
+                .stream().collect(Collectors.toMap(
+                        classImage -> classImage.getOneDayClass().getClassId(),
+                        ClassImage::getUrl
+                ));
 
         Page<ClassDto> classDtoPage = classList.map(ClassDto::new);
         classDtoPage.forEach(item -> {
