@@ -98,6 +98,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("/api/users").hasAnyRole("USER")
                         .requestMatchers("/api/users/**").hasAnyRole("USER")
+                        .requestMatchers("/api/openapi/**").permitAll()
+                        .requestMatchers("/api/users").hasRole("USER")
+                        .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())
                 .exceptionHandling((exception) -> exception
                         // 인증되지 않은 사용자가 보호된 리소스에 액세스하려고 할 때 호출
