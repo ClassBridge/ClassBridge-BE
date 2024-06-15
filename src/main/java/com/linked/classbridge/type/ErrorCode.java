@@ -77,6 +77,12 @@ public enum ErrorCode {
     INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
     NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
 
+    NOT_VALID_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 사업자등록번호입니다."),
+    NOT_REGISTERED_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "등록되지 않은 사업자등록번호입니다."),
+    ALREADY_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "이미 강사로 등록되어 있습니다."),
+    NOT_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "강사로 등록되어 있지 않습니다."),
+    MISSING_BANK_ACCOUNT_INFO(HttpStatus.BAD_REQUEST, "은행 이름과 계좌 번호는 필수값입니다."),
+
     CHAT_ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방을 찾을 수 없습니다."),
     CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 메시지를 찾을 수 없습니다."),
     SENDER_CANNOT_MARK_AS_READ(HttpStatus.BAD_REQUEST, "메시지를 보낸 사람은 읽음 처리를 할 수 없습니다."),

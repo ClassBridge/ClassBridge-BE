@@ -83,3 +83,7 @@ springdoc:
   default-produces-media-type: application/json
   paths-to-match:
     - /**
+
+openapi:
+  url: ${OPEN_API_BASE_URL}
+  key: ${OPEN_API_KEY}

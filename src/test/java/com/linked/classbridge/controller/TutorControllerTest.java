@@ -1,15 +1,25 @@
 package com.linked.classbridge.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.GetReviewResponse;
+import com.linked.classbridge.dto.tutor.TutorInfoDto;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.TutorService;
+import com.linked.classbridge.service.UserService;
+import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
@@ -27,15 +38,27 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @WebMvcTest(TutorController.class)
-@TestPropertySource(properties = "spring.config.location=classpath:application-test.yml")
+@AutoConfigureMockMvc
+//@TestPropertySource(properties = "spring.config.location=classpath:application-test.yml")
 class TutorControllerTest {
 
     @MockBean
     private ReviewService reviewService;
+
+    @MockBean
+    private TutorService tutorService;
+
+    @MockBean
+    private UserService userService;
+
+    @MockBean
+    private OneDayClassService oneDayClassService;
 
     @MockBean
     private UserRepository userRepository;
@@ -122,4 +145,46 @@ class TutorControllerTest {
                 .andExpect(jsonPath("$.data.content[3].userId").value(reviewResponse4.userId()));
     }
 
+    @Test
+    @WithMockUser(roles = "USER")
+    @DisplayName("강사 등록 성공")
+    public void registerTutor_success() throws Exception {
+
+        TutorInfoDto tutorInfoDto = new TutorInfoDto();
+        tutorInfoDto.setBank("국민은행");
+        tutorInfoDto.setAccount("0123456789");
+        tutorInfoDto.setBusinessRegistrationNumber("1234567890");
+        tutorInfoDto.setIntroduction("강사 소개");
+
+        when(tutorService.registerTutor(tutorInfoDto)).thenReturn("강사 등록 성공");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(tutorInfoDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("강사 등록 성공"));
+    }
+
+    @Test
+    @WithMockUser(roles = "TUTOR")
+    @DisplayName("강사 정보 수정 성공")
+    public void updateTutorInfo_success() throws Exception {
+
+        TutorInfoDto tutorInfoDto = new TutorInfoDto();
+        tutorInfoDto.setBank("국민은행");
+        tutorInfoDto.setAccount("0123456789");
+        tutorInfoDto.setBusinessRegistrationNumber("1234567890");
+        tutorInfoDto.setIntroduction("강사 소개를 적어보고자 합니다");
+
+        when(tutorService.updateTutorInfo(tutorInfoDto)).thenReturn("tutor info updated successfully");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/tutors/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(tutorInfoDto))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("강사 정보 수정 성공"));
+    }
 }
