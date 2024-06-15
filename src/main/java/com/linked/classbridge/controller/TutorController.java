@@ -8,10 +8,12 @@ import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
+import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
-import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.dto.tutor.TutorInfoDto;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.TutorService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,8 +46,34 @@ public class TutorController {
 
     private final ReviewService reviewService;
     private final OneDayClassService oneDayClassService;
-    private final UserRepository userRepository;
     private final UserService userService;
+    private final TutorService tutorService;
+
+    @Operation(summary = "강사 등록", description = "강사 등록 및 강사 세부 정보 업로드")
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/register")
+    public ResponseEntity<SuccessResponse<String>> registerTutor(@RequestBody @Valid TutorInfoDto tutorInfoDto) {
+
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.TUTOR_REGISTER_SUCCESS,
+                        tutorService.registerTutor(tutorInfoDto)
+                )
+        );
+    }
+
+    @Operation(summary = "강사 정보 수정", description = "강사 정보 수정")
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/update")
+    public ResponseEntity<SuccessResponse<String>> updateTutorInfo(@RequestBody @Valid TutorInfoDto tutorInfoDto) {
+
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.TUTOR_UPDATE_SUCCESS,
+                        tutorService.updateTutorInfo(tutorInfoDto)
+                )
+        );
+    }
 
     @Operation(summary = "강사 리뷰 조회", description = "강사 리뷰 조회")
     @GetMapping("/reviews")
@@ -191,6 +220,58 @@ public class TutorController {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_FAQ_DELETE_SUCCESS,
                 oneDayClassService.deleteFAQ(userService.getCurrentUserEmail(), classId, faqId))
+        );
+    }
+
+    /**
+     * Class lesson 추가
+     * @param   request
+     * @return  ResponseEntity<SuccessResponse<ClassDto>>
+     */
+    @Operation(summary = "Class lesson 추가", description = "Class lesson 추가")
+    @PostMapping(path = "/class/{classId}/lesson")
+    public ResponseEntity<SuccessResponse<LessonDto>> registerFAQ(
+            @RequestBody @Valid LessonDto.Request request,
+            @PathVariable Long classId
+    ) {
+        return ResponseEntity.status(CREATED).body(SuccessResponse.of(
+                ResponseMessage.CLASS_LESSON_REGISTER_SUCCESS,
+                oneDayClassService.registerLesson(userService.getCurrentUserEmail(), request, classId))
+        );
+    }
+
+    /**
+     * Class lesson 수정
+     * @param   classId, lessonId
+     * @return  ResponseEntity<SuccessResponse<Boolean>>
+     */
+    @Operation(summary = "Class lesson 수정", description = "Class lesson 수정")
+    @PutMapping(path = "/class/{classId}/lesson/{lessonId}")
+    public ResponseEntity<SuccessResponse<LessonDto>> updateLesson(
+            @PathVariable Long classId,
+            @PathVariable Long lessonId,
+            @RequestBody LessonDto.Request request
+    ) {
+        return ResponseEntity.status(OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_LESSON_UPDATE_SUCCESS,
+                oneDayClassService.updateLesson(userService.getCurrentUserEmail(), request, classId, lessonId))
+        );
+    }
+
+    /**
+     * Class lesson 삭제
+     * @param   classId, lessonId
+     * @return  ResponseEntity<SuccessResponse<Boolean>>
+     */
+    @Operation(summary = "Class lesson 삭제", description = "Class lesson 삭제")
+    @DeleteMapping(path = "/class/{classId}/lesson/{lessonId}")
+    public ResponseEntity<SuccessResponse<Boolean>> deleteLesson(
+            @PathVariable Long classId,
+            @PathVariable Long lessonId
+    ) {
+        return ResponseEntity.status(OK).body(SuccessResponse.of(
+                ResponseMessage.CLASS_LESSON_DELETE_SUCCESS,
+                oneDayClassService.deleteLesson(userService.getCurrentUserEmail(), classId, lessonId))
         );
     }
 
