@@ -3,10 +3,10 @@ package com.linked.classbridge.domain.document;
 import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.type.CategoryType;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @Document(indexName = "onedayclass")
 @Setting(settingPath = "elasticsearch/setting.json")
 @Mapping(mappingPath = "elasticsearch/mapping.json")
@@ -42,6 +43,7 @@ public class OneDayClassDocument {
     private int price;          // 가격
     private int personal;   // 수강 최대 인원
     private Double starRate; // 별점
+    private int totalWish;  // 총 찜 개수
 
     private String imageUrl;
 
@@ -49,9 +51,9 @@ public class OneDayClassDocument {
 
     private boolean hasParking;  // 주차장
     @Field(type= FieldType.Date, format = DateFormat.date)
-    private LocalDateTime startDate;    // 시작일
+    private LocalDate startDate;    // 시작일
     @Field(type= FieldType.Date, format = DateFormat.date)
-    private LocalDateTime endDate;      // 종료일
+    private LocalDate endDate;      // 종료일
 
     private CategoryType category;
 
@@ -67,8 +69,9 @@ public class OneDayClassDocument {
         personal = oneDayClass.getPersonal();
         starRate = oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews());
         hasParking = oneDayClass.isHasParking();
-        startDate = LocalDateTime.of(oneDayClass.getStartDate(), LocalTime.MIN);
-        endDate = LocalDateTime.of(oneDayClass.getEndDate(), LocalTime.MAX);
+        totalWish = oneDayClass.getTotalWish();
+        startDate = oneDayClass.getStartDate();
+        endDate = oneDayClass.getEndDate();
         category = oneDayClass.getCategory().getName();
         tagList = oneDayClass.getTagList().stream().map(ClassTag::getName).toList();
         imageUrl = !oneDayClass.getImageList().isEmpty() ?oneDayClass.getImageList().get(0).getUrl() : null;

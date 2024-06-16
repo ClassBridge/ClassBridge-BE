@@ -47,6 +47,7 @@ import com.linked.classbridge.repository.ClassFAQRepository;
 import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.repository.ClassTagRepository;
 import com.linked.classbridge.repository.LessonRepository;
+import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
@@ -83,6 +84,7 @@ public class OneDayClassService {
     private final LessonRepository lessonRepository;
     private final ClassImageRepository classImageRepository;
     private final ElasticsearchOperations operations;
+    private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
 
     @Transactional
     public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
@@ -281,6 +283,14 @@ public class OneDayClassService {
             }
             lessonRepository.saveAll(lessonList);
         }
+
+        OneDayClassDocument beforeDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+
+        OneDayClassDocument afterDocument = new OneDayClassDocument(changeClass);
+        afterDocument.setImageUrl(beforeDocument.getImageUrl());
+
+        operations.save(afterDocument);
+
         return ClassUpdateDto.ClassResponse.fromEntity(changeClass);
     }
 
@@ -308,6 +318,8 @@ public class OneDayClassService {
         imageRepository.deleteAllByOneDayClassClassId(classId);
 
         classRepository.deleteById(classId);
+
+        oneDayClassDocumentRepository.deleteById(classId);
 
         return true;
     }
@@ -346,8 +358,15 @@ public class OneDayClassService {
                 .name(request.getName())
                 .oneDayClass(oneDayClass)
                 .build();
+        ClassTagDto classTagDto = new ClassTagDto(tagRepository.save(classTag));
 
-        return new ClassTagDto(tagRepository.save(classTag));
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        List<String> tagList = new ArrayList<>(oneDayClassDocument.getTagList());
+        tagList.add(classTag.getName());
+        oneDayClassDocument.setTagList(tagList);
+        operations.save(oneDayClassDocument);
+
+        return classTagDto;
     }
 
     public ClassTagDto updateTag(String email, ClassTagDto request, long classId, long tagId) {
@@ -355,9 +374,20 @@ public class OneDayClassService {
         ClassTag classTag = getTag(tagId);
         validateTagMatchTutorAndClassId(tutor, classId, classTag);
 
+        String beforeTagName = classTag.getName();
+
         classTag.setName(request.getName());
 
-        return new ClassTagDto(tagRepository.save(classTag));
+        ClassTagDto classTagDto = new ClassTagDto(tagRepository.save(classTag));
+
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        List<String> tagList = new ArrayList<>(oneDayClassDocument.getTagList());
+        tagList.remove(beforeTagName);
+        tagList.add(request.getName());
+        oneDayClassDocument.setTagList(tagList);
+        operations.save(oneDayClassDocument);
+
+        return classTagDto;
     }
 
     public Boolean deleteTag(String email, long classId, long tagId) {
@@ -366,6 +396,11 @@ public class OneDayClassService {
         validateTagMatchTutorAndClassId(tutor, classId, classTag);
 
         tagRepository.delete(classTag);
+
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        List<String> tagList = new ArrayList<>(oneDayClassDocument.getTagList());
+        tagList.remove(classTag.getName());
+        oneDayClassDocument.setTagList(tagList);
 
         return true;
     }

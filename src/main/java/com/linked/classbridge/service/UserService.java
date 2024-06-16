@@ -19,6 +19,7 @@ import com.linked.classbridge.domain.ClassImage;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.Wish;
+import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
@@ -28,6 +29,7 @@ import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassImageRepository;
+import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.repository.WishRepository;
@@ -38,7 +40,6 @@ import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -77,10 +79,13 @@ public class UserService {
     private final OneDayClassRepository oneDayClassRepository;
     private final WishRepository wishRepository;
     private final ClassImageRepository classImageRepository;
+    private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
+    private final ElasticsearchOperations operations;
 
     public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
                        JWTService jwtService, S3Service s3Service, OneDayClassRepository oneDayClassRepository,
-                       WishRepository wishRepository, ClassImageRepository classImageRepository) {
+                       WishRepository wishRepository, ClassImageRepository classImageRepository,
+                       OneDayClassDocumentRepository oneDayClassDocumentRepository, ElasticsearchOperations operations) {
 
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
@@ -90,6 +95,8 @@ public class UserService {
         this.oneDayClassRepository = oneDayClassRepository;
         this.wishRepository = wishRepository;
         this.classImageRepository = classImageRepository;
+        this.oneDayClassDocumentRepository = oneDayClassDocumentRepository;
+        this.operations = operations;
     }
 
     public String checkNickname(String nickname) {
@@ -374,6 +381,8 @@ public class UserService {
         oneDayClass.setTotalWish(oneDayClass.getTotalWish() + 1);
         oneDayClassRepository.save(oneDayClass);
 
+        updateOneDayClassDocumentTotalWish(oneDayClass);
+
         return true;
     }
 
@@ -391,6 +400,14 @@ public class UserService {
         oneDayClass.setTotalWish(oneDayClass.getTotalWish() - 1);
         oneDayClassRepository.save(oneDayClass);
 
+        updateOneDayClassDocumentTotalWish(oneDayClass);
+
         return true;
+    }
+
+    private void updateOneDayClassDocumentTotalWish(OneDayClass oneDayClass) {
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        oneDayClassDocument.setTotalWish(oneDayClass.getTotalWish());
+        operations.save(oneDayClassDocument);
     }
 }
