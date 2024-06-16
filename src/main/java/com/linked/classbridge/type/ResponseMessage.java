@@ -47,6 +47,9 @@ public enum ResponseMessage {
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),
 
-    ATTENDANCE_CHECK_SUCCESS("출석 체크 성공");
+    ATTENDANCE_CHECK_SUCCESS("출석 체크 성공"),
+    GET_USER_BADGES_SUCCESS("사용자 뱃지 조회 성공"),
+    UPLOAD_BADGE_SUCCESS("뱃지 등록 성공"),
+    ;
     private final String message;
 }
