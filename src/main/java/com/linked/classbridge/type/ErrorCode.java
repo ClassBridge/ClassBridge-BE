@@ -49,17 +49,26 @@ public enum ErrorCode {
     CLASS_NOT_FOUND(HttpStatus.BAD_REQUEST, "원데이 클래스를 찾을 수 없습니다."),
     MISMATCH_USER_TAG(HttpStatus.BAD_REQUEST, "태그를 작성한 유저와 로그인한 유저가 일치하지 않습니다.."),
     MISMATCH_CLASS_TAG(HttpStatus.BAD_REQUEST, "해당 클래스와 태그의 클래스가 일치하지 않습니다."),
-    CANNOT_FOUND_TAG(HttpStatus.BAD_REQUEST, "해당 태그를 찾을 수 없습니다."),
+    TAG_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 태그를 찾을 수 없습니다."),
     CLASS_HAVE_MAX_TAG(HttpStatus.BAD_REQUEST, "클래스 태그는 최대 5개를 등록할 수 있습니다."),
     CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "카테고리를 찾을 수 없습니다"),
     CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "변경할 종료일 이후의 레슨에 예약된 사람이 존재합니다."),
     CANNOT_CHANGE_START_DATE(HttpStatus.BAD_REQUEST, "시작일을 변경할 수 없습니다."),
     CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS(HttpStatus.BAD_REQUEST, "현재 날짜 이후의 레슨에 예약된 사람이 존재합니다."),
+    EXISTS_WISH_CLASS(HttpStatus.BAD_REQUEST, "이미 존재하는 찜목록입니다."),
+    WISH_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 찜을 찾을 수 없습니다."),
+    MISMATCH_USER_WISH(HttpStatus.BAD_REQUEST, "로그인 한 유저와 해당 찜의 유저가 일치하지 않습니다."),
+    CANNOT_ADD_WISH_OWN_CLASS(HttpStatus.BAD_REQUEST, "자신의 클래스는 찜목록에 추가할 수 없습니다."),
 
-    CANNOT_FOUND_FAQ(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
+    FAQ_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
     MISMATCH_CLASS_FAQ(HttpStatus.BAD_REQUEST, "클래스 id와 faq의 클래스 id가 일치하지 않습니다."),
     MISMATCH_USER_FAQ(HttpStatus.BAD_REQUEST, "해당 유저와 faq 작성자가 다릅니다."),
     MISMATCH_USER_CLASS(HttpStatus.BAD_REQUEST, "해당 유저와 클래스 생성자가 다릅니다."),
+    EXISTS_LESSON_DATE_START_TIME(HttpStatus.BAD_REQUEST, "이미 존재하는 레슨날짜와 시간입니다."),
+    LESSON_DATE_MUST_BE_AFTER_NOW(HttpStatus.BAD_REQUEST, "레슨 날짜는 현재 날짜 이후로만 만들 수 있습니다."),
+    MISMATCH_CLASS_LESSON(HttpStatus.BAD_REQUEST, "클래스와 해당 레슨의 클래스가 일치하지 않습니다."),
+    MISMATCH_USER_LESSON(HttpStatus.BAD_REQUEST, "레슨 생성자와 로그인 유저가 일치하지 않습니다."),
+    EXISTS_RESERVED_PERSON(HttpStatus.BAD_REQUEST, "해당 레슨에 예약자가 존재합니다."),
     CLASS_HAVE_MAX_FAQ(HttpStatus.BAD_REQUEST, "클래스는 최대 5개의 FAQ를 만들 수 있습니다."),
     INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
@@ -67,21 +76,27 @@ public enum ErrorCode {
     MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 인원을 초과했습니다."),
 
     RESERVATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 예약입니다."),
-
     PAY_ERROR(HttpStatus.BAD_REQUEST, "결제 요청에 실패했습니다."),
     PAY_CANCEL(HttpStatus.BAD_REQUEST, "결제 요청을 취소합니다."),
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
     INVALID_PAYMENT_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 정보입니다."),
     NULL_RESPONSE_FROM_PAYMENT_GATEWAY(HttpStatus.BAD_REQUEST, "결제 게이트웨이 응답이 없습니다."),
     MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
-
-    CHAT_ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방을 찾을 수 없습니다."),
     INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST,"환불 가능 수량을 확인해주세요."),
-
     INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
     NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
-    ;
 
+    NOT_VALID_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 사업자등록번호입니다."),
+    NOT_REGISTERED_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "등록되지 않은 사업자등록번호입니다."),
+    ALREADY_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "이미 강사로 등록되어 있습니다."),
+    NOT_REGISTERED_TUTOR(HttpStatus.BAD_REQUEST, "강사로 등록되어 있지 않습니다."),
+    MISSING_BANK_ACCOUNT_INFO(HttpStatus.BAD_REQUEST, "은행 이름과 계좌 번호는 필수값입니다."),
+
+    CHAT_ROOM_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅방을 찾을 수 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 메시지를 찾을 수 없습니다."),
+    SENDER_CANNOT_MARK_AS_READ(HttpStatus.BAD_REQUEST, "메시지를 보낸 사람은 읽음 처리를 할 수 없습니다."),
+    USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
+    ;
     private final HttpStatus httpStatus;
     private final String description;
 }

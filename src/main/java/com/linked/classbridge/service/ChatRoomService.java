@@ -15,11 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
@@ -28,7 +26,13 @@ public class ChatRoomService {
 
     private final ChatService chatService;
 
-    @Transactional
+    /**
+     * 채팅방을 생성하거나 이미 존재하는 채팅방을 가져온다.
+     *
+     * @param initiatedBy 채팅방을 생성하는 유저
+     * @param classId     채팅방을 생성하는 클래스
+     * @return 생성된 채팅방 정보
+     */
     public CreateChatRoom.Response createOrGetChatRoom(User initiatedBy, Long classId) {
         User initiatedTo = oneDayClassService.findClassById(classId).getTutor();
 
@@ -36,57 +40,74 @@ public class ChatRoomService {
             throw new RestApiException(ErrorCode.BAD_REQUEST);
         }
 
-        // 이미 채팅방이 존재하는지 확인
         ChatRoom chatRoom
                 = chatRoomRepository.findByInitiatedByAndInitiatedTo(initiatedBy, initiatedTo)
-                .orElseGet(() -> {
-                    ChatRoom newChatRoom = ChatRoom.builder()
-                            .initiatedBy(initiatedBy)
-                            .initiatedTo(initiatedTo)
-                            .userChatRooms(new ArrayList<>())
-                            .build();
-                    UserChatRoom userChatRoom1 = UserChatRoom.builder()
-                            .user(initiatedBy)
-                            .chatRoom(newChatRoom)
-                            .build();
-                    UserChatRoom userChatRoom2 = UserChatRoom.builder()
-                            .user(initiatedTo)
-                            .chatRoom(newChatRoom)
-                            .build();
-                    newChatRoom.getUserChatRooms().add(userChatRoom1);
-                    newChatRoom.getUserChatRooms().add(userChatRoom2);
-                    return chatRoomRepository.save(newChatRoom);
-                });
+                .orElseGet(() -> createNewChatRoom(initiatedBy, initiatedTo));
 
         return CreateChatRoom.Response.fromEntity(chatRoom);
     }
 
-    @Transactional
+    /**
+     * 채팅방에 입장하고 메시지를 가져온다.
+     *
+     * @param user       입장하는 유저
+     * @param chatRoomId 입장할 채팅방
+     * @return 입장한 채팅방 정보
+     */
     public JoinChatRoom.Response joinChatRoomAndGetMessages(User user, Long chatRoomId) {
         ChatRoom chatRoom = findChatRoomById(chatRoomId);
 
-        // 내가 생성하거나 초대된 채팅방이 아닌 경우
-        if (!chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())
-                && !chatRoom.getInitiatedTo().getUserId().equals(user.getUserId())) {
-            throw new RestApiException(ErrorCode.BAD_REQUEST);
-        }
+        validateUserInChatRoom(user, chatRoom);
 
-        // 채팅방 메시지 조회
-        List<ChatMessage> chatMessages = chatService.findLatestChatMessagesByChatRoom(chatRoomId);
+        List<ChatMessage> chatMessages = chatService.getChatMessagesAndMarkAsRead(chatRoomId, user.getUserId());
 
-        // 메시지 읽음 처리
-        chatMessages.stream()
-                .filter(chatMessage -> !chatMessage.isRead())
-                .filter(chatMessage -> !chatMessage.getSenderId().equals(user.getUserId()))
-                .forEach(chatService::markAsRead);
-
-        // 나를 온라인 상태로 변경
         // TODO : 추후 redis로 관리
+        setUserToOnline(user, chatRoom);
+
+        return createJoinChatRoomResponse(chatRoom, user, chatMessages);
+    }
+
+    /**
+     * 채팅방 목록을 가져온다.
+     *
+     * @param user 채팅방 목록을 가져올 유저
+     * @return 채팅방 목록
+     */
+    public ChatRoomDto getChatRooms(User user) {
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserOrderByUpdatedAtDesc(user);
+        ChatRoomDto chatRoomDto = new ChatRoomDto();
+        for (ChatRoom chatRoom : chatRooms) {
+            if (chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())) {
+                chatRoomDto.addInquiredChatRoom(chatRoom);
+            } else {
+                chatRoomDto.addReceivedInquiryChatRoom(chatRoom);
+            }
+        }
+        return chatRoomDto;
+    }
+
+    private ChatRoom findChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findByChatRoomId(chatRoomId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+    }
+
+    private void setUserToOnline(User user, ChatRoom chatRoom) {
         chatRoom.getUserChatRooms().stream()
                 .filter(userChatRoom -> userChatRoom.getUser().getUserId().equals(user.getUserId()))
                 .findFirst()
-                .ifPresent(UserChatRoom::toggleOnline);
+                .ifPresent(UserChatRoom::setOnline);
+    }
 
+
+    private void validateUserInChatRoom(User user, ChatRoom chatRoom) {
+        if (!chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())
+                && !chatRoom.getInitiatedTo().getUserId().equals(user.getUserId())) {
+            throw new RestApiException(ErrorCode.USER_NOT_IN_CHAT_ROOM);
+        }
+    }
+
+    private JoinChatRoom.Response createJoinChatRoomResponse(ChatRoom chatRoom, User user,
+                                                             List<ChatMessage> chatMessages) {
         return JoinChatRoom.Response.of(
                 chatRoom.getChatRoomId(),
                 user.getUserId(),
@@ -100,21 +121,26 @@ public class ChatRoomService {
         );
     }
 
-    public ChatRoom findChatRoomById(Long chatRoomId) {
-        return chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new RestApiException(ErrorCode.CHAT_ROOM_NOT_FOUND));
+    public ChatRoom createNewChatRoom(User initiatedBy, User initiatedTo) {
+        ChatRoom newChatRoom = ChatRoom.builder()
+                .initiatedBy(initiatedBy)
+                .initiatedTo(initiatedTo)
+                .userChatRooms(new ArrayList<>())
+                .build();
+
+        UserChatRoom userChatRoom1 = createUserChatRoom(initiatedBy, newChatRoom);
+        UserChatRoom userChatRoom2 = createUserChatRoom(initiatedTo, newChatRoom);
+
+        newChatRoom.getUserChatRooms().add(userChatRoom1);
+        newChatRoom.getUserChatRooms().add(userChatRoom2);
+
+        return chatRoomRepository.save(newChatRoom);
     }
 
-    public ChatRoomDto getChatRooms(User user) {
-        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUserOrderByUpdatedAtDesc(user);
-        ChatRoomDto chatRoomDto = new ChatRoomDto();
-        for (ChatRoom chatRoom : chatRooms) {
-            if (chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())) {
-                chatRoomDto.addInquiredChatRoom(chatRoom);
-            } else {
-                chatRoomDto.addReceivedInquiryChatRoom(chatRoom);
-            }
-        }
-        return chatRoomDto;
+    private UserChatRoom createUserChatRoom(User user, ChatRoom chatRoom) {
+        return UserChatRoom.builder()
+                .user(user)
+                .chatRoom(chatRoom)
+                .build();
     }
 }

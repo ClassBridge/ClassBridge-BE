@@ -13,6 +13,11 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     Optional<ChatRoom> findByInitiatedByAndInitiatedTo(User initiatedBy, User initiatedTo);
 
     @Query("select cr from ChatRoom cr "
+            + "JOIN FETCH cr.userChatRooms "
+            + "where cr.chatRoomId = :chatRoomId")
+    Optional<ChatRoom> findByChatRoomId(Long chatRoomId);
+
+    @Query("select cr from ChatRoom cr "
             + "JOIN FETCH cr.initiatedBy "
             + "JOIN FETCH cr.initiatedTo "
             + "where cr.initiatedBy = :user or cr.initiatedTo = :user "
