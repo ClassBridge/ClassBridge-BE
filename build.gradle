@@ -63,7 +63,6 @@ dependencies {
 
     // OpenSearch Client
     implementation 'org.opensearch.client:opensearch-rest-high-level-client:2.13.0' // 최신 호환 가능한 버전으로 변경
-    implementation 'org.json:json:20240303'
 }
 
 tasks.named('test') {
