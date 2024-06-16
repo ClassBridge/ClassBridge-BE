@@ -26,7 +26,6 @@ import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,8 @@ public class UserService {
 
     private final S3Service s3Service;
 
-    public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
+    public UserService(UserRepository userRepository, CategoryRepository categoryRepository,
+                       PasswordEncoder passwordEncoder,
                        JWTService jwtService, S3Service s3Service) {
 
         this.userRepository = userRepository;
@@ -74,7 +74,7 @@ public class UserService {
 
         log.info("Checking if nickname '{}' exists", nickname);
 
-        if(userRepository.existsByNickname(nickname)){
+        if (userRepository.existsByNickname(nickname)) {
             log.warn("Nickname '{}' already exists", nickname);
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
@@ -87,7 +87,7 @@ public class UserService {
 
         log.info("Checking if email '{}' exists", email);
 
-        if(userRepository.existsByEmail(email)){
+        if (userRepository.existsByEmail(email)) {
             log.warn("Email '{}' is already registered", email);
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
@@ -161,14 +161,16 @@ public class UserService {
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
 
-        if(userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+        if (userRepository.existsByNickname(additionalInfoDto.getNickname())) {
             log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
 
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
-        Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
+        Gender gender =
+                additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase())
+                        : null;
 
         // 관심 카테고리 String -> Category 변환
         List<Category> interests = additionalInfoDto.getInterests().stream()
@@ -195,14 +197,16 @@ public class UserService {
             user.setProfileImageUrl(profileImageUrl);
         }
 
-        if(signupRequest.getUserDto().getPassword() != null) {
+        if (signupRequest.getUserDto().getPassword() != null) {
             user.setPassword(passwordEncoder.encode(signupRequest.getUserDto().getPassword()));
         }
         userRepository.save(user);
         log.info("User '{}' added successfully", user.getUsername());
 
-        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(), TokenType.ACCESS.getExpiryTime());
-        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(), TokenType.REFRESH.getExpiryTime());
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(),
+                TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(),
+                TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
@@ -231,8 +235,10 @@ public class UserService {
                 .map(Enum::name)
                 .collect(Collectors.toList());
 
-        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles, TokenType.ACCESS.getExpiryTime());
-        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles, TokenType.REFRESH.getExpiryTime());
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles,
+                TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles,
+                TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
@@ -253,7 +259,7 @@ public class UserService {
                     return new RestApiException(USER_NOT_FOUND);
                 });
 
-        if(additionalInfoDto == null && profileImage == null) {
+        if (additionalInfoDto == null && profileImage == null) {
             log.warn("No information to update");
             throw new RestApiException(NO_INFORMATION_TO_UPDATE);
         }
@@ -268,9 +274,12 @@ public class UserService {
                 user.setNickname(additionalInfoDto.getNickname());
             }
 
-            user.setPhone(additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
-            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender()) : user.getGender());
-            user.setBirthDate(additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
+            user.setPhone(
+                    additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
+            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender())
+                    : user.getGender());
+            user.setBirthDate(
+                    additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
 
             if (additionalInfoDto.getInterests() != null) {
                 List<Category> interests = additionalInfoDto.getInterests().stream()
@@ -301,5 +310,10 @@ public class UserService {
         } else {
             throw new RestApiException(UNEXPECTED_PRINCIPAL_TYPE);
         }
+    }
+
+    public User getUserByEmail(String userEmail) {
+        return findByEmail(userEmail)
+                .orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
     }
 }
