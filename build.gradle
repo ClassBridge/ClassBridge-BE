@@ -53,8 +53,16 @@ dependencies {
 
     implementation group: 'org.apache.httpcomponents.core5', name: 'httpcore5', version: '5.2.4'
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.opensearch.client:spring-data-opensearch:1.4.0'
+    implementation 'org.opensearch.client:opensearch-java:2.10.4'
+    implementation 'org.opensearch:opensearch-core:2.13.0'
+    implementation group: 'org.opensearch', name: 'opensearch-x-content', version: '2.13.0'
 
+    // Spring Data Elasticsearch
+    implementation 'org.springframework.data:spring-data-elasticsearch:5.2.7' // 최신 호환 가능한 버전으로 변경
+
+    // OpenSearch Client
+    implementation 'org.opensearch.client:opensearch-rest-high-level-client:2.13.0' // 최신 호환 가능한 버전으로 변경
 }
 
 tasks.named('test') {
