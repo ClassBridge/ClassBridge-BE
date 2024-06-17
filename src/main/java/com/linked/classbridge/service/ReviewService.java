@@ -1,5 +1,6 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Lesson;
@@ -7,12 +8,14 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.review.DeleteReviewResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
 import com.linked.classbridge.repository.UserRepository;
@@ -22,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,6 +44,9 @@ public class ReviewService {
     private final S3Service s3Service;
     private final OneDayClassService classService;
     private final UserRepository userRepository;
+
+    private final ElasticsearchOperations operations;
+    private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
 
     /**
      * 리뷰 등록
@@ -65,6 +72,8 @@ public class ReviewService {
 
         uploadAndSaveReviewImage(savedReview, request.image1(), request.image2(), request.image3());
         oneDayClass.addReview(savedReview); // 평점 등록
+
+        updateOneDayClassDocumentStarRate(oneDayClass);
 
         return RegisterReviewDto.Response.fromEntity(savedReview);
     }
@@ -95,6 +104,8 @@ public class ReviewService {
         review.update(request.contents(), request.rating());
 
         oneDayClass.updateTotalStarRate(diffRating); // 평점 업데이트
+
+        updateOneDayClassDocumentStarRate(oneDayClass);
 
         return UpdateReviewDto.Response.fromEntity(review);
     }
@@ -251,5 +262,11 @@ public class ReviewService {
         User tutor = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
         Page<Review> reviews = reviewRepository.findByTutor(tutor, pageable);
         return reviews.map(GetReviewResponse::fromEntity);
+    }
+
+    private void updateOneDayClassDocumentStarRate(OneDayClass oneDayClass) {
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        oneDayClassDocument.setStarRate(oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews()));
+        operations.save(oneDayClassDocument);
     }
 }

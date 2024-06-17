@@ -65,6 +65,8 @@ public class OneDayClass extends BaseEntity {
     private Double totalStarRate; // 총 별점 수
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Integer totalReviews;  // 총 리뷰 수
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private Integer totalWish;  // 총 찜 수
 
     private boolean hasParking;  // 주차장
     @Column(nullable = false)
