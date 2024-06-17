@@ -2,37 +2,23 @@ package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
 import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
-import static com.linked.classbridge.type.ErrorCode.CANNOT_ADD_WISH_OWN_CLASS;
-import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
-import static com.linked.classbridge.type.ErrorCode.EXISTS_WISH_CLASS;
-import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_WISH;
 import static com.linked.classbridge.type.ErrorCode.NOT_AUTHENTICATED_USER;
 import static com.linked.classbridge.type.ErrorCode.NO_INFORMATION_TO_UPDATE;
 import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
 import static com.linked.classbridge.type.ErrorCode.UNEXPECTED_PRINCIPAL_TYPE;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
-import static com.linked.classbridge.type.ErrorCode.WISH_NOT_FOUND;
 import static com.linked.classbridge.util.CookieUtil.createCookie;
 
 import com.linked.classbridge.domain.Category;
-import com.linked.classbridge.domain.ClassImage;
-import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.domain.Wish;
-import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.GoogleResponse;
 import com.linked.classbridge.dto.user.UserDto;
-import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
-import com.linked.classbridge.repository.ClassImageRepository;
-import com.linked.classbridge.repository.OneDayClassDocumentRepository;
-import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.repository.WishRepository;
 import com.linked.classbridge.security.CustomUserDetails;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
@@ -40,16 +26,13 @@ import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.TokenType;
 import com.linked.classbridge.type.UserRole;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -76,27 +59,15 @@ public class UserService {
     private final JWTService jwtService;
 
     private final S3Service s3Service;
-    private final OneDayClassRepository oneDayClassRepository;
-    private final WishRepository wishRepository;
-    private final ClassImageRepository classImageRepository;
-    private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
-    private final ElasticsearchOperations operations;
 
     public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
-                       JWTService jwtService, S3Service s3Service, OneDayClassRepository oneDayClassRepository,
-                       WishRepository wishRepository, ClassImageRepository classImageRepository,
-                       OneDayClassDocumentRepository oneDayClassDocumentRepository, ElasticsearchOperations operations) {
+                       JWTService jwtService, S3Service s3Service) {
 
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.s3Service = s3Service;
-        this.oneDayClassRepository = oneDayClassRepository;
-        this.wishRepository = wishRepository;
-        this.classImageRepository = classImageRepository;
-        this.oneDayClassDocumentRepository = oneDayClassDocumentRepository;
-        this.operations = operations;
     }
 
     public String checkNickname(String nickname) {
@@ -330,84 +301,5 @@ public class UserService {
         } else {
             throw new RestApiException(UNEXPECTED_PRINCIPAL_TYPE);
         }
-    }
-
-    public Page<WishDto> getWishList(String email, Pageable pageable) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-
-        List<Wish> list = wishRepository.findByUserUserId(user.getUserId());
-        Map<Long, Long> wishMap = list.stream().collect(Collectors.toMap(
-                wish -> wish.getOneDayClass().getClassId(),
-                Wish::getId
-        ));
-
-        List<Long> classIdList = list.stream().map(wish -> wish.getOneDayClass().getClassId()).toList();
-
-        Page<OneDayClass> classList = oneDayClassRepository.findAllByClassIdIn(classIdList, pageable);
-
-        Map<Long, String> imageMap = (classImageRepository.findAllByOneDayClassClassIdInAndSequence(classList.map(OneDayClass::getClassId).toList(), 1))
-                .stream().collect(Collectors.toMap(
-                        classImage -> classImage.getOneDayClass().getClassId(),
-                        ClassImage::getUrl
-                ));
-
-        Page<WishDto> wishDtoPage = classList.map(WishDto::new);
-        wishDtoPage.forEach(item -> {
-            item.setWishId(wishMap.get(item.getClassId()));
-            if(imageMap.containsKey(item.getClassId())) {
-                item.setClassImageUrl(imageMap.get(item.getClassId()));
-            }
-        });
-
-        return wishDtoPage;
-    }
-
-    public Boolean addWish(String email, Long classId) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = oneDayClassRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(Objects.equals(user.getUserId(), oneDayClass.getTutor().getUserId())) {
-            throw new RestApiException(CANNOT_ADD_WISH_OWN_CLASS);
-        }
-
-        if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())) {
-            throw new RestApiException(EXISTS_WISH_CLASS);
-        }
-
-        Wish wish = Wish.builder().user(user).oneDayClass(oneDayClass).build();
-
-        wishRepository.save(wish);
-
-        oneDayClass.setTotalWish(oneDayClass.getTotalWish() + 1);
-        oneDayClassRepository.save(oneDayClass);
-
-        updateOneDayClassDocumentTotalWish(oneDayClass);
-
-        return true;
-    }
-
-    public Boolean deleteWish(String email, Long wishId) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        Wish wish = wishRepository.findById(wishId).orElseThrow(() -> new RestApiException(WISH_NOT_FOUND));
-        OneDayClass oneDayClass = oneDayClassRepository.findById(wish.getOneDayClass().getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-
-        if(!Objects.equals(user.getUserId(), wish.getUser().getUserId())) {
-            throw new RestApiException(MISMATCH_USER_WISH);
-        }
-
-        wishRepository.delete(wish);
-
-        oneDayClass.setTotalWish(oneDayClass.getTotalWish() - 1);
-        oneDayClassRepository.save(oneDayClass);
-
-        updateOneDayClassDocumentTotalWish(oneDayClass);
-
-        return true;
-    }
-
-    private void updateOneDayClassDocumentTotalWish(OneDayClass oneDayClass) {
-        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-        oneDayClassDocument.setTotalWish(oneDayClass.getTotalWish());
-        operations.save(oneDayClassDocument);
     }
 }

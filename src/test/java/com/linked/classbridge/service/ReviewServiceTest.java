@@ -18,17 +18,14 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Review;
 import com.linked.classbridge.domain.ReviewImage;
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.review.DeleteReviewResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.ReviewImageRepository;
 import com.linked.classbridge.repository.ReviewRepository;
-import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +44,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,9 +58,6 @@ class ReviewServiceTest {
     private ReviewImageRepository reviewImageRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private LessonService lessonService;
 
     @Mock
@@ -72,12 +65,6 @@ class ReviewServiceTest {
 
     @InjectMocks
     private ReviewService reviewService;
-
-    @Mock
-    private OneDayClassDocumentRepository oneDayClassDocumentRepository;
-
-    @Mock
-    private ElasticsearchOperations operations;
 
     private User mockUser1;
     private User mockUser2;
@@ -314,8 +301,6 @@ class ReviewServiceTest {
                 mockOneDayClass1, request);
         Review savedReview = mockReview1;
 
-        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).build();
-
         given(reviewRepository.findByLessonAndUser(mockLesson1, mockUser1))
                 .willReturn(Optional.empty());
         given(lessonService.findLessonById(1L)).willReturn(mockLesson1);
@@ -323,8 +308,6 @@ class ReviewServiceTest {
         given(s3Service.uploadReviewImage(request.image2())).willReturn(url2);
         given(s3Service.uploadReviewImage(request.image3())).willReturn(url3);
         given(reviewRepository.save(reviewToSave)).willReturn(savedReview);
-
-        given(oneDayClassDocumentRepository.findById(mockOneDayClass1.getClassId())).willReturn(Optional.of(oneDayClassDocument));
 
         // when
         RegisterReviewDto.Response response = reviewService.registerReview(mockUser1, request);
@@ -425,11 +408,10 @@ class ReviewServiceTest {
         Long reviewId = 1L;
 
         UpdateReviewDto.Request request = createUpdateReviewDtoRequest();
-        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).build();
+
         Review savedReview = mockReview1;
 
         given(reviewRepository.findById(reviewId)).willReturn(Optional.of(savedReview));
-        given(oneDayClassDocumentRepository.findById(mockOneDayClass1.getClassId())).willReturn(Optional.of(oneDayClassDocument));
 
         // when
         UpdateReviewDto.Response response = reviewService.updateReview(mockUser1, request,
@@ -644,7 +626,7 @@ class ReviewServiceTest {
                         pageable, 4);
 
         given(reviewRepository.findByTutor(tutor, pageable)).willReturn(reviewPage);
-        given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
+
         // when
         Page<GetReviewResponse> responses = reviewService.getTutorReviews(tutor.getEmail(), pageable);
 
