@@ -13,7 +13,6 @@ import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
@@ -49,8 +48,6 @@ public class UserController {
     private final UserService userService;
 
     private final ReviewService reviewService;
-
-    private final UserRepository userRepository;
 
     @Operation(summary = "닉네임 중복 확인", description = "DB에 중복된 닉네임이 있는지 확인")
     @GetMapping("/auth/check-nickname")
@@ -99,16 +96,16 @@ public class UserController {
         if (additionalInfoDto == null) {
             throw new RestApiException(REQUIRED_USER_INFO);
         } else {
-            if(profileImage != null) {
+            if (profileImage != null) {
                 additionalInfoDto.setProfileImage(profileImage);
             }
 
-            if(additionalInfoDto.getPhoneNumber() == null
+            if (additionalInfoDto.getPhoneNumber() == null
                     || signupRequest.getAdditionalInfoDto().getPhoneNumber().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
 
-            if(signupRequest.getAdditionalInfoDto().getNickname() == null
+            if (signupRequest.getAdditionalInfoDto().getNickname() == null
                     || signupRequest.getAdditionalInfoDto().getNickname().isEmpty()) {
                 throw new RestApiException(REQUIRED_USER_INFO);
             }
@@ -177,8 +174,7 @@ public class UserController {
     public ResponseEntity<SuccessResponse<Page<GetReviewResponse>>> getClassReviews(
             @PageableDefault Pageable pageable
     ) {
-
-        User user = userRepository.findById(1L).orElse(null);
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
 
         return ResponseEntity.ok().body(
                 SuccessResponse.of(

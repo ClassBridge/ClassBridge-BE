@@ -89,18 +89,17 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/", "/api/users/auth/**").permitAll()
-                        .requestMatchers("/api/users/auth/reissue").permitAll()
-                        .requestMatchers("api/tutors/**").permitAll()
-                        .requestMatchers("/CB-websocket/**").permitAll()
+                        // permitAll
                         .requestMatchers("/", "/api/users/auth/**", "/swagger-ui/*", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()
+                        .requestMatchers("/api/tutors/**").permitAll()
+                        .requestMatchers("/api/class/**").permitAll()
+                        .requestMatchers("/CB-websocket/**").permitAll()
+                        .requestMatchers("/api/openapi/**").permitAll()
+
+                        // user role
                         .requestMatchers("/api/users").hasAnyRole("USER")
                         .requestMatchers("/api/users/**").hasAnyRole("USER")
-                        .requestMatchers("/api/openapi/**").permitAll()
-                        .requestMatchers("/api/users").hasRole("USER")
-                        .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())
                 .exceptionHandling((exception) -> exception
                         // 인증되지 않은 사용자가 보호된 리소스에 액세스하려고 할 때 호출
