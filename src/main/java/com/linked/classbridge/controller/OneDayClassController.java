@@ -1,7 +1,7 @@
 package com.linked.classbridge.controller;
 
 import com.linked.classbridge.dto.SuccessResponse;
-import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByUser;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
@@ -43,7 +43,7 @@ public class OneDayClassController {
 
     @Operation(summary = "클래스 상세 조회", description = "클래스 상세 조회")
     @GetMapping("/{classId}")
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getClassDetail(
+    public ResponseEntity<SuccessResponse<ClassResponseByUser>> getClassDetail(
             @PathVariable Long classId
     ) {
         return ResponseEntity.ok().body(
