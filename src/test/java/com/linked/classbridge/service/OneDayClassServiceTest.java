@@ -1,31 +1,31 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_TAG;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
 import static com.linked.classbridge.type.ErrorCode.LESSON_DATE_MUST_BE_AFTER_NOW;
-import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_TAG;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.linked.classbridge.domain.ClassFAQ;
-import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.ClassTag;
+import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDto.Request;
-import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
 import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.repository.ClassTagRepository;
 import com.linked.classbridge.repository.LessonRepository;
+import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import java.time.LocalDate;
@@ -40,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
@@ -79,6 +80,12 @@ class OneDayClassServiceTest {
 
     @Mock
     private ClassTagRepository tagRepository;
+
+    @Mock
+    private OneDayClassDocumentRepository oneDayClassDocumentRepository;
+
+    @Mock
+    private ElasticsearchOperations operations;
 
     @Test
     void registerFAQ() {
@@ -315,9 +322,6 @@ class OneDayClassServiceTest {
         User tutor = User.builder().userId(1L).email("example@example.com").build();
         OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).build();
 
-        given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
-        given(classRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
-
         ClassTagDto request = ClassTagDto.builder().name("tag입니다.").build();
 
         ClassTag responseTag = ClassTag.builder()
@@ -326,8 +330,14 @@ class OneDayClassServiceTest {
                 .oneDayClass(oneDayClass)
                 .build();
 
+        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).tagList(new ArrayList<>()).build();
+
         // When
+        given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
+        given(classRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
         given(tagRepository.save(any(ClassTag.class))).willReturn(responseTag);
+        given(oneDayClassDocumentRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClassDocument));
+        given(operations.save(oneDayClassDocument)).willReturn(oneDayClassDocument);
 
         // Execute the service method
         ClassTagDto response = oneDayClassService.registerTag(tutor.getEmail(), request, 1L);
@@ -386,10 +396,14 @@ class OneDayClassServiceTest {
                 .oneDayClass(oneDayClass)
                 .build();
 
+        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).tagList(List.of("tag")).build();
+
         // When
         given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
         given(tagRepository.findById(1L)).willReturn(Optional.of(originTag));
         given(tagRepository.save(any(ClassTag.class))).willReturn(responseTag);
+        given(oneDayClassDocumentRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClassDocument));
+        given(operations.save(oneDayClassDocument)).willReturn(oneDayClassDocument);
 
         // Execute the service method
         ClassTagDto response = oneDayClassService.updateTag(tutor.getEmail(), request, 1L, 1L);
@@ -405,9 +419,12 @@ class OneDayClassServiceTest {
         User tutor = User.builder().userId(1L).email("example@example.com").build();
         OneDayClass oneDayClass = OneDayClass.builder().classId(1L).tutor(tutor).build();
 
+        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).tagList(List.of("tag입니다.")).build();
+
         // When
         given(userRepository.findByEmail(tutor.getEmail())).willReturn(Optional.of(tutor));
-        given(tagRepository.findById(1L)).willReturn(Optional.of(ClassTag.builder().tagId(1L).oneDayClass(oneDayClass).build()));
+        given(tagRepository.findById(1L)).willReturn(Optional.of(ClassTag.builder().tagId(1L).name("tag입니다.").oneDayClass(oneDayClass).build()));
+        given(oneDayClassDocumentRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClassDocument));
 
         // Execute the service method
         boolean response = oneDayClassService.deleteTag(tutor.getEmail(), 1L, 1L);
