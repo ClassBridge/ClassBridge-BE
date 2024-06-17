@@ -3,13 +3,12 @@ package com.linked.classbridge.service;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_START_DATE;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS;
-import static com.linked.classbridge.type.ErrorCode.FAQ_NOT_FOUND;
-import static com.linked.classbridge.type.ErrorCode.TAG_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_TAG;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_LESSON_DATE_START_TIME;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
+import static com.linked.classbridge.type.ErrorCode.FAQ_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
@@ -22,6 +21,7 @@ import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_CLASS;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_FAQ;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_LESSON;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_TAG;
+import static com.linked.classbridge.type.ErrorCode.TAG_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Category;
@@ -34,12 +34,14 @@ import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByUser;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
-import com.linked.classbridge.dto.oneDayClass.LessonDto;
-import com.linked.classbridge.dto.oneDayClass.LessonDto.Request;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail.Request;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
@@ -89,7 +91,7 @@ public class OneDayClassService {
     private final WishRepository wishRepository;
 
     @Transactional
-    public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
+    public ClassResponseByTutor registerClass(String email, ClassRequest request, List<MultipartFile> files)
     {
         User tutor = getUser(email);
 
@@ -126,11 +128,9 @@ public class OneDayClassService {
 
         oneDayClass.setTagList(tagRepository.saveAll(request.tagList()));
 
-        oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
-
         operations.save(new OneDayClassDocument(oneDayClass));
 
-        return ClassDto.ClassResponse.fromEntity(oneDayClass);
+        return ClassResponseByTutor.fromEntity(oneDayClass);
     }
 
     private void validateClassName(String className) {
@@ -326,7 +326,7 @@ public class OneDayClassService {
         return true;
     }
 
-    public ClassDto.ClassResponse getOneDayClassByTutor(String email, long classId) {
+    public ClassResponseByTutor getOneDayClassByTutor(String email, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
@@ -336,10 +336,10 @@ public class OneDayClassService {
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
 
-        return ClassDto.ClassResponse.fromEntity(oneDayClass);
+        return ClassResponseByTutor.fromEntity(oneDayClass);
     }
 
-    public ClassDto.ClassResponse getOneDayClassByUser(String email, long classId) {
+    public ClassResponseByUser getOneDayClassByUser(String email, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         boolean isWish = false;
 
@@ -355,7 +355,7 @@ public class OneDayClassService {
             }
         }
 
-        return ClassDto.ClassResponse.fromEntity(oneDayClass, isWish);
+        return ClassResponseByUser.fromEntity(oneDayClass, isWish);
     }
 
     public OneDayClass findClassById(Long classId) {
@@ -498,7 +498,7 @@ public class OneDayClassService {
         }
     }
 
-    public LessonDto registerLesson(String email, LessonDto.Request request, Long classId) {
+    public LessonDtoDetail registerLesson(String email, LessonDtoDetail.Request request, Long classId) {
         if(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(classId, request.lessonDate(), request.startTime())) {
             throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
         }
@@ -512,7 +512,7 @@ public class OneDayClassService {
 
         validateOneDayClassMatchTutor(tutor, oneDayClass);
 
-        return new LessonDto(lessonRepository.save(request.toEntity(oneDayClass)), oneDayClass.getPersonal());
+        return new LessonDtoDetail(lessonRepository.save(request.toEntity(oneDayClass)), oneDayClass.getPersonal());
     }
 
     public Boolean deleteLesson(String email, Long classId, Long lessonId) {
@@ -526,7 +526,7 @@ public class OneDayClassService {
         return true;
     }
 
-    public LessonDto updateLesson(String email, Request request, Long classId, Long lessonId) {
+    public LessonDtoDetail updateLesson(String email, Request request, Long classId, Long lessonId) {
         if(request.lessonDate().isEqual(LocalDate.now()) || request.lessonDate().isBefore(LocalDate.now())) {
             throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
         }
@@ -542,7 +542,7 @@ public class OneDayClassService {
         lesson.setStartTime(request.startTime());
         lesson.setEndTime(request.startTime().plusMinutes(lesson.getOneDayClass().getDuration()));
 
-        return new LessonDto(lessonRepository.save(lesson), lesson.getOneDayClass().getPersonal());
+        return new LessonDtoDetail(lessonRepository.save(lesson), lesson.getOneDayClass().getPersonal());
 
     }
 
