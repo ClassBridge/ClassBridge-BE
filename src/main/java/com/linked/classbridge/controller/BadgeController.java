@@ -31,17 +31,18 @@ public class BadgeController {
 
     @Operation(summary = "뱃지 추가", description = "(테스트 환경) 개발자가 뱃지를 직접 등록합니다.")
     @PostMapping("/add/{badgeName}")
-    public ResponseEntity<SuccessResponse<MultipartFile>> uploadBadge(
+    public ResponseEntity<SuccessResponse<String>> uploadBadge(
             @PathVariable String badgeName,
-            @RequestParam("badgeImage") MultipartFile badgeImage
+            @RequestParam("badgeImage") MultipartFile badgeImage,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("threshold") int threshold
     ) {
-
-        badgeService.uploadBadge(badgeName, badgeImage);
+        badgeService.uploadBadge(badgeName, badgeImage, categoryId, threshold);
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
                         ResponseMessage.UPLOAD_BADGE_SUCCESS,
-                        badgeImage
+                        "uploaded badge successfully"
                 )
         );
     }

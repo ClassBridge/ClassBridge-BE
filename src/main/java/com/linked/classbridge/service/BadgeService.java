@@ -44,13 +44,17 @@ public class BadgeService {
     }
 
     // 테스트 환경에서 개발자가 직접 뱃지를 등록
-    public void uploadBadge(String badgeName, MultipartFile badgeImage) {
+    public void uploadBadge(String badgeName, MultipartFile badgeImage, Long categoryId, int threshold) {
 
         String imageUrl = s3Service.uploadImage(badgeImage, "badge/");
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.CATEGORY_NOT_FOUND));
 
         Badge badge = Badge.builder()
                 .name(badgeName)
                 .imageUrl(imageUrl)
+                .category(category)
+                .threshold(threshold)
                 .build();
 
         badgeRepository.save(badge);
