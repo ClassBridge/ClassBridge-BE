@@ -52,7 +52,6 @@ dependencies {
     testImplementation group: 'com.h2database', name: 'h2', version: '2.1.214'
 
     implementation group: 'org.apache.httpcomponents.core5', name: 'httpcore5', version: '5.2.4'
-    implementation 'org.json:json:20240303'
 }
 
 tasks.named('test') {

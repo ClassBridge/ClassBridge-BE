@@ -19,14 +19,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class TutorService {
 
+    private final BadgeService badgeService;
     private final UserService userService;
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final AttendanceRepository attendanceRepository;
 
-    public TutorService(UserService userService, UserRepository userRepository,
+    public TutorService(BadgeService badgeService, UserService userService, UserRepository userRepository,
                         ReservationRepository reservationRepository, AttendanceRepository attendanceRepository) {
 
+        this.badgeService = badgeService;
         this.userService = userService;
         this.userRepository = userRepository;
         this.reservationRepository = reservationRepository;
@@ -112,8 +114,15 @@ public class TutorService {
                     attendanceRepository.save(attendance);
                 });
 
-        log.info("attendance checked successfully");
+        log.info("{}: attendance checked successfully", user.getEmail());
 
-        return "attendance checked successfully";
+        String userEmail = user.getEmail();
+        String categoryName = String.valueOf(reservation.getLesson().getOneDayClass().getCategory().getName());
+
+        badgeService.addStamp(userEmail, categoryName);
+
+        log.info("{}: stamp issued successfully", user.getEmail());
+
+        return "attendance checked and stamp issued successfully";
     }
 }

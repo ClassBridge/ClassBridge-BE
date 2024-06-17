@@ -46,24 +46,6 @@ public class BadgeController {
         );
     }
 
-    @Operation(summary = "스템프 발급", description = "(테스트 환경) 사용자에게 스템프를 발급합니다.")
-    @PostMapping("/stamp/{categoryName}")
-    public ResponseEntity<SuccessResponse<String>> addStamp(
-            @PathVariable String categoryName,
-            HttpServletRequest request
-    ) {
-
-        String userEmail = jwtService.getEmail(request.getHeader("access"));
-        badgeService.addStamp(userEmail, categoryName);
-
-        return ResponseEntity.status(HttpStatus.OK).body(
-                SuccessResponse.of(
-                        ResponseMessage.UPLOAD_BADGE_SUCCESS,
-                        categoryName
-                )
-        );
-    }
-
     @Operation(summary = "뱃지 조회", description = "사용자의 뱃지 목록을 조회합니다.")
     @PreAuthorize("hasRole('USER')")
     @GetMapping
