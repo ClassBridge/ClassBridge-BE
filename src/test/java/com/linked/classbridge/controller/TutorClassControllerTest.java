@@ -20,6 +20,7 @@ import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.TutorService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
 import com.linked.classbridge.type.CategoryType;
@@ -43,6 +44,9 @@ class TutorClassControllerTest {
 
     @MockBean
     private OneDayClassService classService;
+
+    @MockBean
+    private TutorService tutorService;
 
     @Autowired
     private MockMvc mockMvc;

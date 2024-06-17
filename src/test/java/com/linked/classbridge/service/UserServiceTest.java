@@ -14,10 +14,12 @@ import com.linked.classbridge.domain.ClassImage;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.Wish;
+import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassImageRepository;
+import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.repository.WishRepository;
@@ -34,6 +36,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
@@ -67,6 +70,12 @@ class UserServiceTest {
 
     @Mock
     private ClassImageRepository classImageRepository;
+
+    @Mock
+    private OneDayClassDocumentRepository oneDayClassDocumentRepository;
+
+    @Mock
+    private ElasticsearchOperations operations;
 
     @Test
     @WithMockUser
@@ -181,9 +190,12 @@ class UserServiceTest {
                 .category(category)
                 .tutor(tutor).build();
 
+        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).totalWish(0).build();
+
         given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
         given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
         given(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())).willReturn(false);
+        given(oneDayClassDocumentRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClassDocument));
 
         boolean response = userService.addWish(user.getEmail(), oneDayClass.getClassId());
 
@@ -277,10 +289,12 @@ class UserServiceTest {
                 .tutor(tutor).build();
 
         Wish wish = Wish.builder().user(user).oneDayClass(oneDayClass).id(1L).build();
+        OneDayClassDocument oneDayClassDocument = OneDayClassDocument.builder().classId(1L).totalWish(0).build();
 
         given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
         given(oneDayClassRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClass));
         given(wishRepository.findById(wish.getId())).willReturn(Optional.of(wish));
+        given(oneDayClassDocumentRepository.findById(oneDayClass.getClassId())).willReturn(Optional.of(oneDayClassDocument));
 
         // when
         boolean response = userService.deleteWish(user.getEmail(), wish.getId());
