@@ -12,13 +12,21 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserChatRoom {
+@SQLDelete(sql = "UPDATE user_chat_room SET deleted_at = NOW() WHERE user_chat_room_id = ?")
+//@SQLRestriction("deleted_at is null")
+@FilterDef(name = "deletedChatRoomFilter", parameters = @ParamDef(name = "isDeleted", type = Boolean.class))
+@Filter(name = "deletedChatRoomFilter", condition = "(deleted_at IS NOT NULL) = :isDeleted")
+public class UserChatRoom extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,9 +44,6 @@ public class UserChatRoom {
     @Builder.Default
     private boolean isOnline = false;
 
-    @Builder.Default
-    private boolean isDeleted = false;
-
     public void setOnline() {
         this.isOnline = true;
     }
@@ -47,4 +52,7 @@ public class UserChatRoom {
         this.isOnline = false;
     }
 
+    public void restoreUserChatRoom() {
+        setDeletedAt(null);
+    }
 }

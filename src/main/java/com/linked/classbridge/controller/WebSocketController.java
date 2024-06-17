@@ -2,7 +2,7 @@ package com.linked.classbridge.controller;
 
 import com.linked.classbridge.dto.chat.SendMessageDto;
 import com.linked.classbridge.exception.WebsocketException;
-import com.linked.classbridge.service.ChatService;
+import com.linked.classbridge.service.chat.ChatService;
 import com.linked.classbridge.type.ErrorCode;
 import java.security.Principal;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class WebSocketController {
             throw new WebsocketException(ErrorCode.UNAUTHORIZED);
         }
 
-        chatService.sendMessage(principal.getName(), chatRoomId, sendRequest.message());
+        chatService.sendMessageProcess(principal.getName(), chatRoomId, sendRequest.message());
     }
 
     @MessageMapping("/read/{messageId}")
