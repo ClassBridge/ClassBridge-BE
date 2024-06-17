@@ -1,7 +1,6 @@
 package com.linked.classbridge.controller;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,13 +12,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.tutor.TutorInfoDto;
-import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.TutorService;
 import com.linked.classbridge.service.UserService;
-import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,7 +36,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
