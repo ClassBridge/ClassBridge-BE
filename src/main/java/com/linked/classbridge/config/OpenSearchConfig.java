@@ -18,19 +18,10 @@ public class OpenSearchConfig {
     @Value("${AWS_ES_SECRET_KEY}")
     private String secretKey;
 
-    @Value("${AWS_ES_USERNAME}")
-    private String username;
-
-    @Value("${AWS_ES_PASSWORD}")
-    private String password;
-
-
     @Bean
     public AWSCredentialsProvider customCredentialsProvider() {
         log.info("Using AWS credentials for access.");
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
-//        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
     }
-
 
 }
