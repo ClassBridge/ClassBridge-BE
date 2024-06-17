@@ -6,8 +6,8 @@ import com.linked.classbridge.dto.review.DeleteReviewResponse;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
-import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/api/reviews")
 public class ReviewController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ReviewService reviewService;
 
     @Operation(summary = "리뷰 등록", description = "리뷰 등록")
@@ -36,7 +36,7 @@ public class ReviewController {
     public ResponseEntity<SuccessResponse<RegisterReviewDto.Response>> registerReview(
             @Valid @ModelAttribute RegisterReviewDto.Request request
     ) {
-        User user = userRepository.findById(1L).orElse(null);
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 SuccessResponse.of(
@@ -52,7 +52,7 @@ public class ReviewController {
             @Valid @ModelAttribute UpdateReviewDto.Request request,
             @PathVariable Long reviewId
     ) {
-        User user = userRepository.findById(1L).orElse(null);
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
@@ -67,7 +67,7 @@ public class ReviewController {
     public ResponseEntity<SuccessResponse<DeleteReviewResponse>> deleteReview(
             @PathVariable Long reviewId
     ) {
-        User user = userRepository.findById(1L).orElse(null);
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
