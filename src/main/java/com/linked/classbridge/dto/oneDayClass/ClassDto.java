@@ -27,8 +27,9 @@ public class ClassDto {
     private Long classId;
     private String className;
     private String address;
-    private int timeTaken;
+    private int duration;
     private int price;
+    private int personal;
     private boolean hasParking;
     private String introduction;
     private LocalDate startDate;
@@ -36,14 +37,16 @@ public class ClassDto {
     private CategoryType categoryType;
     private double totalStarRate;
     private long totalReviews;
+    private int totalWish;
     private String classImageUrl;
 
     public ClassDto(OneDayClass oneDayClass) {
         this.classId = oneDayClass.getClassId();
         this.className = oneDayClass.getClassName();
         this.address = oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3();
-        this.timeTaken = oneDayClass.getDuration();
+        this.duration = oneDayClass.getDuration();
         this.price = oneDayClass.getPrice();
+        this.personal = oneDayClass.getPersonal();
         this.hasParking = oneDayClass.isHasParking();
         this.introduction = oneDayClass.getIntroduction();
         this.startDate = oneDayClass.getStartDate();
@@ -51,7 +54,7 @@ public class ClassDto {
         this.categoryType = oneDayClass.getCategory().getName();
         this.totalStarRate = oneDayClass.getTotalStarRate();
         this.totalReviews = oneDayClass.getTotalReviews();
-
+        this.totalWish = oneDayClass.getTotalWish();
     }
 
     @Builder
@@ -131,6 +134,7 @@ public class ClassDto {
                     .introduction(request.introduction)
                     .totalStarRate(0.0)
                     .totalReviews(0)
+                    .totalWish(0)
                     .startDate(request.startDate)
                     .endDate(request.endDate)
                     .build();
@@ -156,6 +160,7 @@ public class ClassDto {
 
             Double totalStarRate, // 총 별점 수
             Integer totalReviews,  // 총 리뷰 수
+            Integer totalWish,     // 총 찜 수
 
             boolean hasParking,  // 주차장 정보
             String introduction,        // 클래스 소개
@@ -184,6 +189,7 @@ public class ClassDto {
                     oneDayClass.getPersonal(),
                     oneDayClass.getTotalStarRate(),
                     oneDayClass.getTotalReviews(),
+                    oneDayClass.getTotalWish(),
                     oneDayClass.isHasParking(),
                     oneDayClass.getIntroduction(),
                     oneDayClass.getStartDate(),
