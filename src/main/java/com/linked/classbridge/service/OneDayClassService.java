@@ -50,6 +50,7 @@ import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
 import com.linked.classbridge.type.ErrorCode;
 import jakarta.transaction.Transactional;
 import java.time.DayOfWeek;
@@ -85,6 +86,7 @@ public class OneDayClassService {
     private final ClassImageRepository classImageRepository;
     private final ElasticsearchOperations operations;
     private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
+    private final WishRepository wishRepository;
 
     @Transactional
     public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
@@ -324,7 +326,7 @@ public class OneDayClassService {
         return true;
     }
 
-    public ClassDto.ClassResponse getOneDayClass(String email, long classId) {
+    public ClassDto.ClassResponse getOneDayClassByTutor(String email, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
@@ -335,6 +337,25 @@ public class OneDayClassService {
         oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
 
         return ClassDto.ClassResponse.fromEntity(oneDayClass);
+    }
+
+    public ClassDto.ClassResponse getOneDayClassByUser(String email, long classId) {
+        OneDayClass oneDayClass = getClass(classId);
+        boolean isWish = false;
+
+        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfter(classId, LocalDate.now().minusDays(1)));
+        oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
+
+        if(email != null) {
+            User user = getUser(email);
+            if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())) {
+                isWish = true;
+            }
+        }
+
+        return ClassDto.ClassResponse.fromEntity(oneDayClass, isWish);
     }
 
     public OneDayClass findClassById(Long classId) {

@@ -1,8 +1,11 @@
 package com.linked.classbridge.controller;
 
 import com.linked.classbridge.dto.SuccessResponse;
+import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class OneDayClassController {
 
     private final ReviewService reviewService;
+    private final OneDayClassService oneDayClassService;
+    private final UserService userService;
 
     @Operation(summary = "클래스 리뷰 조회", description = "클래스 리뷰 조회")
     @GetMapping("/{classId}/reviews")
@@ -32,6 +37,19 @@ public class OneDayClassController {
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_GET_SUCCESS,
                         reviewService.getClassReviews(classId, pageable)
+                )
+        );
+    }
+
+    @Operation(summary = "클래스 상세 조회", description = "클래스 상세 조회")
+    @GetMapping("/{classId}")
+    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getClassDetail(
+            @PathVariable Long classId
+    ) {
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
+                        oneDayClassService.getOneDayClassByUser(userService.checkLogin() ? userService.getCurrentUserEmail() : null, classId)
                 )
         );
     }

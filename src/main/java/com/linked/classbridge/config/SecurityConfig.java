@@ -93,6 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/api/users/auth/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("api/tutors/**").permitAll()
+                        .requestMatchers("api/class/**").permitAll()
                         .requestMatchers("/CB-websocket/**").permitAll()
                         .requestMatchers("/", "/api/users/auth/**", "/swagger-ui/*", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()

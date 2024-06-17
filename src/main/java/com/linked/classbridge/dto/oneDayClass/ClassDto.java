@@ -168,7 +168,8 @@ public class ClassDto {
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
             CategoryType category,
-            Long userId,
+            Long userId,   // 강사 id
+            boolean isWish,  // 찜 여부
 
             List<ClassImageDto> imageList,
             List<LessonDto> lessonList,
@@ -196,6 +197,35 @@ public class ClassDto {
                     oneDayClass.getEndDate(),
                     oneDayClass.getCategory().getName(),
                     oneDayClass.getTutor().getUserId(),
+                    false,
+                    oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
+                    oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
+                    oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),
+                    oneDayClass.getTagList().stream().map(ClassTagDto::new).toList());
+        }
+
+        public static ClassResponse fromEntity(OneDayClass oneDayClass, boolean isWish) {
+            return new ClassResponse(
+                    oneDayClass.getClassId(),
+                    oneDayClass.getClassName(),
+                    oneDayClass.getAddress1(),
+                    oneDayClass.getAddress2(),
+                    oneDayClass.getAddress3(),
+                    oneDayClass.getLatitude(),
+                    oneDayClass.getLongitude(),
+                    oneDayClass.getDuration(),
+                    oneDayClass.getPrice(),
+                    oneDayClass.getPersonal(),
+                    oneDayClass.getTotalStarRate(),
+                    oneDayClass.getTotalReviews(),
+                    oneDayClass.getTotalWish(),
+                    oneDayClass.isHasParking(),
+                    oneDayClass.getIntroduction(),
+                    oneDayClass.getStartDate(),
+                    oneDayClass.getEndDate(),
+                    oneDayClass.getCategory().getName(),
+                    oneDayClass.getTutor().getUserId(),
+                    isWish,
                     oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
                     oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
                     oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),

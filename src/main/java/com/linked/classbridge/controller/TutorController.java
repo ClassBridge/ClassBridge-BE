@@ -113,7 +113,7 @@ public class TutorController {
             @PathVariable Long classId) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), classId))
+                oneDayClassService.getOneDayClassByTutor(userService.getCurrentUserEmail(), classId))
         );
     }
 
