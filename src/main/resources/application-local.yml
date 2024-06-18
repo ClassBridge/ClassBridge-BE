@@ -61,6 +61,9 @@ cloud:
     credentials:
       access-key: ${AWS_ACCESS_KEY}
       secret-key: ${AWS_SECRET_KEY}
+    es:
+      endPoint: ${ELASTICSEARCH_ENDPOINT}
+      region: ${ELASTICSEARCH_REGION}
 
 pay:
   ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
