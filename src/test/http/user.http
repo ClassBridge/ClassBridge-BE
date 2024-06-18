@@ -1,0 +1,49 @@
+### 회원가입 테스트
+POST http://localhost:8080/api/users/auth/signup
+Content-Type: multipart/form-data; boundary=boundary123
+
+--boundary123
+Content-Disposition: form-data; name="signupRequest"
+
+{
+  "userDto": {
+    "provider": "email",
+    "providerId": "123456788",
+    "email": "usertest@example.com",
+    "password": "securepassword",
+    "username": "exampleUser",
+    "authType": "EMAIL",
+    "roles": [
+      "USER"
+    ]
+  },
+  "additionalInfoDto": {
+    "nickname": "nickname",
+    "phoneNumber": "010-1234-5677",
+    "gender": "MALE",
+    "birthDate": "1990-01-02",
+    "interests": ["COOKING"]
+  }
+}
+--boundary123--
+
+### 로그인 테스트
+POST http://localhost:8080/api/users/auth/signin
+Content-Type: application/json
+
+{
+  "email": "usertest@example.com",
+  "password": "securepassword"
+}
+
+### 이메일 중복 확인 테스트
+GET http://localhost:8080/api/users/auth/check-email?email=testuser@example.com
+Content-Type: application/json
+
+### 닉네임 중복 확인 테스트
+GET http://localhost:8080/api/users/auth/check-nickname?nickname=testnickname
+Content-Type: application/json
+
+### 회원 리뷰 조회 테스트
+GET http://localhost:8080/api/users/reviews?page=0&size=5&sort=createdAt,desc
+Content-Type: application/json

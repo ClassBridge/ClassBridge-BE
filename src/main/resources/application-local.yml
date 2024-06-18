@@ -1,0 +1,89 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  jwt:
+    secret: ${JWT_SECRET}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/${DB_NAME}?serverTimezone=UTC&CharacterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  mvc:
+    pathmatch:
+      matching-strategy: path_pattern_parser
+  jackson:
+    date-format: yyyy-MM-dd
+    time-zone: Asia/Seoul
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        show-sql: true
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - https://www.googleapis.com/auth/userinfo.profile
+              - https://www.googleapis.com/auth/userinfo.email
+            redirect-uri: "http://localhost:8080/api/users/auth/google"
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 100MB
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE}
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+
+pay:
+  ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
+  approve-url: https://open-api.kakaopay.com/online/v1/payment/approve
+  cancel-url: http://localhost:8080/payment/kakao/cancel
+  cid: ${KAKAO_PAY_CID}
+  dev-key: ${KAKAO_PAY_DEV_KEY}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    groups-order: DESC
+    operationsSorter: method
+    disable-swagger-default-url: true
+    display-request-duration: true
+    defaultModelsExpandDepth: -1
+  api-docs:
+    path: /v3/api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  paths-to-match:
+    - /**
+
+openapi:
+  url: ${OPEN_API_BASE_URL}
+  key: ${OPEN_API_KEY}

@@ -1,0 +1,22 @@
+### 결제
+POST http://localhost:8080/api/payments/prepare
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODE4NDMxOCwiZXhwIjoxNzE4MTg0OTE4fQ.XMjniYYGYMLvegLDcXm_K2mu2ZT0Z5kFrwAVcWE--YU
+
+{
+  "quantity": 2,
+  "total_amount": 10000,
+  "reservation_id":10,
+  "item_name": "코딩클래스"
+}
+
+### test
+POST http://localhost:8080/api/payments/complete
+Content-Type: application/json
+
+{
+    "tid": "test_tid",
+    "partner_order_id": "test_order_id",
+    "partner_user_id": "test_user_id",
+    "pg_token": "test_pg_token"
+}
