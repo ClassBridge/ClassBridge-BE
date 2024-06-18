@@ -9,6 +9,7 @@ import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_LESSON_DATE_START_TIME;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
 import static com.linked.classbridge.type.ErrorCode.FAQ_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_DATE;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
@@ -31,12 +32,14 @@ import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.Wish;
 import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByUser;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassSearchDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
@@ -53,21 +56,45 @@ import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.repository.WishRepository;
+import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.type.LocationType;
+import com.linked.classbridge.type.OrderType;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.common.geo.GeoPoint;
+import org.opensearch.common.unit.DistanceUnit;
+import org.opensearch.data.client.orhlc.NativeSearchQuery;
+import org.opensearch.data.client.orhlc.NativeSearchQueryBuilder;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.search.sort.GeoDistanceSortBuilder;
+import org.opensearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -89,6 +116,7 @@ public class OneDayClassService {
     private final ElasticsearchOperations operations;
     private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
     private final WishRepository wishRepository;
+    private final RestHighLevelClient client;
 
     @Transactional
     public ClassResponseByTutor registerClass(String email, ClassRequest request, List<MultipartFile> files)
@@ -107,6 +135,7 @@ public class OneDayClassService {
 
         validateClassName(oneDayClass.getClassName());
         validateClassIntroduction(oneDayClass.getIntroduction());
+        validateClassDate(oneDayClass);
 
         kakaoMapService.extracted(oneDayClass);
 
@@ -131,6 +160,20 @@ public class OneDayClassService {
         operations.save(new OneDayClassDocument(oneDayClass));
 
         return ClassResponseByTutor.fromEntity(oneDayClass);
+    }
+
+    private void validateClassDate(OneDayClass oneDayClass) {
+        if(oneDayClass.getStartDate() == null) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
+
+        if(oneDayClass.getEndDate() != null && oneDayClass.getEndDate().isBefore(LocalDate.now())) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
+
+        if(oneDayClass.getEndDate() != null && oneDayClass.getEndDate().isBefore(oneDayClass.getStartDate())) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
     }
 
     private void validateClassName(String className) {
@@ -161,11 +204,14 @@ public class OneDayClassService {
     }
 
     private List<Lesson> createRepeatLesson(ClassRequest request, OneDayClass oneDayClass) {
-        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(oneDayClass.getStartDate(), oneDayClass.getEndDate());
+        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap =
+                DayOfWeekListCreator.createDayOfWeekLists(oneDayClass.getStartDate().isBefore(LocalDate.now()) ? LocalDate.now() : oneDayClass.getStartDate(), oneDayClass.getEndDate());
 
         List<Lesson> lessonList = new ArrayList<>();
         for(RepeatClassDto repeatClassDto : request.lesson()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto, oneDayClass);
+            if(dayOfWeekListMap.containsKey(repeatClassDto.getDayOfWeek())) {
+                addLesson(dayOfWeekListMap, lessonList, repeatClassDto, oneDayClass);
+            }
         }
 
         return lessonList;
@@ -342,6 +388,7 @@ public class OneDayClassService {
     public ClassResponseByUser getOneDayClassByUser(String email, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         boolean isWish = false;
+        boolean isWanted = false;
 
         oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfter(classId, LocalDate.now().minusDays(1)));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
@@ -355,7 +402,11 @@ public class OneDayClassService {
             }
         }
 
-        return ClassResponseByUser.fromEntity(oneDayClass, isWish);
+        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsLessThan(oneDayClass.getClassId(), LocalDate.now().minusDays(1), oneDayClass.getPersonal())) {
+            isWanted = true;
+        }
+
+        return ClassResponseByUser.fromEntity(oneDayClass, isWish, isWanted);
     }
 
     public OneDayClass findClassById(Long classId) {
@@ -584,4 +635,165 @@ public class OneDayClassService {
             throw new RestApiException(EXISTS_RESERVED_PERSON);
         }
     }
+
+    public Page<ClassSearchDto> searchClass(String email, String query, CategoryType categoryType, double lat, double lng, LocationType location, OrderType orderType, int page) {
+        if(page < 1) page = 1;
+        NativeSearchQuery searchQuery = buildSearchQuery(query, categoryType, lat, lng, location, orderType, page);
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(searchQuery.getQuery());
+        Objects.requireNonNull(searchQuery.getOpenSearchSorts()).forEach(searchSourceBuilder::sort);
+        SearchHits<OneDayClassDocument> searchHits = operations.search(searchQuery, OneDayClassDocument.class);
+        List<ClassSearchDto> documents = searchHits.stream().map(SearchHit::getContent).map(ClassSearchDto::new).collect(Collectors.toList());
+
+        if(email != null && !email.isEmpty()) {
+            User user = getUser(email);
+
+            List<Long> wishListIds = wishRepository.findByUserUserId(user.getUserId())
+                    .stream().map(Wish::getOneDayClass).map(OneDayClass::getClassId).toList();
+
+            documents.forEach(document -> {
+                if(wishListIds.contains(document.getClassId())) {
+                    document.setWish(true);
+                }
+            });
+        }
+
+        return new PageImpl<>(documents, PageRequest.of(page - 1, 20), searchHits.getTotalHits());
+    }
+
+    private NativeSearchQuery buildSearchQuery(String query, CategoryType categoryType, double lat, double lng, LocationType location, OrderType orderType, int page) {
+        int size = 20; // 한 페이지에 표시할 문서 수
+        int from = (page - 1) * size; // 시작 문서 번호
+
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+
+        if(lat != 0.0 && lng != 0.0) {
+            queryBuilder.must(QueryBuilders.geoDistanceQuery("location")
+                    .point(lat, lng)
+                    .distance("5km"));
+        }
+
+        if(location != null) {
+            queryBuilder.should(QueryBuilders.matchQuery("address1", location.toString()));
+        }
+
+        if (categoryType != null) {
+            queryBuilder.must(QueryBuilders.matchQuery("category", categoryType.toString()));
+        }
+
+        if (query != null && !query.isEmpty()) {
+            // className 또는 tutorName이 query와 일치하는 경우
+            BoolQueryBuilder classNameOrTutorName = QueryBuilders.boolQuery()
+                    .should(QueryBuilders.wildcardQuery("className", "*" + query + "*"))
+                    .should(QueryBuilders.wildcardQuery("tutorName", "*" + query + "*"))
+                    .should(QueryBuilders.termQuery("category", query));
+
+            // tagList가 query와 정확히 일치하는 경우
+            QueryBuilder tagQuery = QueryBuilders.termQuery("tagList", query);
+
+            // 최종 쿼리 조합
+            BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
+                    .should(classNameOrTutorName)
+                    .should(tagQuery);
+
+            queryBuilder.must(finalQuery);
+        }
+
+        queryBuilder.filter(QueryBuilders.rangeQuery("endDate").gte(LocalDate.now()));
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder);
+
+        switch (orderType) {
+            case WISH:
+                searchSourceBuilder.sort("totalWish", SortOrder.DESC);
+                break;
+            case DIST:
+                GeoPoint geoPoint = new GeoPoint(lat, lng);
+                GeoDistanceSortBuilder geoDistanceSortBuilder = new GeoDistanceSortBuilder("location", geoPoint)
+                        .unit(DistanceUnit.METERS)
+                        .order(SortOrder.ASC);
+                searchSourceBuilder.sort(geoDistanceSortBuilder);
+                break;
+            case STAR:
+                searchSourceBuilder.sort("starRate", SortOrder.DESC);
+                break;
+            default:
+                searchSourceBuilder.sort("totalWish", SortOrder.DESC);
+                break;
+        }
+
+        searchSourceBuilder.from(from);
+        searchSourceBuilder.size(size);
+
+        return new NativeSearchQueryBuilder()
+                .withQuery(queryBuilder)
+                .withPageable(PageRequest.of(page - 1, 20))
+                .withSorts(searchSourceBuilder.sorts())
+                .build();
+    }
+
+    public List<String> autoCompleteSearch(String query) throws IOException {
+        String indexName = "onedayclass";
+        Set<String> set = new HashSet<>();
+        String[] fieldList = {"className", "tutorName", "tagList"};
+
+        SearchRequest searchRequest = new SearchRequest(indexName);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+        BoolQueryBuilder classNameOrTutorName = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchPhrasePrefixQuery("className", query))
+                .should(QueryBuilders.matchPhrasePrefixQuery("tutorName", query))
+                .should(QueryBuilders.wildcardQuery("tagList", query + "*"));
+
+        // 최종 쿼리 조합
+        BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
+                .should(classNameOrTutorName);
+
+        queryBuilder.must(finalQuery);
+
+        searchSourceBuilder.query(queryBuilder);
+
+        // _source 매개변수 사용하여 특정 필드만 가져오기
+        searchSourceBuilder.fetchSource(fieldList, null).size(5);
+
+        searchRequest.source(searchSourceBuilder);
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 검색 결과 처리
+        for (org.opensearch.search.SearchHit hit : searchResponse.getHits()) {
+            Map<String, Object> source = hit.getSourceAsMap();
+            for(String field : fieldList) {
+                Object highlight = source.get(field);
+                if (highlight instanceof ArrayList<?>) {
+                    List<String> tagList = (ArrayList<String>) highlight;
+                    for (String tag : tagList) {
+                        if(tag.contains(query)) {
+                            set.add(tag);
+                        }
+                    }
+                } else if(highlight.toString().contains(query)) {
+                    set.add(highlight.toString());
+                }
+            }
+        }
+
+        List<String> list = new ArrayList<>(set.stream().toList());
+
+        list.sort((o1, o2) -> {
+            if(o1.length() != o2.length()) {
+                return o1.length() - o2.length();
+            } else {
+                return o1.compareTo(o2);
+            }
+        });
+
+        return list.size() > 5 ? list.subList(0, 5) : list;
+    }
+
+
 }
+

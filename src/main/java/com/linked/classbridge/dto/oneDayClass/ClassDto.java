@@ -230,15 +230,17 @@ public class ClassDto {
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
             CategoryType category,
-            Long userId,   // 강사 id
+            Long tutorId,   // 강사 id
+            String tutorName,  // 강사 닉네임
+            String tutorIntroduction,
             boolean isWish,  // 찜 여부
-
+            boolean isWanted, // 수강 신청 가능 여부
             List<ClassImageDto> imageList,
             List<LessonDto> lessonList,
             List<ClassFAQDto> faqList,
             List<ClassTagDto> tagList
     ) {
-        public static ClassResponseByUser fromEntity(OneDayClass oneDayClass, boolean isWish) {
+        public static ClassResponseByUser fromEntity(OneDayClass oneDayClass, boolean isWish, boolean isWanted) {
             return new ClassResponseByUser(
                     oneDayClass.getClassId(),
                     oneDayClass.getClassName(),
@@ -257,7 +259,10 @@ public class ClassDto {
                     oneDayClass.getEndDate(),
                     oneDayClass.getCategory().getName(),
                     oneDayClass.getTutor().getUserId(),
+                    oneDayClass.getTutor().getNickname(),
+                    oneDayClass.getTutor().getSelfIntroduction(),
                     isWish,
+                    isWanted,
                     oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
                     oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
                     oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),

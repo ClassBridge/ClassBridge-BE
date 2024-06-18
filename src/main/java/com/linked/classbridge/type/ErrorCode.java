@@ -72,6 +72,7 @@ public enum ErrorCode {
     CLASS_HAVE_MAX_FAQ(HttpStatus.BAD_REQUEST, "클래스는 최대 5개의 FAQ를 만들 수 있습니다."),
     INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
+    INVALIDATE_CLASS_DATE(HttpStatus.BAD_REQUEST, "허용하지 않는 클래스 날짜입니다."),
     INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
     MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 인원을 초과했습니다."),
 

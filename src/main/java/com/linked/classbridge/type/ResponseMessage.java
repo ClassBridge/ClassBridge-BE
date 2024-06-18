@@ -37,6 +37,9 @@ public enum ResponseMessage {
     WISH_ADD_SUCCESS("Wish 추가 성공"),
     WISH_DELETE_SUCCESS("Wish 삭제 성공"),
 
+    ONE_DAY_CLASS_SEARCH_SUCCESS("검색 성공"),
+    ONE_DAY_CLASS_AUTO_COMPLETE_SUCCESS("자동 완성 성공"),
+
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
