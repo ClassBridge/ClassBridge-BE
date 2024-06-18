@@ -90,3 +90,7 @@ springdoc:
 openapi:
   url: ${OPEN_API_BASE_URL}
   key: ${OPEN_API_KEY}
+
+kakaomap:
+  admin-key: ${KAKAO_MAP_ADMIN_KEY}
+  map-url: https://dapi.kakao.com/v2/local/search/address.json
