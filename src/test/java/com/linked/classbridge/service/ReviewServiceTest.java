@@ -568,7 +568,7 @@ class ReviewServiceTest {
                 mockOneDayClass1.getClassName(), mockOneDayClass1.getClassName());
         assertThat(responses).extracting("lessonId").containsExactly(
                 mockLesson1.getLessonId(), mockLesson1.getLessonId());
-        assertThat(responses).extracting("userId").containsExactly(
+        assertThat(responses).extracting("tutorId").containsExactly(
                 mockUser1.getUserId(), mockUser2.getUserId());
         assertThat(responses).extracting("userNickName").containsExactly(
                 mockUser1.getNickname(), mockUser2.getNickname());
@@ -621,7 +621,7 @@ class ReviewServiceTest {
                 mockOneDayClass1.getClassName(), mockOneDayClass2.getClassName());
         assertThat(responses).extracting("lessonId").containsExactly(
                 mockLesson1.getLessonId(), mockLesson2.getLessonId());
-        assertThat(responses).extracting("userId").containsExactly(
+        assertThat(responses).extracting("tutorId").containsExactly(
                 mockUser1.getUserId(), mockUser1.getUserId());
         assertThat(responses).extracting("userNickName").containsExactly(
                 mockUser1.getNickname(), mockUser1.getNickname());
@@ -662,7 +662,7 @@ class ReviewServiceTest {
         assertThat(responses).extracting("lessonId").containsExactly(
                 mockLesson1.getLessonId(), mockLesson1.getLessonId()
                 , mockLesson2.getLessonId(), mockLesson2.getLessonId());
-        assertThat(responses).extracting("userId").containsExactly(
+        assertThat(responses).extracting("tutorId").containsExactly(
                 mockUser1.getUserId(), mockUser2.getUserId(),
                 mockUser1.getUserId(), mockUser2.getUserId());
         assertThat(responses).extracting("userNickName").containsExactly(

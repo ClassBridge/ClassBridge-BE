@@ -24,5 +24,4 @@ public class OpenSearchConfig {
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
     }
 
-
 }
