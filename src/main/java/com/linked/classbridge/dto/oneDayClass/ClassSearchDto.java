@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 @Setter
 @Builder
@@ -22,10 +21,9 @@ public class ClassSearchDto {
     private Long classId;
     private String className;   // 클래스명
     private String tutorName;   // 강사 닉네임
-    private String address1;    // 시도 명
-    private String address2;    // 시군구 명
-    private String address3;    // 나머지 상세 주소
-    private GeoPoint location;
+    private String address;    // 시도 명
+    private double lat;     // 위도
+    private double lng;     // 경도
     private int duration;      // 소요 시간
     private int price;          // 가격
     private int personal;   // 수강 최대 인원
@@ -43,10 +41,9 @@ public class ClassSearchDto {
         this.classId = oneDayClassDocument.getClassId();
         this.className = oneDayClassDocument.getClassName();
         this.tutorName = oneDayClassDocument.getTutorName();
-        this.address1 = oneDayClassDocument.getAddress1();
-        this.address2 = oneDayClassDocument.getAddress2();
-        this.address3 = oneDayClassDocument.getAddress3();
-        this.location = oneDayClassDocument.getLocation();
+        this.address = oneDayClassDocument.getAddress1() + " " + oneDayClassDocument.getAddress2() + " " + oneDayClassDocument.getAddress3();
+        this.lat = oneDayClassDocument.getLocation().getLat();
+        this.lng = oneDayClassDocument.getLocation().getLon();
         this.duration = oneDayClassDocument.getDuration();
         this.price = oneDayClassDocument.getPrice();
         this.personal = oneDayClassDocument.getPersonal();
