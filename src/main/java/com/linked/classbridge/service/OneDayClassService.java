@@ -662,20 +662,20 @@ public class OneDayClassService {
         return new PageImpl<>(documents, PageRequest.of(page - 1, 20), searchHits.getTotalHits());
     }
 
-    private NativeSearchQuery buildSearchQuery(String query, CategoryType categoryType, double lat, double lng, LocationType location, OrderType orderType, int page) {
+    private NativeSearchQuery buildSearchQuery(String query, CategoryType categoryType, double lat, double lnt, LocationType location, OrderType orderType, int page) {
         int size = 20; // 한 페이지에 표시할 문서 수
         int from = (page - 1) * size; // 시작 문서 번호
 
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
 
-        if(lat != 0.0 && lng != 0.0) {
+        if(lat != 0.0 && lnt != 0.0) {
             queryBuilder.must(QueryBuilders.geoDistanceQuery("location")
-                    .point(lat, lng)
+                    .point(lat, lnt)
                     .distance("5km"));
         }
 
         if(location != null) {
-            queryBuilder.should(QueryBuilders.matchQuery("address1", location.toString()));
+            queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery("address1", location.toString()));
         }
 
         if (categoryType != null) {
@@ -710,7 +710,7 @@ public class OneDayClassService {
                 searchSourceBuilder.sort("totalWish", SortOrder.DESC);
                 break;
             case DIST:
-                GeoPoint geoPoint = new GeoPoint(lat, lng);
+                GeoPoint geoPoint = new GeoPoint(lat, lnt);
                 GeoDistanceSortBuilder geoDistanceSortBuilder = new GeoDistanceSortBuilder("location", geoPoint)
                         .unit(DistanceUnit.METERS)
                         .order(SortOrder.ASC);
