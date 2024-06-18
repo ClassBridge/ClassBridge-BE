@@ -3,7 +3,9 @@ package com.linked.classbridge.controller;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ResponseMessage.REVIEW_GET_SUCCESS;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -63,6 +66,7 @@ class OneDayClassControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("클래스 리뷰 목록 조회 성공")
     void getClassReviews() throws Exception {
         // given
@@ -72,10 +76,12 @@ class OneDayClassControllerTest {
         // when & then
         mockMvc.perform(get("/api/class/{classId}/reviews", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
                         .param("page", "0")
                         .param("size", "5")
                         .param("sort", "createdAt,desc")
                 )
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value(REVIEW_GET_SUCCESS.getMessage()))
@@ -93,6 +99,7 @@ class OneDayClassControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("클래스 리뷰 목록 조회 실패 - 존재하지 않는 클래스")
     void getClassReviewsFail() throws Exception {
         // given
@@ -102,10 +109,12 @@ class OneDayClassControllerTest {
         // when & then
         mockMvc.perform(get("/api/class/{classId}/reviews", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
                         .param("page", "0")
                         .param("size", "5")
                         .param("sort", "createdAt,desc")
                 )
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(CLASS_NOT_FOUND.name()))
                 .andExpect(jsonPath("$.message").value(CLASS_NOT_FOUND.getDescription()))
