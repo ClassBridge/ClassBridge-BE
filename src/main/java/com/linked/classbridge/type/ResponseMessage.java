@@ -56,6 +56,9 @@ public enum ResponseMessage {
     ATTENDANCE_CHECK_SUCCESS("출석 체크 성공"),
     GET_USER_BADGES_SUCCESS("사용자 뱃지 조회 성공"),
     UPLOAD_BADGE_SUCCESS("뱃지 등록 성공"),
+
+    GET_TOP_CLASSES_SUCCESS("기본 추천 클래스 조회 성공"),
+    GET_TOP_CLASSES_FOR_USER_SUCCESS("사용자 추천 클래스 조회 성공"),
     ;
     private final String message;
 }
