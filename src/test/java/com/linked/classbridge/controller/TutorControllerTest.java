@@ -1,7 +1,6 @@
 package com.linked.classbridge.controller;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -39,7 +38,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -186,5 +184,85 @@ class TutorControllerTest {
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("강사 정보 수정 성공"));
+    }
+
+    @Test
+    @WithMockUser(roles = "TUTOR")
+    @DisplayName("출석체크 및 스템프 부여 성공")
+    public void checkAttendance_success() throws Exception {
+
+        Long userId = 1L;
+        Long reservationId = 1L;
+        String expectedResponse = "attendance checked and stamp issued successfully";
+
+        when(tutorService.checkAttendance(userId, reservationId)).thenReturn(expectedResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
+                        .param("userId", userId.toString())
+                        .param("reservationId", reservationId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "TUTOR")
+    @DisplayName("출석체크 및 스템프 부여 실패 - 예약 정보 없음")
+    public void checkAttendance_failure_reservation_not_found() throws Exception {
+
+        Long userId = 1L;
+        Long reservationId = 1L;
+
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
+                        .param("userId", userId.toString())
+                        .param("reservationId", reservationId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "TUTOR")
+    @DisplayName("출석체크 및 스템프 부여 실패 - 레슨 당일에만 출석체크 가능")
+    public void checkAttendance_failure_not_today_lesson() throws Exception {
+
+        Long userId = 1L;
+        Long reservationId = 1L;
+
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_TODAY_LESSON));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
+                        .param("userId", userId.toString())
+                        .param("reservationId", reservationId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "TUTOR")
+    @DisplayName("출석체크 및 스템프 부여 실패 - 레슨 시작 30분 전부터 출석체크 가능")
+    public void checkAttendance_failure_not_yet_attendance() throws Exception {
+
+        Long userId = 1L;
+        Long reservationId = 1L;
+
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_YET_ATTENDANCE));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
+                        .param("userId", userId.toString())
+                        .param("reservationId", reservationId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 }

@@ -39,7 +39,6 @@ public enum ErrorCode {
     FAILED_TO_UPLOAD_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다."),
     FAILED_TO_DELETE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제에 실패했습니다."),
 
-
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
     REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
     NOT_REVIEW_OWNER(HttpStatus.FORBIDDEN, "리뷰 작성자만 수정 및 삭제가 가능합니다."),
@@ -97,6 +96,9 @@ public enum ErrorCode {
     CHAT_MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "채팅 메시지를 찾을 수 없습니다."),
     SENDER_CANNOT_MARK_AS_READ(HttpStatus.BAD_REQUEST, "메시지를 보낸 사람은 읽음 처리를 할 수 없습니다."),
     USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
+
+    NOT_TODAY_LESSON(HttpStatus.BAD_REQUEST, "레슨 당일에만 출석체크가 가능합니다."),
+    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다."),
     ;
     private final HttpStatus httpStatus;
     private final String description;

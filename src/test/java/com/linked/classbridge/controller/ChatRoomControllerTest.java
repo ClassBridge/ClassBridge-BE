@@ -1,6 +1,9 @@
 package com.linked.classbridge.controller;
 
+import static com.linked.classbridge.type.ErrorCode.BAD_REQUEST;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,15 +12,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
-import com.linked.classbridge.dto.chat.ChatRoomDto;
+import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.CreateChatRoom.Request;
+import com.linked.classbridge.dto.chat.GetChatRoomsResponse;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.service.ChatRoomService;
 import com.linked.classbridge.service.UserService;
+import com.linked.classbridge.service.chat.ChatService;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import java.util.List;
@@ -38,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class ChatRoomControllerTest {
 
     @MockBean
-    private ChatRoomService chatRoomService;
+    private ChatService chatService;
 
     @MockBean
     private UserService userService;
@@ -61,11 +66,15 @@ class ChatRoomControllerTest {
         mockTutor = User.builder()
                 .userId(1L)
                 .email("tutor@mail.com")
+                .nickname("tutor")
+                .profileImageUrl("profileImageUrl")
                 .build();
 
         mockUser = User.builder()
                 .userId(2L)
                 .email("user@mail.com")
+                .nickname("user")
+                .profileImageUrl("profileImageUrl")
                 .build();
 
         createChatRoomRequest = new Request(1L);
@@ -81,7 +90,7 @@ class ChatRoomControllerTest {
         // given
         CreateChatRoom.Response response = new CreateChatRoom.Response(1L, "/chatRooms/1");
 
-        given(chatRoomService.createOrGetChatRoom(mockUser, createChatRoomRequest.classId()))
+        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.classId()))
                 .willReturn(response);
 
         // when & then
@@ -104,8 +113,8 @@ class ChatRoomControllerTest {
     @DisplayName("채팅방 생성 실패 - 나의 클래스일 경우")
     void createChatRoom_fail_request_to_my_class() throws Exception {
         // given
-        given(chatRoomService.createOrGetChatRoom(mockUser, createChatRoomRequest.classId()))
-                .willThrow(new RestApiException(ErrorCode.BAD_REQUEST));
+        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.classId()))
+                .willThrow(new RestApiException(BAD_REQUEST));
 
         // when & then
         mockMvc.perform(post("/api/chatRooms")
@@ -128,7 +137,7 @@ class ChatRoomControllerTest {
                 mockUser.getUserId(), mockUser.getUserId(), mockTutor.getUserId(),
                 null, null, List.of(chatMessageDto));
 
-        given(chatRoomService.joinChatRoomAndGetMessages(mockUser, 1L))
+        given(chatService.enterChatRoomProcess(mockUser, 1L))
                 .willReturn(response);
 
         // when & then
@@ -151,7 +160,7 @@ class ChatRoomControllerTest {
     @DisplayName("채팅방 참여 실패 - 채팅방이 없는 경우")
     void joinChatRoom_fail_chat_room_not_exist() throws Exception {
         // given
-        given(chatRoomService.joinChatRoomAndGetMessages(mockUser, 1L))
+        given(chatService.enterChatRoomProcess(mockUser, 1L))
                 .willThrow(new RestApiException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
         // when & then
@@ -170,14 +179,38 @@ class ChatRoomControllerTest {
     @DisplayName("채팅방 목록 조회 성공")
     void getChatRooms_success() throws Exception {
         // given
-        ChatRoomDto chatRoomDto = new ChatRoomDto();
-        ChatRoomDto.inquiredChatRooms inquiredChatRooms = new ChatRoomDto.inquiredChatRooms(1L, 1L, 2L, "tutor", "url");
-        ChatRoomDto.receivedInquiryChatRooms receivedInquiryChatRooms = new ChatRoomDto.receivedInquiryChatRooms(2L, 3L,
-                "user", "user", 2L);
-        chatRoomDto.getInquiredChatRoomsChatRooms().add(inquiredChatRooms);
-        chatRoomDto.getReceivedInquiryChatRoomsChatRooms().add(receivedInquiryChatRooms);
-        given(chatRoomService.getChatRooms(mockUser))
-                .willReturn(chatRoomDto);
+        User user = User.builder()
+                .userId(1L)
+                .email("user@mail.com")
+                .nickname("user")
+                .profileImageUrl("profileImageUrl")
+                .build();
+
+        User partner = User.builder()
+                .userId(2L)
+                .email("user2@mail.com")
+                .nickname("user2")
+                .profileImageUrl("profileImageUrl2")
+                .build();
+        ChatRoom chatRoom1 = ChatRoom.builder()
+                .chatRoomId(1L)
+                .initiatedBy(user)
+                .initiatedTo(partner)
+                .build();
+
+        ChatRoomUnreadCountInfoDto chatRoomUnreadCountInfoDto = ChatRoomUnreadCountInfoDto.builder()
+                .chatRoomId(1L)
+                .unreadMessageCount(0)
+                .latestMessage("message")
+                .latestMessageTime(null)
+                .build();
+
+        GetChatRoomsResponse getChatRoomsResponse = GetChatRoomsResponse.builder()
+                .userId(user.getUserId())
+                .build();
+        getChatRoomsResponse.addChatRoomInfo(chatRoom1, partner, chatRoomUnreadCountInfoDto);
+        given(userService.findByEmail(userService.getCurrentUserEmail())).willReturn(Optional.of(user));
+        given(chatService.getChatRoomListProcess(user)).willReturn(getChatRoomsResponse);
 
         // when & then
         mockMvc.perform(get("/api/chatRooms")
@@ -186,9 +219,66 @@ class ChatRoomControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.inquiredChatRoomsChatRooms[0].chatRoomId").value(1L))
-                .andExpect(jsonPath("$.data.receivedInquiryChatRoomsChatRooms[0].chatRoomId").value(2L))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatRoomId").value(chatRoom1.getChatRoomId()))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatPartnerId").value(partner.getUserId()))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatPartnerNickname").value(partner.getNickname()))
         ;
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("채팅방 닫기 성공")
+    void closeChatRoom_success() throws Exception {
+        // given
+        doNothing().when(chatService).closeChatRoomProcess(mockUser, 1L);
+
+        // when & then
+        mockMvc.perform(post("/api/chatRooms/1/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(ResponseMessage.CHAT_ROOM_CLOSE_SUCCESS.getMessage())
+                );
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("채팅방 퇴장 성공")
+    void leaveChatRoom_success() throws Exception {
+        // given
+        doNothing().when(chatService).leaveChatRoomProcess(mockUser, 1L);
+
+        // when & then
+        mockMvc.perform(post("/api/chatRooms/1/leave")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value(ResponseMessage.CHAT_ROOM_LEAVE_SUCCESS.getMessage())
+                );
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("채팅방 퇴장 실패 - 채팅방 멤버 아닌 경우")
+    void leaveChatRoom_fail_not_chat_room_member() throws Exception {
+        // given
+        doNothing().when(chatService).leaveChatRoomProcess(mockUser, 1L);
+        doThrow(new RestApiException(ErrorCode.USER_NOT_IN_CHAT_ROOM))
+                .when(chatService).leaveChatRoomProcess(mockUser, 1L);
+
+        // when & then
+        mockMvc.perform(post("/api/chatRooms/1/leave")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(ErrorCode.USER_NOT_IN_CHAT_ROOM.getDescription())
+                );
     }
 
 }

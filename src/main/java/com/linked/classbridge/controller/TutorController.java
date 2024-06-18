@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -323,6 +324,20 @@ public class TutorController {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_TAG_DELETE_SUCCESS,
                 oneDayClassService.deleteTag(userService.getCurrentUserEmail(), classId, tagId))
+        );
+    }
+
+    @Operation(summary = "출석체크", description = "예약자에 대한 출석체크를 진행")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PostMapping("/check-attendance")
+    public ResponseEntity<SuccessResponse<String>> checkAttendance(
+            @RequestParam Long userId, @RequestParam Long reservationId) {
+
+        return ResponseEntity.ok().body(
+                SuccessResponse.of(
+                        ResponseMessage.ATTENDANCE_CHECK_SUCCESS,
+                        tutorService.checkAttendance(userId, reservationId)
+                )
         );
     }
 }

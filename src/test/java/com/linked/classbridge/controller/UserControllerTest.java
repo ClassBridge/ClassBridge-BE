@@ -1,12 +1,35 @@
 package com.linked.classbridge.controller;
 
+import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
+import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
+import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
+import static com.linked.classbridge.type.ErrorCode.REQUIRED_USER_INFO;
+import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.UserDto;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.AuthType;
+import com.linked.classbridge.type.ResponseMessage;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,41 +39,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import static com.linked.classbridge.type.ErrorCode.ALREADY_EXIST_NICKNAME;
-import static com.linked.classbridge.type.ErrorCode.ALREADY_REGISTERED_EMAIL;
-import static com.linked.classbridge.type.ErrorCode.PASSWORD_NOT_MATCH;
-import static com.linked.classbridge.type.ErrorCode.REQUIRED_USER_INFO;
-import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.review.GetReviewResponse;
-import com.linked.classbridge.repository.UserRepository;
-import com.linked.classbridge.service.ReviewService;
-import com.linked.classbridge.type.ResponseMessage;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Optional;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @AutoConfigureMockMvc
 @WebMvcTest(UserController.class)
@@ -203,7 +201,8 @@ class UserControllerTest {
         doNothing().when(userService).addUser(signupRequest);
 
         MockMultipartFile signupRequestPart =
-                new MockMultipartFile("signupRequest", "", "application/json", new ObjectMapper().writeValueAsBytes(signupRequest));
+                new MockMultipartFile("signupRequest", "", "application/json",
+                        new ObjectMapper().writeValueAsBytes(signupRequest));
 
         MockMultipartFile profileImagePart =
                 new MockMultipartFile("profileImage", "profileImage.png", "image/png", new byte[0]);
@@ -226,7 +225,8 @@ class UserControllerTest {
         doThrow(new RestApiException(REQUIRED_USER_INFO)).when(userService).addUser(signupRequest);
 
         MockMultipartFile signupRequestPart =
-                new MockMultipartFile("signupRequest", "", "application/json", new ObjectMapper().writeValueAsBytes(signupRequest));
+                new MockMultipartFile("signupRequest", "", "application/json",
+                        new ObjectMapper().writeValueAsBytes(signupRequest));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .multipart("/api/users/auth/signup")
@@ -245,7 +245,8 @@ class UserControllerTest {
         doThrow(new RestApiException(REQUIRED_USER_INFO)).when(userService).addUser(signupRequest);
 
         MockMultipartFile signupRequestPart =
-                new MockMultipartFile("signupRequest", "", "application/json", new ObjectMapper().writeValueAsBytes(signupRequest));
+                new MockMultipartFile("signupRequest", "", "application/json",
+                        new ObjectMapper().writeValueAsBytes(signupRequest));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .multipart("/api/users/auth/signup")
@@ -264,7 +265,8 @@ class UserControllerTest {
         doThrow(new RestApiException(REQUIRED_USER_INFO)).when(userService).addUser(signupRequest);
 
         MockMultipartFile signupRequestPart =
-                new MockMultipartFile("signupRequest", "", "application/json", new ObjectMapper().writeValueAsBytes(signupRequest));
+                new MockMultipartFile("signupRequest", "", "application/json",
+                        new ObjectMapper().writeValueAsBytes(signupRequest));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .multipart("/api/users/auth/signup")
@@ -342,7 +344,10 @@ class UserControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                         .accept(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                        .with(request -> { request.setMethod("PUT"); return request; }))
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
@@ -365,7 +370,10 @@ class UserControllerTest {
                         .param("additionalInfo", new ObjectMapper().writeValueAsString(additionalInfoDto))
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                         .accept(MediaType.APPLICATION_JSON)
-                        .with(request -> { request.setMethod("PUT"); return request; }))
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
                 .andDo(print())
                 .andExpect(status().isForbidden());
     }
@@ -404,18 +412,28 @@ class UserControllerTest {
     */
 
     @Test
+    @WithMockUser
     @DisplayName("유저 리뷰 목록 조회")
     void getUserReviews() throws Exception {
         // given
-        given(userRepository.findById(1L)).willReturn(Optional.of(mockUser));
-        given(reviewService.getUserReviews(mockUser, pageable)).willReturn(new PageImpl<>(
-                Arrays.asList(reviewResponse1, reviewResponse2, reviewResponse3, reviewResponse4)
-                , pageable, 4)
+        mockUser = User.builder()
+                .userId(1L)
+                .email("email@mail.com")
+                .nickname("userNickname")
+                .build();
+
+        given(userService.getCurrentUserEmail()).willReturn("email@mail.com");
+        given(userService.getUserByEmail("email@mail.com")).willReturn(mockUser);
+
+        given(reviewService.getUserReviews(mockUser, pageable)).willReturn(
+                new PageImpl<>(Arrays.asList(reviewResponse1, reviewResponse2, reviewResponse3, reviewResponse4),
+                        pageable, 4)
         );
 
         // when & then
         mockMvc.perform(get("/api/users/reviews")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
                         .param("page", "0")
                         .param("size", "5")
                         .param("sort", "createdAt,desc")
