@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenSearchConfig {
 
-    @Value("${AWS_ES_ACCESS_KEY}")
+    @Value("${cloud.aws.credentials.access-key}")
     private String accessKey;
 
-    @Value("${AWS_ES_SECRET_KEY}")
+    @Value("${cloud.aws.credentials.secret-key}")
     private String secretKey;
 
     @Bean
