@@ -12,11 +12,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.tutor.TutorInfoDto;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
 import com.linked.classbridge.service.TutorService;
 import com.linked.classbridge.service.UserService;
+import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -212,7 +214,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())
@@ -231,7 +234,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.NOT_TODAY_LESSON));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_TODAY_LESSON));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())
@@ -250,7 +254,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.NOT_YET_ATTENDANCE));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_YET_ATTENDANCE));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())
