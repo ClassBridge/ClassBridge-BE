@@ -28,9 +28,6 @@ public enum ErrorCode {
     REQUIRED_USER_INFO(HttpStatus.BAD_REQUEST, "가입시 필요한 사용자 필수 정보가 빠져있습니다."),
     NO_INFORMATION_TO_UPDATE(HttpStatus.BAD_REQUEST, "수정할 정보가 없습니다."),
 
-    HELLO_NAME_IS_REQUIRED(HttpStatus.BAD_REQUEST, "Hello 이름은 필수입니다."),
-    HELLO_NOT_FOUND(HttpStatus.BAD_REQUEST, "Hello를 찾을 수 없습니다."),
-
     REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성하셨습니다."),
     INVALID_ONE_DAY_CLASS_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 클래스 ID 입니다."),
     INVALID_REVIEW_RATING(HttpStatus.BAD_REQUEST, "리뷰 평점은 1점부터 5점까지 가능합니다."),
