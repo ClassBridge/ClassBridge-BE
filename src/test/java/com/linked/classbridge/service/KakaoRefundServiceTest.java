@@ -1,16 +1,19 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.REFUND_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
@@ -24,6 +27,8 @@ import com.linked.classbridge.type.ErrorCode;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -55,8 +60,11 @@ public class KakaoRefundServiceTest {
     @InjectMocks
     private KakaoRefundService kakaoRefundService;
 
+    @InjectMocks
+    private KakaoRefundService refundService;
     private PaymentRefundDto.Requset request;
     private Payment payment;
+    private Refund refund;
     private Reservation reservation;
     private Lesson lesson;
 
@@ -89,6 +97,12 @@ public class KakaoRefundServiceTest {
         payment.setTid("test_tid");
         payment.setTotalAmount(10000);
         payment.setQuantity(1); // 수량 설정
+
+        refund = new Refund();
+        refund.setRefundId(1L);
+        refund.setStatus(PaymentStatusType.COMPLETED);
+        refund.setAmount(1000);
+        refund.setPayment(payment);
 
         lenient().when(payProperties.getCancelUrl()).thenReturn(baseUrl);
         lenient().when(payProperties.getDevKey()).thenReturn("devKey");
@@ -173,6 +187,50 @@ public class KakaoRefundServiceTest {
         assertEquals(ErrorCode.PAY_ERROR, exception.getErrorCode());
         verify(paymentRepository).findById(request.getPaymentId());
         verify(lessonService, never()).updateParticipantCount(lesson, 1);
+    }
+
+    @Test
+    @DisplayName("환불 조회 성공")
+    void getAllRefunds_success() {
+        List<Refund> refunds = Arrays.asList(refund);
+
+        when(refundRepository.findAll()).thenReturn(refunds);
+
+        List<PaymentRefundDto> refundDtos = refundService.getAllRefunds();
+
+        assertNotNull(refundDtos);
+        assertEquals(1, refundDtos.size());
+        assertEquals(refund.getRefundId(), refundDtos.get(0).getRefundId());
+        verify(refundRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("특정 환불 조회 성공")
+    void getRefundById_success() {
+        Long refundId = 1L;
+
+        when(refundRepository.findById(refundId)).thenReturn(Optional.of(refund));
+
+        PaymentRefundDto refundDto = refundService.getRefundById(refundId);
+
+        assertNotNull(refundDto);
+        assertEquals(refundId, refundDto.getRefundId());
+        verify(refundRepository, times(1)).findById(refundId);
+    }
+
+    @Test
+    @DisplayName("환불 조회 실패")
+    void getRefundById_notFound() {
+        Long refundId = 1L;
+
+        when(refundRepository.findById(refundId)).thenReturn(Optional.empty());
+
+        RestApiException exception = assertThrows(RestApiException.class, () -> {
+            refundService.getRefundById(refundId);
+        });
+
+        assertEquals(REFUND_NOT_FOUND, exception.getErrorCode());
+        verify(refundRepository, times(1)).findById(refundId);
     }
 
 }

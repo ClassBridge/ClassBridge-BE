@@ -1,9 +1,11 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,11 +15,14 @@ import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.reservation.GetReservationResponse;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
+import com.linked.classbridge.dto.reservation.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,7 +71,7 @@ public class ReservationServiceTest {
         payment.setPaymentId(1L);
 
         reservation = Reservation.createReservation(request, lesson, user);
-//        reservation.setReservationId(1L);
+        reservation.setReservationId(1L);
 //        reservation.setUser(user);
 //        reservation.setLesson(lesson);
         reservation.setPayment(payment);
@@ -121,6 +126,7 @@ public class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("예약 조회 성공")
     void getReservation_success() {
         Long reservationId = 1L;
 
@@ -131,4 +137,36 @@ public class ReservationServiceTest {
         assertNotNull(response);
         assertEquals(reservationId, response.getReservationId());
     }
+
+    @Test
+    @DisplayName("예약 조회 실패")
+    void getReservation_notFound() {
+        Long reservationId = 1L;
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.empty());
+
+        RestApiException exception = assertThrows(RestApiException.class, () -> {
+            reservationService.getReservation(reservationId);
+        });
+
+        assertEquals(RESERVATION_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("예약 취소 성공")
+    void cancelReservation_success() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation();
+        reservation.setReservationId(reservationId);
+        reservation.setStatus(ReservationStatus.PENDING);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        Long canceledReservationId = reservationService.cancelReservation(reservationId);
+
+        assertEquals(reservationId, canceledReservationId);
+        assertEquals(ReservationStatus.CANCELED_BY_TUTOR, reservation.getStatus());
+        verify(reservationRepository, times(1)).save(reservation);
+    }
+
 }
