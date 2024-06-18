@@ -38,7 +38,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -215,7 +214,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.RESERVATION_NOT_FOUND));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())
@@ -234,7 +234,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.NOT_TODAY_LESSON));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_TODAY_LESSON));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())
@@ -253,7 +254,8 @@ class TutorControllerTest {
         Long userId = 1L;
         Long reservationId = 1L;
 
-        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(new RestApiException(ErrorCode.NOT_YET_ATTENDANCE));
+        when(tutorService.checkAttendance(userId, reservationId)).thenThrow(
+                new RestApiException(ErrorCode.NOT_YET_ATTENDANCE));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/tutors/check-attendance")
                         .param("userId", userId.toString())

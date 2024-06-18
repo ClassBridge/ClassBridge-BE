@@ -17,9 +17,9 @@ import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
-import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
+import com.linked.classbridge.dto.chat.GetChatRoomsResponse;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.dto.chat.ReadReceipt;
 import com.linked.classbridge.dto.chat.ReadReceiptList;
@@ -209,6 +209,7 @@ class ChatServiceTest {
         List<ChatRoom> chatRooms = new ArrayList<>(List.of(chatRoom1, chatRoom2));
 
         given(chatRoomService.findAllChatRoomsByUser(user)).willReturn(chatRooms);
+
         given(chatMessageService.findAllMessageByChatRoomIdOrderBySendTimeDesc(chatRoom1.getChatRoomId()))
                 .willReturn(chatMessage2);
         given(chatMessageService.findMessagesUserNotRead(chatRoom1.getChatRoomId(), user.getUserId()))
@@ -220,14 +221,18 @@ class ChatServiceTest {
                 .willReturn(List.of(chatMessage3));
 
         // when
-        ChatRoomDto result = chatService.getChatRoomListProcess(user);
+        GetChatRoomsResponse result = chatService.getChatRoomListProcess(user);
 
         // then
         assertEquals(user.getUserId(), result.getUserId());
-        assertEquals(1, result.getInquiredChatRoomsChatRooms().size());
-        assertEquals(1L, result.getInquiredChatRoomsChatRooms().get(0).getChatRoomId());
-        assertEquals(1, result.getReceivedInquiryChatRoomsChatRooms().size());
-        assertEquals(2L, result.getReceivedInquiryChatRoomsChatRooms().get(0).getChatRoomId());
+        assertEquals(2, result.getChatRooms().size());
+        assertEquals(chatRoom1.getChatRoomId(), result.getChatRooms().get(0).getChatRoomId());
+        assertEquals(tutor.getUserId(), result.getChatRooms().get(0).getChatPartnerId());
+        assertEquals(chatMessage2.getMessage(), result.getChatRooms().get(0).getUnreadCountInfo().getLatestMessage());
+        assertEquals(chatRoom2.getChatRoomId(), result.getChatRooms().get(1).getChatRoomId());
+        assertEquals(otherUser.getUserId(), result.getChatRooms().get(1).getChatPartnerId());
+        assertEquals(chatMessage3.getMessage(), result.getChatRooms().get(1).getUnreadCountInfo().getLatestMessage());
+
     }
 
     @Test

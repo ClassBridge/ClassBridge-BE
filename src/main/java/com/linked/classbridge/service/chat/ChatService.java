@@ -9,9 +9,9 @@ import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
-import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
+import com.linked.classbridge.dto.chat.GetChatRoomsResponse;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.dto.chat.ReadReceipt;
 import com.linked.classbridge.dto.chat.ReadReceiptList;
@@ -97,26 +97,20 @@ public class ChatService {
     }
 
     // 채팅방 목록 조회
-    public ChatRoomDto getChatRoomListProcess(User user) {
+    public GetChatRoomsResponse getChatRoomListProcess(User user) {
         List<ChatRoom> chatRooms = chatRoomService.findAllChatRoomsByUser(user);
-        ChatRoomDto chatRoomDto = new ChatRoomDto();
-        chatRoomDto.setUserId(user.getUserId());
+        GetChatRoomsResponse getChatRoomsResponse = new GetChatRoomsResponse();
+        getChatRoomsResponse.setUserId(user.getUserId());
 
         chatRooms.forEach(chatRoom -> {
-            ChatRoomUnreadCountInfoDto chatRoomInfo = createChatRoomUnreadCountInfoDto(chatRoom, user);
-
-            if (isInitiatedByUser(chatRoom, user)) {
-                chatRoomDto.addInquiredChatRoom(chatRoom, chatRoomInfo);
-            } else {
-                chatRoomDto.addReceivedInquiryChatRoom(chatRoom, chatRoomInfo);
-            }
+            ChatRoomUnreadCountInfoDto unreadCountInfo = createChatRoomUnreadCountInfoDto(chatRoom, user);
+            User chatPartner = chatRoom.getInitiatedBy().getUserId().equals(user.getUserId())
+                    ? chatRoom.getInitiatedTo()
+                    : chatRoom.getInitiatedBy();
+            getChatRoomsResponse.addChatRoomInfo(chatRoom, chatPartner, unreadCountInfo);
         });
 
-        return chatRoomDto;
-    }
-
-    private boolean isInitiatedByUser(ChatRoom chatRoom, User user) {
-        return chatRoom.getInitiatedBy().getUserId().equals(user.getUserId());
+        return getChatRoomsResponse;
     }
 
     private ChatRoomUnreadCountInfoDto createChatRoomUnreadCountInfoDto(ChatRoom chatRoom, User user) {

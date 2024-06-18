@@ -12,12 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.linked.classbridge.domain.ChatRoom;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.chat.ChatMessageDto;
-import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.CreateChatRoom.Request;
+import com.linked.classbridge.dto.chat.GetChatRoomsResponse;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
@@ -65,11 +66,15 @@ class ChatRoomControllerTest {
         mockTutor = User.builder()
                 .userId(1L)
                 .email("tutor@mail.com")
+                .nickname("tutor")
+                .profileImageUrl("profileImageUrl")
                 .build();
 
         mockUser = User.builder()
                 .userId(2L)
                 .email("user@mail.com")
+                .nickname("user")
+                .profileImageUrl("profileImageUrl")
                 .build();
 
         createChatRoomRequest = new Request(1L);
@@ -174,6 +179,25 @@ class ChatRoomControllerTest {
     @DisplayName("채팅방 목록 조회 성공")
     void getChatRooms_success() throws Exception {
         // given
+        User user = User.builder()
+                .userId(1L)
+                .email("user@mail.com")
+                .nickname("user")
+                .profileImageUrl("profileImageUrl")
+                .build();
+
+        User partner = User.builder()
+                .userId(2L)
+                .email("user2@mail.com")
+                .nickname("user2")
+                .profileImageUrl("profileImageUrl2")
+                .build();
+        ChatRoom chatRoom1 = ChatRoom.builder()
+                .chatRoomId(1L)
+                .initiatedBy(user)
+                .initiatedTo(partner)
+                .build();
+
         ChatRoomUnreadCountInfoDto chatRoomUnreadCountInfoDto = ChatRoomUnreadCountInfoDto.builder()
                 .chatRoomId(1L)
                 .unreadMessageCount(0)
@@ -181,15 +205,12 @@ class ChatRoomControllerTest {
                 .latestMessageTime(null)
                 .build();
 
-        ChatRoomDto chatRoomDto = new ChatRoomDto();
-        ChatRoomDto.inquiredChatRooms inquiredChatRooms
-                = new ChatRoomDto.inquiredChatRooms(1L, 1L, 2L, "tutor", "url", chatRoomUnreadCountInfoDto);
-        ChatRoomDto.receivedInquiryChatRooms receivedInquiryChatRooms
-                = new ChatRoomDto.receivedInquiryChatRooms(2L, 3L, "user", "user", 2L, chatRoomUnreadCountInfoDto);
-        chatRoomDto.getInquiredChatRoomsChatRooms().add(inquiredChatRooms);
-        chatRoomDto.getReceivedInquiryChatRoomsChatRooms().add(receivedInquiryChatRooms);
-        given(chatService.getChatRoomListProcess(mockUser))
-                .willReturn(chatRoomDto);
+        GetChatRoomsResponse getChatRoomsResponse = GetChatRoomsResponse.builder()
+                .userId(user.getUserId())
+                .build();
+        getChatRoomsResponse.addChatRoomInfo(chatRoom1, partner, chatRoomUnreadCountInfoDto);
+        given(userService.findByEmail(userService.getCurrentUserEmail())).willReturn(Optional.of(user));
+        given(chatService.getChatRoomListProcess(user)).willReturn(getChatRoomsResponse);
 
         // when & then
         mockMvc.perform(get("/api/chatRooms")
@@ -198,8 +219,9 @@ class ChatRoomControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.inquiredChatRoomsChatRooms[0].chatRoomId").value(1L))
-                .andExpect(jsonPath("$.data.receivedInquiryChatRoomsChatRooms[0].chatRoomId").value(2L))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatRoomId").value(chatRoom1.getChatRoomId()))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatPartnerId").value(partner.getUserId()))
+                .andExpect(jsonPath("$.data.chatRooms[0].chatPartnerNickname").value(partner.getNickname()))
         ;
     }
 

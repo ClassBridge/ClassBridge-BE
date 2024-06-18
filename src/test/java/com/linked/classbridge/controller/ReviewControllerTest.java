@@ -5,6 +5,7 @@ import static com.linked.classbridge.type.ErrorCode.REVIEW_ALREADY_EXISTS;
 import static com.linked.classbridge.type.ErrorCode.REVIEW_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -93,6 +94,7 @@ class ReviewControllerTest {
                         .param("classId", request.classId().toString())
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isCreated())
@@ -119,6 +121,7 @@ class ReviewControllerTest {
                         .param("classId", request.classId().toString())
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -133,11 +136,8 @@ class ReviewControllerTest {
     @WithMockUser
     void registerReview_fail_contents_too_short() throws Exception {
         // Given
-        RegisterReviewDto.Request request = new RegisterReviewDto.Request(
-                1L, 1L, "short", 4.5, image1, image2, image3);
-        RegisterReviewDto.Response response = new RegisterReviewDto.Response(1L);
-
-        given(reviewService.registerReview(eq(mockUser), eq(request))).willReturn(response);
+        RegisterReviewDto.Request request
+                = new RegisterReviewDto.Request(1L, 1L, "short", 4.5, image1, image2, image3);
 
         // When & Then
         mockMvc.perform(multipart("/api/reviews")
@@ -146,8 +146,9 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("classId", request.classId().toString())
                         .param("lessonId", request.lessonId().toString())
-                        .param("contents", request.contents()) // 10자 미만
+                        .param("contents", "short") // 10자 미만
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -166,7 +167,7 @@ class ReviewControllerTest {
                 1L, 1L, "This is a valid content.", 7.0, image1, image2, image3);
         RegisterReviewDto.Response response = new RegisterReviewDto.Response(1L);
 
-        given(reviewService.registerReview(eq(mockUser), eq(request))).willReturn(response);
+//        given(reviewService.registerReview(eq(mockUser), eq(request))).willReturn(response);
 
         // When & Then
         mockMvc.perform(multipart(HttpMethod.POST, "/api/reviews")
@@ -177,6 +178,7 @@ class ReviewControllerTest {
                         .param("lessonId", request.lessonId().toString())
                         .param("contents", request.contents()) // 10자 미만
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -206,6 +208,7 @@ class ReviewControllerTest {
                         .param("lessonId", request.lessonId().toString())
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -235,6 +238,7 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -265,6 +269,7 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -294,6 +299,7 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -322,6 +328,7 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isForbidden())
@@ -349,6 +356,7 @@ class ReviewControllerTest {
                         .file(image3)
                         .param("contents", request.contents())
                         .param("rating", request.rating().toString())
+                        .with(csrf())
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -368,7 +376,9 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/api/reviews/{reviewId}", 1L)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
+
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
@@ -387,6 +397,7 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/api/reviews/{reviewId}", 1L)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isForbidden())
@@ -419,6 +430,7 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/reviews/{reviewId}", 1L)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -450,6 +462,7 @@ class ReviewControllerTest {
         // When & Then
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/api/reviews/{reviewId}", 1L)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
