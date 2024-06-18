@@ -97,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers("/CB-websocket/**").permitAll()
                         .requestMatchers("/api/users/badges/**").permitAll()
                         .requestMatchers("/api/openapi/**").permitAll()
+                        .requestMatchers("/api/class/recommend/**").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())

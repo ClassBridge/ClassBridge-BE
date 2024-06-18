@@ -29,6 +29,7 @@ public class RecommendationController {
 
     private final OneDayClassRepository oneDayClassRepository;
 
+    @Operation(summary = "추천 클래스 반환", description = "(비동기 처리) 사용자에게 맞는 추천 클래스를 반환")
     @GetMapping("/async")
     public CompletableFuture<ResponseEntity<SuccessResponse<List<OneDayClass>>>> recommendClassesAsync() {
 
@@ -48,8 +49,8 @@ public class RecommendationController {
         );
     }
 
-    @Operation(summary = "기본 추천 클래스", description = "기본 추천 클래스를 반환")
-    @GetMapping("/recommend")
+    @Operation(summary = "기본 추천 클래스 반환", description = "기본 추천 클래스를 반환")
+    @GetMapping("/basic")
     public ResponseEntity<SuccessResponse<List<OneDayClass>>> recommendClassesBasic() {
 
         List<OneDayClass> topClasses = oneDayClassRepository.findTopClassesByRatingAndWish(PageRequest.of(0, 5));

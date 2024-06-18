@@ -61,7 +61,7 @@ public class RecommendationControllerTest {
 
         given(oneDayClassRepository.findTopClassesByRatingAndWish(any(PageRequest.class))).willReturn(Arrays.asList(new OneDayClass()));
 
-        mockMvc.perform(get("/api/class/recommend/recommend")
+        mockMvc.perform(get("/api/class/recommend/basic")
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isOk());
