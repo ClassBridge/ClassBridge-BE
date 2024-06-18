@@ -8,9 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
-import com.linked.classbridge.dto.reservation.ReservationDto;
+import com.linked.classbridge.dto.reservation.GetReservationResponse;
+import com.linked.classbridge.dto.reservation.RegisterReservationDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.ReservationRepository;
@@ -40,21 +42,35 @@ public class ReservationServiceTest {
     @InjectMocks
     private ReservationService reservationService;
 
-    private ReservationDto.Request request;
+    private RegisterReservationDto.Request request;
     private Lesson lesson;
     private User user;
+    private Payment payment;
     private Reservation reservation;
 
 
     @BeforeEach
     void setUp() {
-        request = new ReservationDto.Request();
+        request = new RegisterReservationDto.Request();
         request.setLessonId(1L);
         request.setUserId(1L);
 
         lesson = new Lesson();
+        lesson.setLessonId(1L);
+
         user = new User();
+        user.setUserId(1L);
+        user.setUsername("testuser");
+
+        payment = new Payment();
+        payment.setPaymentId(1L);
+
         reservation = Reservation.createReservation(request, lesson, user);
+//        reservation.setReservationId(1L);
+//        reservation.setUser(user);
+//        reservation.setLesson(lesson);
+        reservation.setPayment(payment);
+//        reservation.setStatus(ReservationStatus.PENDING);
 
     }
 
@@ -102,5 +118,17 @@ public class ReservationServiceTest {
         verify(lessonRepository).findById(request.getLessonId());
         verify(userRepository).findById(request.getUserId());
         verify(reservationRepository, never()).save(reservation);
+    }
+
+    @Test
+    void getReservation_success() {
+        Long reservationId = 1L;
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        GetReservationResponse response = reservationService.getReservation(reservationId);
+
+        assertNotNull(response);
+        assertEquals(reservationId, response.getReservationId());
     }
 }

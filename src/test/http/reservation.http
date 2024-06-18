@@ -8,3 +8,38 @@ access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN
   "lesson_id" : 1,
   "quantity" : 2
 }
+
+### 특정 예약 조회
+GET http://localhost:8080/api/reservations/10
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1MTMxMiwiZXhwIjoxNzE4MzUxOTEyfQ.3_Mxvae5GAyyo5_WAW8bze-z1lkJN6zGHuQv_L_9NQc
+
+### 특정 예약 강사 취소
+PATCH http://localhost:8080/api/reservations/10/cancel
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1MjIzMCwiZXhwIjoxNzE4MzUyODMwfQ.bv9NSE6pP5cZDF2iIW7cU_iTVhkFQqRsCR0sO83UTIg
+
+### 모든 예약 조회
+GET http://localhost:8080/api/reservations
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1Mzc5MywiZXhwIjoxNzE4MzU0MzkzfQ.n1zmAyjr2B4h8p3soXz-sPo1V_uXXcFvZPAtEm2-Ztk
+
+### 모든 예약 조회 필터링 by user_id
+GET http://localhost:8080/api/reservations?user_id=2
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1NTA1OCwiZXhwIjoxNzE4MzU1NjU4fQ.y57avbKNN_zkN8fLfGVwWJDZCgKI-Gw6Mlnlx14BKiY
+
+### 모든 예약 조회 필터링 by lesson_id
+GET http://localhost:8080/api/reservations?lesson_id=2
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1NTI5OSwiZXhwIjoxNzE4MzU1ODk5fQ.sfxuN3bseWxbV1ZxF9dxoYH3suUxiS5S9i-3V5rbyIw
+
+### 모든 예약 조회 필터링 by status
+GET http://localhost:8080/api/reservations?status=PENDING
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1NTUwNCwiZXhwIjoxNzE4MzU2MTA0fQ.q9UHmja95WAae5tGpykAuuCkWVk5K0ARWZGpgam26DQ
+
+### 모든 예약 조회 필터링 by all
+GET http://localhost:8080/api/reservations?user_id=1&lesson_id=2&status=PENDING
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1NTUwNCwiZXhwIjoxNzE4MzU2MTA0fQ.q9UHmja95WAae5tGpykAuuCkWVk5K0ARWZGpgam26DQ

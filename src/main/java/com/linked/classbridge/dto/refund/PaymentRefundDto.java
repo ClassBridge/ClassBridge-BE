@@ -1,13 +1,28 @@
 package com.linked.classbridge.dto.refund;
 
+import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.dto.payment.Amount;
 import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PaymentRefundDto {
+
+    private Long refundId;
+    private PaymentStatusType status;
+    private int amount;                 // 최초 실 결제 금액
+    private int approvedCancelAmount;   // 이번 요청으로 취소된 전체 결제 금액
+    private int canceledAmount;         // 취소된 전체 누적 금액
+    private int quantity;               // 환불 수량
+    private Long paymentId;
     @Getter
     @Setter
     public static class Requset {
@@ -81,6 +96,18 @@ public class PaymentRefundDto {
         private int point; // 취소 가능 포인트 금액
         private int discount; // 취소 가능 할인 금액
         private int green_deposit; // 컵 보증금
+    }
+
+    public static PaymentRefundDto from(Refund refund) {
+        return PaymentRefundDto.builder()
+                .refundId(refund.getRefundId())
+                .status(refund.getStatus())
+                .amount(refund.getAmount())
+                .approvedCancelAmount(refund.getApprovedCancelAmount())
+                .canceledAmount(refund.getCanceledAmount())
+                .quantity(refund.getQuantity())
+                .paymentId(refund.getPayment().getPaymentId())
+                .build();
     }
 
 }

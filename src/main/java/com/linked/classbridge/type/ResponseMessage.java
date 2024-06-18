@@ -46,7 +46,13 @@ public enum ResponseMessage {
     TUTOR_UPDATE_SUCCESS("강사 정보 수정 성공"),
 
     RESERVATION_SUCCESS("예약 생성 성공"),
+    PAYMENT_GET_SUCCESS("결제 조회 성공"),
+
+    RESERVATION_REGISTER_SUCCESS("예약 생성 성공"),
+    RESERVATION_GET_SUCCESS("예약 조회 성공"),
+    RESERVATION_CANCELED_BY_TUTOR_SUCCESS("예약 취소 성공"),
     REFUND_SUCCESS("환불 승인"),
+    REFUND_GET_SUCCESS("환불 조회 성공"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),

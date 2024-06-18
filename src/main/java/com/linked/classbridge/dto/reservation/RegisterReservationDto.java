@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-public class ReservationDto {
+public class RegisterReservationDto {
     @Getter
     @Setter
     public static class Request {
@@ -27,7 +27,7 @@ public class ReservationDto {
         private LocalDateTime createdAt;
     }
 
-    public static ReservationDto.Response convertToDto(Reservation reservation) {
+    public static RegisterReservationDto.Response convertToDto(Reservation reservation) {
         return Response.builder()
                 .reservationId(reservation.getReservationId())
                 .status(reservation.getStatus())

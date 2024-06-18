@@ -1,13 +1,14 @@
-package com.linked.classbridge.service;
+package com.linked.classbridge.util;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-public class RefundPolicy {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class RefundPolicyUtils {
     private static final double FULL_REFUND_RATE = 1.0;             // 100% 환불
     private static final double SEVENTY_PERCENT_REFUND_RATE = 0.7;  // 70% 환불
     private static final double FIFTY_PERCENT_REFUND_RATE = 0.5;    // 50% 환불

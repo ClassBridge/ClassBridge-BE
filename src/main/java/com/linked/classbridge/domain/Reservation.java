@@ -1,6 +1,6 @@
 package com.linked.classbridge.domain;
 
-import com.linked.classbridge.dto.reservation.ReservationDto;
+import com.linked.classbridge.dto.reservation.RegisterReservationDto;
 import com.linked.classbridge.dto.reservation.ReservationStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -46,7 +46,7 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
-    public static Reservation createReservation(ReservationDto.Request request, Lesson lesson, User user) {
+    public static Reservation createReservation(RegisterReservationDto.Request request, Lesson lesson, User user) {
         return Reservation.builder()
                 .lesson(lesson)
                 .user(user)

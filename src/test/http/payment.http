@@ -20,3 +20,11 @@ Content-Type: application/json
     "partner_user_id": "test_user_id",
     "pg_token": "test_pg_token"
 }
+
+### 모든 결제 조회
+GET http://localhost:8080/api/payments
+Content-Type: application/json
+
+### 특정 결제 조회
+GET http://localhost:8080/api/payments/1
+Content-Type: application/json

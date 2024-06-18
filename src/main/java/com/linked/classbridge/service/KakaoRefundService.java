@@ -1,10 +1,11 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.REFUND_NOT_FOUND;
+
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.domain.Reservation;
-import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Requset;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Response;
@@ -14,10 +15,13 @@ import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.RefundRepository;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.util.RefundPolicyUtils;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -56,7 +60,7 @@ public class KakaoRefundService {
         }
 
         // 환불 비율 계산
-        double refundRate = RefundPolicy.calculateRefundRate(reservation.getLesson().getLessonDate(),
+        double refundRate = RefundPolicyUtils.calculateRefundRate(reservation.getLesson().getLessonDate(),
                 reservation.getLesson().getStartTime(),
                 LocalDateTime.now());
 
@@ -170,5 +174,20 @@ public class KakaoRefundService {
 
     private int calculateNewTotalAmount(Payment payment, int cancelAmount) {
         return payment.getTotalAmount() - cancelAmount;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentRefundDto> getAllRefunds() {
+        List<Refund> refunds = refundRepository.findAll();
+        return refunds.stream()
+                .map(PaymentRefundDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentRefundDto getRefundById(Long refundId) {
+        Refund refund = refundRepository.findById(refundId)
+                .orElseThrow(() -> new RestApiException(REFUND_NOT_FOUND));
+        return PaymentRefundDto.from(refund);
     }
 }
