@@ -50,6 +50,8 @@ public enum ResponseMessage {
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),
+    CHAT_ROOM_LEAVE_SUCCESS("채팅방 퇴장하기 성공"),
+    CHAT_ROOM_CLOSE_SUCCESS("채팅방 닫기 성공"),
 
     ATTENDANCE_CHECK_SUCCESS("출석 체크 성공"),
     GET_USER_BADGES_SUCCESS("사용자 뱃지 조회 성공"),

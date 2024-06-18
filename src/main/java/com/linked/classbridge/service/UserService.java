@@ -410,4 +410,9 @@ public class UserService {
         oneDayClassDocument.setTotalWish(oneDayClass.getTotalWish());
         operations.save(oneDayClassDocument);
     }
+
+    public User getUserByEmail(String userEmail) {
+        return findByEmail(userEmail)
+                .orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+    }
 }

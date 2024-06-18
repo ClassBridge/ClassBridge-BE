@@ -14,13 +14,16 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     @Query("select cr from ChatRoom cr "
             + "JOIN FETCH cr.userChatRooms "
-            + "where cr.chatRoomId = :chatRoomId")
+            + "where cr.chatRoomId = :chatRoomId and cr.deletedAt is null")
     Optional<ChatRoom> findByChatRoomId(Long chatRoomId);
 
-    @Query("select cr from ChatRoom cr "
+    @Query("SELECT DISTINCT cr FROM UserChatRoom ucr "
+            + "JOIN ucr.chatRoom cr "
             + "JOIN FETCH cr.initiatedBy "
             + "JOIN FETCH cr.initiatedTo "
-            + "where cr.initiatedBy = :user or cr.initiatedTo = :user "
-            + "order by cr.updatedAt desc")
-    List<ChatRoom> findAllByUserOrderByUpdatedAtDesc(User user);
+            + "WHERE ucr.user = :user "
+            + "AND ucr.deletedAt IS NULL "
+            + "AND cr.deletedAt IS NULL "
+            + "ORDER BY cr.updatedAt DESC")
+    List<ChatRoom> findAllByUserOrderByLastMessageAtDesc(User user);
 }

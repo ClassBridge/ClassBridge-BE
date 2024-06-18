@@ -6,8 +6,8 @@ import com.linked.classbridge.dto.chat.ChatRoomDto;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.service.ChatRoomService;
 import com.linked.classbridge.service.UserService;
+import com.linked.classbridge.service.chat.ChatService;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/chatRooms")
 public class ChatRoomController {
 
-    private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
 
     private final UserService userService;
 
@@ -42,12 +42,12 @@ public class ChatRoomController {
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.CHAT_ROOM_CREATE_SUCCESS,
-                        chatRoomService.createOrGetChatRoom(user, request.classId())
+                        chatService.createChatRoomProcess(user, request.classId())
                 )
         );
     }
 
-    @Operation(summary = "채팅방 참여", description = "채팅방에 참여합니다.")
+    @Operation(summary = "채팅방 입장", description = "채팅방에 입장합니다.")
     @GetMapping("/{chatRoomId}/join")
     public ResponseEntity<SuccessResponse<JoinChatRoom.Response>> joinChatRoom(
             @PathVariable Long chatRoomId
@@ -58,9 +58,33 @@ public class ChatRoomController {
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.CHAT_ROOM_JOIN_SUCCESS,
-                        chatRoomService.joinChatRoomAndGetMessages(user, chatRoomId)
+                        chatService.enterChatRoomProcess(user, chatRoomId)
                 )
         );
+    }
+
+    @Operation(summary = "채팅방 닫기", description = "채팅방을 닫습니다")
+    @PostMapping("/{chatRoomId}/close")
+    public ResponseEntity<SuccessResponse<String>> leaveChatRoom(
+            @PathVariable Long chatRoomId
+    ) {
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        // 채팅방 나가기
+        chatService.closeChatRoomProcess(user, chatRoomId);
+        return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_CLOSE_SUCCESS));
+    }
+
+    @Operation(summary = "채팅방 퇴장", description = "채팅방에서 퇴장합니다.")
+    @PostMapping("/{chatRoomId}/leave")
+    public ResponseEntity<SuccessResponse<String>> deleteChatRoom(
+            @PathVariable Long chatRoomId
+    ) {
+        User user = userService.findByEmail(userService.getCurrentUserEmail())
+                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        // 채팅방 삭제
+        chatService.leaveChatRoomProcess(user, chatRoomId);
+        return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_LEAVE_SUCCESS));
     }
 
     @Operation(summary = "채팅방 목록 조회", description = "채팅방 목록을 조회합니다.")
@@ -69,6 +93,6 @@ public class ChatRoomController {
         User user = userService.findByEmail(userService.getCurrentUserEmail())
                 .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
 
-        return ResponseEntity.ok().body(SuccessResponse.of(chatRoomService.getChatRooms(user)));
+        return ResponseEntity.ok().body(SuccessResponse.of(chatService.getChatRoomListProcess(user)));
     }
 }

@@ -11,6 +11,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,4 +44,11 @@ public class ChatRoom extends BaseEntity {
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
     private List<UserChatRoom> userChatRooms;
+
+    private LocalDateTime lastMessageAt;
+
+    public void updateLastMessageAt(LocalDateTime lastMessageAt) {
+        this.lastMessageAt = lastMessageAt;
+    }
+
 }

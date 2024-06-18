@@ -3,12 +3,14 @@ package com.linked.classbridge.dto.chat;
 import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ReadReceiptList {
 
     private List<ReadReceipt> readReceipts;
