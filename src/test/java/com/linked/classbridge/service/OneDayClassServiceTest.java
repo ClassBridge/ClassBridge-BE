@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.linked.classbridge.domain.ClassFAQ;
@@ -16,6 +17,7 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassSearchDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail.Request;
@@ -28,6 +30,9 @@ import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
+import com.linked.classbridge.type.OrderType;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -39,8 +44,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.search.SearchResponseSections;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.core.common.bytes.BytesArray;
+import org.opensearch.data.client.orhlc.NativeSearchQuery;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchHitsImpl;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
@@ -86,6 +102,12 @@ class OneDayClassServiceTest {
 
     @Mock
     private ElasticsearchOperations operations;
+
+    @Mock
+    private WishRepository wishRepository;
+
+    @Mock
+    private RestHighLevelClient client;
 
     @Test
     void registerFAQ() {
@@ -432,4 +454,66 @@ class OneDayClassServiceTest {
         // Then
         assertThat(response).isEqualTo(true);
     }
+
+    @Test
+    void search() {
+        OneDayClassDocument searchClass1 = OneDayClassDocument.builder().classId(1L).totalWish(5).className("클래스 이름1").endDate(LocalDate.now().plusDays(1)).build();
+        OneDayClassDocument searchClass2 = OneDayClassDocument.builder().classId(2L).totalWish(4).className("클래스 이름2").endDate(LocalDate.now().plusDays(1)).build();
+        OneDayClassDocument searchClass3 = OneDayClassDocument.builder().classId(3L).totalWish(3).className("클래스 이름3").endDate(LocalDate.now().plusDays(1)).build();
+        OneDayClassDocument searchClass4 = OneDayClassDocument.builder().classId(4L).totalWish(2).className("클래스 이름4").endDate(LocalDate.now().plusDays(1)).build();
+        OneDayClassDocument searchClass5 = OneDayClassDocument.builder().classId(5L).totalWish(1).className("클래스 이름5").endDate(LocalDate.now().plusDays(1)).build();
+        List<SearchHit<OneDayClassDocument>> list = new ArrayList<>();
+        SearchHit<OneDayClassDocument> searchHit1 = new SearchHit<>
+                ("1", "1", null, 0, null, null, null, null, null, null, searchClass1);
+        SearchHit<OneDayClassDocument> searchHit2 = new SearchHit<>
+                ("1", "1", null, 0, null, null, null, null, null, null, searchClass2);
+        SearchHit<OneDayClassDocument> searchHit3 = new SearchHit<>
+                ("1", "1", null, 0, null, null, null, null, null, null, searchClass3);
+        SearchHit<OneDayClassDocument> searchHit4 = new SearchHit<>
+                ("1", "1", null, 0, null, null, null, null, null, null, searchClass4);
+        SearchHit<OneDayClassDocument> searchHit5 = new SearchHit<>
+                ("1", "1", null, 0, null, null, null, null, null, null, searchClass5);
+
+        list.add(searchHit1);
+        list.add(searchHit2);
+        list.add(searchHit3);
+        list.add(searchHit4);
+        list.add(searchHit5);
+
+        SearchHits<OneDayClassDocument> hits = new SearchHitsImpl<>(5, null, 1, null, null, list, null, null);
+
+        given(operations.search(any(NativeSearchQuery.class), eq(OneDayClassDocument.class))).willReturn(hits);
+
+        Page<ClassSearchDto> response = oneDayClassService.searchClass(null, null, null, 0.0, 0.0, null, OrderType.WISH, 1);
+
+        // Then
+        assertThat(response.getTotalElements()).isEqualTo(5);
+        assertThat(response.getContent().get(0).getClassId()).isEqualTo(1L);
+        assertThat(response.getContent().get(1).getClassId()).isEqualTo(2L);
+
+    }
+
+    @Test
+    void autoCompleteSearch() throws IOException {
+        org.opensearch.search.SearchHit hit1 = new org.opensearch.search.SearchHit(1);
+        hit1.sourceRef(new BytesArray("{ \"className\": \"자동 검색\", \"tutorName\": \"강사닉네임\", \"tagList\": [\"태그1\"] }"));
+
+        org.opensearch.search.SearchHit hit2 = new org.opensearch.search.SearchHit(2);
+        hit2.sourceRef(new BytesArray("{ \"className\": \"자동\", \"tutorName\": \"강사닉네임2\", \"tagList\": [\"태그2\"] }"));
+
+        org.opensearch.search.SearchHit[] searchHitsArray = {hit1, hit2};
+        org.opensearch.search.SearchHits hits = new org.opensearch.search.SearchHits(searchHitsArray, null, 0);
+        SearchResponse searchResponse = new SearchResponse(new SearchResponseSections(
+                hits, null, null,false, false, null, 0), null, 0, 0, 0, 0,null, null);
+        given(client.search(any(SearchRequest.class), eq(RequestOptions.DEFAULT))).willReturn(searchResponse);
+
+        List<String> response = oneDayClassService.autoCompleteSearch("자동");
+
+        // Then
+        assertThat(response.size()).isEqualTo(2);
+        assertThat(response.get(0)).isEqualTo("자동");
+        assertThat(response.get(1)).isEqualTo("자동 검색");
+
+    }
+
 }
