@@ -44,7 +44,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @ExtendWith(MockitoExtension.class)
 public class KakaoRefundServiceTest {
-
     @Mock
     private PayProperties payProperties;
 
