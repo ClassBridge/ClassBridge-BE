@@ -12,7 +12,6 @@ import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.service.RecommendationService;
 import com.linked.classbridge.service.UserService;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

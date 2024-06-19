@@ -5,7 +5,6 @@ import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.repository.OneDayClassRepository;
-import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
@@ -36,9 +35,6 @@ public class RecommendationServiceTest {
 
     @Mock
     private OneDayClassRepository oneDayClassRepository;
-
-    @Mock
-    private ReservationRepository reservationRepository;
 
     @Test
     public void recommendClassesForUserTest() throws ExecutionException, InterruptedException {
