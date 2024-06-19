@@ -1,5 +1,6 @@
 package com.linked.classbridge.domain;
 
+import com.linked.classbridge.type.Gender;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -77,6 +78,12 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;      // 종료일
 
+    private Long studentCount = 0L; // 전체 예약자 및 수강생 수
+    private Double totalAge = 0.0; // 예약자 및 수강생들의 나이의 총합
+    private Double averageAge; // 예약자 및 수강생들의 평균 나이
+    private Long maleCount; // 클래스를 수강하거나 예약한 남성의 수
+    private Long femaleCount; // 클래스를 수강하거나 예약한 여성의 수
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -115,5 +122,18 @@ public class OneDayClass extends BaseEntity {
 
     public void updateTotalStarRate(Double diff) {
         this.totalStarRate += diff;
+    }
+
+    public void addStudent(Double userAge, Gender userGender) {
+
+        this.studentCount++;
+        this.totalAge += userAge;
+        this.averageAge = Math.round(totalAge / studentCount * 100.0) / 100.0;
+
+        if(userGender == Gender.MALE) {
+            this.maleCount = this.maleCount != null ? this.maleCount + 1 : 1;
+        } else {
+            this.femaleCount = this.femaleCount != null ? this.femaleCount + 1 : 1;
+        }
     }
 }

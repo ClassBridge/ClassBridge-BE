@@ -6,6 +6,7 @@ import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
 
 import com.linked.classbridge.domain.Attendance;
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
@@ -13,12 +14,15 @@ import com.linked.classbridge.dto.payment.PaymentStatusType;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.reservation.GetReservationResponse;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
+import com.linked.classbridge.repository.OneDayClassRepository;
+import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.AttendanceRepository;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.util.AgeUtil;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +37,7 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final AttendanceRepository attendanceRepository;
+    private final OneDayClassRepository oneDayClassRepository;
     private final UserService userService;
     private final KakaoRefundService refundService;
 
@@ -51,7 +56,14 @@ public class ReservationService {
 
         Reservation reservation = reservationRepository.save(Reservation.createReservation(request, lesson, user));
 
-        attendanceRepository.save(Attendance.createAttendance(lesson, reservation, user));
+        attendanceRepository.save(Attendance.createAttendance(lesson, reservation, user)); // 출석 테이블에 유저 추가
+
+        OneDayClass oneDayClass = lesson.getOneDayClass();
+        Double userAge = (double) AgeUtil.calculateAge(user.getBirthDate());
+        Gender userGender = user.getGender();
+
+        oneDayClass.addStudent(userAge, userGender);
+        oneDayClassRepository.save(oneDayClass);
 
         return reservation;
     }
@@ -77,8 +89,6 @@ public class ReservationService {
     @Transactional
     public Long cancelReservation(Long reservationId) {
         Reservation reservation = getReservationEntity(reservationId);
-//        reservation.setStatus(ReservationStatus.CANCELED_BY_TUTOR);
-//        reservationRepository.save(reservation);
         // 환불 처리
         Payment payment = reservation.getPayment();
         if (payment != null) {
@@ -91,8 +101,6 @@ public class ReservationService {
             // 환불 처리 메소드 호출
             refundService.refundPayment(refundRequest, null);
         }
-//        reservation.setStatus(ReservationStatus.CANCELED_BY_TUTOR);
-//        reservationRepository.save(reservation);
         return reservation.getReservationId();
     }
 

@@ -67,6 +67,9 @@ dependencies {
 
     //batch
     implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+    // Apache Commons Math
+    implementation 'org.apache.commons:commons-math3:3.6.1'
 }
 
 tasks.named('test') {
