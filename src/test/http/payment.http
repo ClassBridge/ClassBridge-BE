@@ -1,12 +1,12 @@
 ### 결제
 POST http://localhost:8080/api/payments/prepare
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODE4NDMxOCwiZXhwIjoxNzE4MTg0OTE4fQ.XMjniYYGYMLvegLDcXm_K2mu2ZT0Z5kFrwAVcWE--YU
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODc3NDQ4NCwiZXhwIjoxNzE4Nzc1MDg0fQ.DFSIuEq6ortpaDmgkAgCV_zIbJuoXyQgVBM0wKYdm9Q
 
 {
-  "quantity": 2,
-  "total_amount": 10000,
-  "reservation_id":10,
+  "quantity": 1,
+  "total_amount": 1000,
+  "reservation_id":13,
   "item_name": "코딩클래스"
 }
 
@@ -20,3 +20,11 @@ Content-Type: application/json
     "partner_user_id": "test_user_id",
     "pg_token": "test_pg_token"
 }
+
+### 모든 결제 조회
+GET http://localhost:8080/api/payments
+Content-Type: application/json
+
+### 특정 결제 조회
+GET http://localhost:8080/api/payments/1
+Content-Type: application/json

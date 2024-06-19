@@ -1,5 +1,6 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.INVALID_PAYMENT_ID;
 import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.MAX_PARTICIPANTS_EXCEEDED;
 import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
@@ -9,18 +10,21 @@ import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.dto.payment.CreatePaymentResponse;
+import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
+import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -261,5 +265,26 @@ public class KakaoPaymentService {
                 .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
         lesson.setParticipantNumber(lesson.getParticipantNumber() - quantity);
         lessonRepository.save(lesson);
+    }
+
+    /**
+     * 결제 조회
+     */
+    @Transactional(readOnly = true)
+    public List<GetPaymentResponse> getAllPayments() {
+        List<Payment> payments = paymentRepository.findAll();
+        return payments.stream()
+                .map(GetPaymentResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 결제 조회
+     */
+    @Transactional(readOnly = true)
+    public GetPaymentResponse getPaymentById(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RestApiException(INVALID_PAYMENT_ID));
+        return GetPaymentResponse.from(payment);
     }
 }
