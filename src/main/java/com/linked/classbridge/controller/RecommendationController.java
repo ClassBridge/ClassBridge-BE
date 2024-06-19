@@ -10,7 +10,6 @@ import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +28,9 @@ public class RecommendationController {
 
     private final OneDayClassRepository oneDayClassRepository;
 
-    @Operation(summary = "추천 클래스 반환", description = "(비동기 처리) 사용자에게 맞는 추천 클래스를 반환")
-    @GetMapping("/async")
-    public CompletableFuture<ResponseEntity<SuccessResponse<List<OneDayClass>>>> recommendClassesAsync() {
+    @Operation(summary = "추천 클래스 반환", description = "사용자에게 맞는 추천 클래스를 반환")
+    @GetMapping("/user-only")
+    public ResponseEntity<SuccessResponse<List<OneDayClass>>> recommendClassesForUser() {
 
         String userEmail = userService.getCurrentUserEmail();
 
@@ -39,12 +38,10 @@ public class RecommendationController {
             throw new RestApiException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return recommendationService.recommendClasses(userEmail).thenApply(result ->
-                ResponseEntity.ok(
-                        SuccessResponse.of(
-                                ResponseMessage.GET_TOP_CLASSES_FOR_USER_SUCCESS,
-                                result
-                        )
+        return ResponseEntity.ok(
+                SuccessResponse.of(
+                        ResponseMessage.GET_TOP_CLASSES_FOR_USER_SUCCESS,
+                        recommendationService.recommendClassesForUser(userEmail)
                 )
         );
     }

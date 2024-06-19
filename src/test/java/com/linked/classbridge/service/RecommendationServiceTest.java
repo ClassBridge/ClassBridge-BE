@@ -41,7 +41,7 @@ public class RecommendationServiceTest {
     private ReservationRepository reservationRepository;
 
     @Test
-    public void recommendClassesTest() throws ExecutionException, InterruptedException {
+    public void recommendClassesForUserTest() throws ExecutionException, InterruptedException {
 
         Category category = new Category();
         category.setName(CategoryType.COOKING);
@@ -68,9 +68,8 @@ public class RecommendationServiceTest {
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
         given(oneDayClassRepository.findAll()).willReturn(Arrays.asList(oneDayClass));
-        given(reservationRepository.findAllByLesson(lesson)).willReturn(Collections.emptyList());
 
-        List<OneDayClass> result = recommendationService.recommendClasses("test@test.com").get();
+        List<OneDayClass> result = recommendationService.recommendClassesForUser("test@test.com");
 
         assertEquals(1, result.size());
         assertEquals(oneDayClass, result.get(0));

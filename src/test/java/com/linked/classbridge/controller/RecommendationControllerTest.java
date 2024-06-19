@@ -45,10 +45,9 @@ public class RecommendationControllerTest {
     public void recommendClassesAsync_success() throws Exception {
 
         given(userService.getCurrentUserEmail()).willReturn("test@test.com");
-        given(recommendationService.recommendClasses("test@test.com")).willReturn(CompletableFuture.completedFuture(
-                Arrays.asList(new OneDayClass())));
+        given(recommendationService.recommendClassesForUser("test@test.com")).willReturn(Arrays.asList(new OneDayClass()));
 
-        mockMvc.perform(get("/api/class/recommend/async")
+        mockMvc.perform(get("/api/class/recommend/user-only")
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isOk());
