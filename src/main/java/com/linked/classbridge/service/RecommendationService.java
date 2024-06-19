@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,6 +39,10 @@ public class RecommendationService {
         int userAge = AgeUtil.calculateAge(user.getBirthDate());
         Gender userGender = user.getGender();
         List<Category> userInterests = user.getInterests();
+
+        if(userAge == 0 || userGender == null || userInterests == null) {
+            return oneDayClassRepository.findTopClassesByRatingAndWish(PageRequest.of(0, 5));
+        }
 
         List<OneDayClass> allClasses = oneDayClassRepository.findAll();
 
