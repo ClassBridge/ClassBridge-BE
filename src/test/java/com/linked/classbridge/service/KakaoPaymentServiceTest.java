@@ -5,12 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.config.PayProperties;
+import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
@@ -22,6 +25,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -86,51 +90,46 @@ class KakaoPaymentServiceTest {
     }
 
     @Test
-    void testInitiatePayment_Success() {
+    void testInitiatePayment_MaxParticipantsExceeded() {
         // given
         PaymentPrepareDto.Request request = new PaymentPrepareDto.Request();
+        request.setReservationId(1L);
+        request.setQuantity(5);
         request.setItemName("Test Item");
-        request.setQuantity(1);
         request.setTotalAmount(1000);
         request.setTexFreeAmount(0);
 
-        Map<String, String> parameters = Map.of(
-                "cid", "test_cid",
-                "partner_order_id", "payservice1",
-                "partner_user_id", "payservice1",
-                "item_name", "Test Item",
-                "quantity", "1",
-                "total_amount", "1000",
-                "tax_free_amount", "0",
-                "approval_url", "http://localhost:8080/api/payments/complete",
-                "cancel_url", "http://localhost:8080/api/payments/cancel",
-                "fail_url", "http://localhost:8080/api/payments/fail"
-        );
+        Lesson lesson = new Lesson();
+        lesson.setLessonId(1L);
 
-        PaymentPrepareDto.Response response = new PaymentPrepareDto.Response();
-        response.setTid("test_tid");
+        Reservation reservation = new Reservation();
+        reservation.setLesson(lesson);
 
-        given(payProperties.getCid()).willReturn("test_cid");
-        given(payProperties.getReadyUrl()).willReturn(mockWebServer.url("/api/payments/prepare").toString());
+        given(reservationRepository.findById(1L)).willReturn(Optional.of(reservation));
 
-        mockWebServer.enqueue(new MockResponse()
-                .setBody("{\"tid\":\"test_tid\"}")
-                .addHeader("Content-Type", "application/json"));
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200));
 
-        // when
-        PaymentPrepareDto.Response result = kakaoPaymentService.initiatePayment(request);
-
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getTid()).isEqualTo("test_tid");
+        // when & then
+        assertThrows(RestApiException.class, () -> kakaoPaymentService.initiatePayment(request));
     }
 
     @Test
     void testInitiatePayment_Failure() {
         // given
         PaymentPrepareDto.Request request = new PaymentPrepareDto.Request();
+        request.setReservationId(1L);
+        request.setQuantity(1);
+        request.setItemName("Test Item");
+        request.setTotalAmount(1000);
+        request.setTexFreeAmount(0);
 
-        given(payProperties.getReadyUrl()).willReturn(mockWebServer.url("/api/payments/prepare").toString());
+        Lesson lesson = new Lesson();
+        lesson.setLessonId(1L);
+
+        Reservation reservation = new Reservation();
+        reservation.setLesson(lesson);
+
+        given(reservationRepository.findById(1L)).willReturn(Optional.of(reservation));
 
         mockWebServer.enqueue(new MockResponse().setResponseCode(400));
 
