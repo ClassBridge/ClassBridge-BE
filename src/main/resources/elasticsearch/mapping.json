@@ -7,8 +7,13 @@
       "type": "text",
       "analyzer": "korean"
     },
+    "tutorName": {
+      "type": "text",
+      "analyzer": "korean"
+    },
     "address1": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "address2": {
       "type": "text"
@@ -31,11 +36,17 @@
     "starRate": {
       "type": "double"
     },
+    "totalWish": {
+      "type": "integer"
+    },
     "imageUrl": {
       "type": "text"
     },
     "tagList": {
-      "type": "keyword"
+      "type": "array",
+      "items": {
+        "type": "text"
+      }
     },
     "hasParking": {
       "type": "boolean"
@@ -49,7 +60,7 @@
       "format": "yyyy-MM-dd"
     },
     "category": {
-      "type": "text"
+      "type": "keyword"
     }
   }
 }

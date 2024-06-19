@@ -11,7 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -37,6 +39,12 @@ class OneDayClassControllerTest {
 
     @MockBean
     private ReviewService reviewService;
+
+    @MockBean
+    private OneDayClassService oneDayClassService;
+
+    @MockBean
+    private UserService userService;
 
     @Autowired
     private MockMvc mockMvc;

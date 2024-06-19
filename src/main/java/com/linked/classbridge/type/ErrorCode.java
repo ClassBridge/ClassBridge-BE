@@ -68,6 +68,7 @@ public enum ErrorCode {
     CLASS_HAVE_MAX_FAQ(HttpStatus.BAD_REQUEST, "클래스는 최대 5개의 FAQ를 만들 수 있습니다."),
     INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
+    INVALIDATE_CLASS_DATE(HttpStatus.BAD_REQUEST, "허용하지 않는 클래스 날짜입니다."),
     INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
     MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 인원을 초과했습니다."),
 
@@ -81,6 +82,7 @@ public enum ErrorCode {
     INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST,"환불 가능 수량을 확인해주세요."),
     INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
     NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
+    REFUND_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 환불입니다."),
 
     NOT_VALID_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 사업자등록번호입니다."),
     NOT_REGISTERED_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "등록되지 않은 사업자등록번호입니다."),

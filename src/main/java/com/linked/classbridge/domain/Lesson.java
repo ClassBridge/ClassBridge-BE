@@ -33,7 +33,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Setter
 @ToString
-@SQLDelete(sql = "UPDATE LESSON SET deleted_at = now() WHERE lesson_id = ? and version = ?")
+@SQLDelete(sql = "UPDATE lesson SET deleted_at = now() WHERE lesson_id = ? and version = ?")
 @SQLRestriction("deleted_at is null")
 public class Lesson extends BaseEntity {
 
@@ -58,8 +58,8 @@ public class Lesson extends BaseEntity {
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
 
-    @Version
-    private Long version;
+//    @Version
+//    private Long version;
 
     public void addReview(Review review) {
         this.reviewList.add(review);

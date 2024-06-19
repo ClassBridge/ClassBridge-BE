@@ -5,10 +5,11 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
-import com.linked.classbridge.dto.oneDayClass.LessonDto;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.tutor.TutorInfoDto;
 import com.linked.classbridge.service.OneDayClassService;
@@ -110,11 +111,11 @@ public class TutorController {
      */
     @Operation(summary = "Class 조회", description = "Class 조회")
     @GetMapping("/class/{classId}")
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(
+    public ResponseEntity<SuccessResponse<ClassResponseByTutor>> getOneDayClass(
             @PathVariable Long classId) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), classId))
+                oneDayClassService.getOneDayClassByTutor(userService.getCurrentUserEmail(), classId))
         );
     }
 
@@ -125,7 +126,7 @@ public class TutorController {
      */
     @Operation(summary = "Class 등록", description = "Class 등록")
     @PostMapping(path = "/class", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> registerClass(
+    public ResponseEntity<SuccessResponse<ClassResponseByTutor>> registerClass(
             @RequestPart(value = "request") @Valid ClassDto.ClassRequest request,
             @RequestPart(value = "file1", required = false) MultipartFile file1,
             @RequestPart(value = "file2", required = false) MultipartFile file2,
@@ -231,8 +232,8 @@ public class TutorController {
      */
     @Operation(summary = "Class lesson 추가", description = "Class lesson 추가")
     @PostMapping(path = "/class/{classId}/lesson")
-    public ResponseEntity<SuccessResponse<LessonDto>> registerFAQ(
-            @RequestBody @Valid LessonDto.Request request,
+    public ResponseEntity<SuccessResponse<LessonDtoDetail>> registerFAQ(
+            @RequestBody @Valid LessonDtoDetail.Request request,
             @PathVariable Long classId
     ) {
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
@@ -248,10 +249,10 @@ public class TutorController {
      */
     @Operation(summary = "Class lesson 수정", description = "Class lesson 수정")
     @PutMapping(path = "/class/{classId}/lesson/{lessonId}")
-    public ResponseEntity<SuccessResponse<LessonDto>> updateLesson(
+    public ResponseEntity<SuccessResponse<LessonDtoDetail>> updateLesson(
             @PathVariable Long classId,
             @PathVariable Long lessonId,
-            @RequestBody LessonDto.Request request
+            @RequestBody LessonDtoDetail.Request request
     ) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_LESSON_UPDATE_SUCCESS,

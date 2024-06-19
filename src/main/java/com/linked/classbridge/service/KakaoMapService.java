@@ -44,6 +44,8 @@ public class KakaoMapService {
             URI targetUrl = uriComponents.toUri();
             ResponseEntity<Map> responseEntity = restTemplate.exchange(targetUrl, HttpMethod.GET, requestEntity, Map.class);
             KakaoMapResponse kakaoMapResponse = new KakaoMapResponse((ArrayList)responseEntity.getBody().get("documents"));
+            oneDayClass.setAddress1(kakaoMapResponse.getRoad_address().getRegion_1depth_name());
+            oneDayClass.setAddress2(kakaoMapResponse.getRoad_address().getRegion_2depth_name());
             oneDayClass.setLatitude(Double.parseDouble(kakaoMapResponse.getY()));
             oneDayClass.setLongitude(Double.parseDouble(kakaoMapResponse.getX()));
 

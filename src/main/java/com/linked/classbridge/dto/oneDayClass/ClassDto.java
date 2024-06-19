@@ -141,7 +141,7 @@ public class ClassDto {
         }
     }
 
-    public record ClassResponse(
+    public record ClassResponseByTutor(
             Long classId,
 
             String className,  // 클래스명
@@ -168,15 +168,16 @@ public class ClassDto {
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
             CategoryType category,
-            Long userId,
+            Long userId,   // 강사 id
+            boolean isWish,  // 찜 여부
 
             List<ClassImageDto> imageList,
-            List<LessonDto> lessonList,
+            List<LessonDtoDetail> lessonList,
             List<ClassFAQDto> faqList,
             List<ClassTagDto> tagList
     ) {
-        public static ClassResponse fromEntity(OneDayClass oneDayClass) {
-            return new ClassResponse(
+        public static ClassResponseByTutor fromEntity(OneDayClass oneDayClass) {
+            return new ClassResponseByTutor(
                     oneDayClass.getClassId(),
                     oneDayClass.getClassName(),
                     oneDayClass.getAddress1(),
@@ -196,6 +197,72 @@ public class ClassDto {
                     oneDayClass.getEndDate(),
                     oneDayClass.getCategory().getName(),
                     oneDayClass.getTutor().getUserId(),
+                    false,
+                    oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
+                    oneDayClass.getLessonList().stream().map(LessonDtoDetail::new).toList(),
+                    oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),
+                    oneDayClass.getTagList().stream().map(ClassTagDto::new).toList());
+        }
+    }
+
+    public record ClassResponseByUser(
+            Long classId,
+
+            String className,  // 클래스명
+
+            String address,    // 주소
+
+            double latitude,    // 위도
+            double longitude,   // 경도
+
+            int duration,     // 소요 시간
+
+            int price,         // 가격
+            int personal,
+
+            Double totalStarRate, // 총 별점 수
+            Integer totalReviews,  // 총 리뷰 수
+            Integer totalWish,     // 총 찜 수
+
+            boolean hasParking,  // 주차장 정보
+            String introduction,        // 클래스 소개
+
+            LocalDate startDate,   // 시작일
+            LocalDate endDate,      // 종료일
+            CategoryType category,
+            Long tutorId,   // 강사 id
+            String tutorName,  // 강사 닉네임
+            String tutorIntroduction,
+            boolean isWish,  // 찜 여부
+            boolean isWanted, // 수강 신청 가능 여부
+            List<ClassImageDto> imageList,
+            List<LessonDto> lessonList,
+            List<ClassFAQDto> faqList,
+            List<ClassTagDto> tagList
+    ) {
+        public static ClassResponseByUser fromEntity(OneDayClass oneDayClass, boolean isWish, boolean isWanted) {
+            return new ClassResponseByUser(
+                    oneDayClass.getClassId(),
+                    oneDayClass.getClassName(),
+                    oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3(),
+                    oneDayClass.getLatitude(),
+                    oneDayClass.getLongitude(),
+                    oneDayClass.getDuration(),
+                    oneDayClass.getPrice(),
+                    oneDayClass.getPersonal(),
+                    oneDayClass.getTotalStarRate(),
+                    oneDayClass.getTotalReviews(),
+                    oneDayClass.getTotalWish(),
+                    oneDayClass.isHasParking(),
+                    oneDayClass.getIntroduction(),
+                    oneDayClass.getStartDate(),
+                    oneDayClass.getEndDate(),
+                    oneDayClass.getCategory().getName(),
+                    oneDayClass.getTutor().getUserId(),
+                    oneDayClass.getTutor().getNickname(),
+                    oneDayClass.getTutor().getSelfIntroduction(),
+                    isWish,
+                    isWanted,
                     oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
                     oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
                     oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),

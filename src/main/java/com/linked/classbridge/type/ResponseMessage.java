@@ -34,6 +34,9 @@ public enum ResponseMessage {
     WISH_ADD_SUCCESS("Wish 추가 성공"),
     WISH_DELETE_SUCCESS("Wish 삭제 성공"),
 
+    ONE_DAY_CLASS_SEARCH_SUCCESS("검색 성공"),
+    ONE_DAY_CLASS_AUTO_COMPLETE_SUCCESS("자동 완성 성공"),
+
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
@@ -43,7 +46,15 @@ public enum ResponseMessage {
     TUTOR_UPDATE_SUCCESS("강사 정보 수정 성공"),
 
     RESERVATION_SUCCESS("예약 생성 성공"),
+    PAYMENT_GET_SUCCESS("결제 조회 성공"),
+
+    RESERVATION_REGISTER_SUCCESS("예약 생성 성공"),
+    RESERVATION_GET_SUCCESS("예약 조회 성공"),
+    RESERVATION_CANCELED_BY_TUTOR_SUCCESS("예약 취소 성공"),
     REFUND_SUCCESS("환불 승인"),
+    REFUND_GET_SUCCESS("환불 조회 성공"),
+
+    TUTOR_PAYMENT_GET_SUCCESS("정산 조회 성공"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),

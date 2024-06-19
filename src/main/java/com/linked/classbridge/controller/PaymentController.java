@@ -5,6 +5,7 @@ import static com.linked.classbridge.type.ErrorCode.PAY_ERROR;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.payment.CreatePaymentResponse;
+import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
@@ -13,11 +14,13 @@ import com.linked.classbridge.service.KakaoPaymentService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,6 +90,34 @@ public class PaymentController {
     public void fail() {
 
         throw new RestApiException(PAY_ERROR);
+    }
+
+    /**
+     * 결제 조회
+     */
+    @GetMapping
+    public ResponseEntity<SuccessResponse<List<GetPaymentResponse>>> getAllPayments() {
+        List<GetPaymentResponse> payments = paymentService.getAllPayments();
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.PAYMENT_GET_SUCCESS,
+                        payments
+                )
+        );
+    }
+
+    /**
+     * 특정 결제 조회
+     */
+    @GetMapping("/{paymentId}")
+    public ResponseEntity<SuccessResponse<GetPaymentResponse>> getPaymentById(@PathVariable Long paymentId) {
+        GetPaymentResponse payment = paymentService.getPaymentById(paymentId);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.PAYMENT_GET_SUCCESS,
+                        payment
+                )
+        );
     }
 
 }

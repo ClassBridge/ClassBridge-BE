@@ -332,6 +332,13 @@ public class UserService {
         }
     }
 
+    public boolean checkLogin() {
+        log.info("check user login");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUserDetails;
+    }
+
     public Page<WishDto> getWishList(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
 

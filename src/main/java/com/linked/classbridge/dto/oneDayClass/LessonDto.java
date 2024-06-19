@@ -7,12 +7,14 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
 public class LessonDto {
     private Long lessonId;
     private LocalDate lessonDate;
@@ -55,6 +57,15 @@ public class LessonDto {
                     .oneDayClass(oneDayClass)
                     .build();
         }
+    }
+
+    public static LessonDto from(Lesson lesson) {
+        return LessonDto.builder()
+                .lessonId(lesson.getLessonId())
+                .lessonDate(lesson.getLessonDate())
+                .startTime(lesson.getStartTime())
+                .endTime(lesson.getEndTime())
+                .build();
     }
 
 }
