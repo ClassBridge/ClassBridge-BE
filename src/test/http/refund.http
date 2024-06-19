@@ -1,12 +1,13 @@
 ### 결제 취소
 POST http://localhost:8080/api/refunds
 Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODc3NDQ4NCwiZXhwIjoxNzE4Nzc1MDg0fQ.DFSIuEq6ortpaDmgkAgCV_zIbJuoXyQgVBM0wKYdm9Q
 
 {
-  "paymentId" : 18,
-  "refundType": "PARTIAL_REFUND",
+  "paymentId" : 19,
+  "refundType": "REFUNDED_BY_CUSTOMER",
   "quantity": 1,
-  "cancelAmount": 5000
+  "cancelAmount": 9000
 }
 
 ### 환불 목록 조회

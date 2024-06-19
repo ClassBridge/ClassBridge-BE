@@ -1,7 +1,7 @@
 package com.linked.classbridge.domain;
 
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
+import com.linked.classbridge.type.ReservationStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

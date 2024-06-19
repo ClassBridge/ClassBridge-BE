@@ -1,23 +1,24 @@
 ### 예약 생성
 POST http://localhost:8080/api/reservations
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODE4NDMxOCwiZXhwIjoxNzE4MTg0OTE4fQ.XMjniYYGYMLvegLDcXm_K2mu2ZT0Z5kFrwAVcWE--YU
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODc3NDQ4NCwiZXhwIjoxNzE4Nzc1MDg0fQ.DFSIuEq6ortpaDmgkAgCV_zIbJuoXyQgVBM0wKYdm9Q
 
 {
   "user_id" : 1,
-  "lesson_id" : 1,
-  "quantity" : 2
+  "lesson_id" : 2,
+  "quantity" : 1
 }
 
 ### 특정 예약 조회
 GET http://localhost:8080/api/reservations/10
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1MTMxMiwiZXhwIjoxNzE4MzUxOTEyfQ.3_Mxvae5GAyyo5_WAW8bze-z1lkJN6zGHuQv_L_9NQc
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODY5Nzc0OCwiZXhwIjoxNzE4Njk4MzQ4fQ.VXkdmP5F5gZqHcur3xgz9oDF97joKdpnymh9Sq63f8c
+
 
 ### 특정 예약 강사 취소
-PATCH http://localhost:8080/api/reservations/10/cancel
+PATCH http://localhost:8080/api/reservations/13/cancel
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODM1MjIzMCwiZXhwIjoxNzE4MzUyODMwfQ.bv9NSE6pP5cZDF2iIW7cU_iTVhkFQqRsCR0sO83UTIg
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODc3NTU2NiwiZXhwIjoxNzE4Nzc2MTY2fQ.N1Q9WgxuapDuGg0EIYuYJx3tFZW7r3HBXSMbZL_ekCk
 
 ### 모든 예약 조회
 GET http://localhost:8080/api/reservations

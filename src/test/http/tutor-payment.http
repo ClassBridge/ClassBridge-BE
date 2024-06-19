@@ -1,0 +1,8 @@
+### 정산 목록 조회
+GET http://localhost:8080/api/tutors/payments?userId=1
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODcwMzUyMywiZXhwIjoxNzE4NzA0MTIzfQ.sdyCl5X-HvMF-5QzgS5C0FvqXO9HuG44pq5OlLswdnc
+
+### 매출 조회
+GET http://localhost:8080/api/tutors/sales?tutorId=1&year=2024
+Content-Type: application/json

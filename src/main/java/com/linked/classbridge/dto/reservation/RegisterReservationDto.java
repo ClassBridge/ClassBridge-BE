@@ -2,6 +2,7 @@ package com.linked.classbridge.dto.reservation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.type.ReservationStatus;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;

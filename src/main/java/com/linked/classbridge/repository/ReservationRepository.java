@@ -1,8 +1,7 @@
 package com.linked.classbridge.repository;
 
 import com.linked.classbridge.domain.Reservation;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
-import java.time.LocalDate;
+import com.linked.classbridge.type.ReservationStatus;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

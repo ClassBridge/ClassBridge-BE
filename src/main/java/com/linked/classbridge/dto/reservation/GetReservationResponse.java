@@ -1,12 +1,10 @@
 package com.linked.classbridge.dto.reservation;
 
-import com.linked.classbridge.domain.Lesson;
-import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
-import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.oneDayClass.LessonDto;
 import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.user.UserDto;
+import com.linked.classbridge.type.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

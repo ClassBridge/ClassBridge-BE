@@ -54,6 +54,8 @@ public enum ResponseMessage {
     REFUND_SUCCESS("환불 승인"),
     REFUND_GET_SUCCESS("환불 조회 성공"),
 
+    TUTOR_PAYMENT_GET_SUCCESS("정산 조회 성공"),
+
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),
     CHAT_ROOM_LEAVE_SUCCESS("채팅방 퇴장하기 성공"),

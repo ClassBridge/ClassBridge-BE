@@ -19,7 +19,7 @@ import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Response;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
+import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.RefundRepository;
@@ -80,7 +80,7 @@ public class KakaoRefundServiceTest {
         request = new PaymentRefundDto.Requset();
         request.setPaymentId(1L);
         request.setCancelAmount(1000);
-        request.setRefundType(PaymentStatusType.REFUNDED);
+        request.setRefundType(PaymentStatusType.REFUNDED_BY_CUSTOMER);
         request.setQuantity(1);
 
         lesson = new Lesson();
