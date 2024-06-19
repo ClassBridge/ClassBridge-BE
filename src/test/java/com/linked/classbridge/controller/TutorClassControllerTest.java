@@ -95,7 +95,7 @@ class TutorClassControllerTest {
 //    @WithMockUser
 //    void registerClass() throws Exception {
 //        // given
-//        User mockUser = User.builder().email("example@example.com").userId(1L).build();
+//        User mockUser = User.builder().email("example@example.com").tutorId(1L).build();
 //
 //        // 파일들을 포함한 요청 객체 생성
 //        ClassDto.ClassRequest request = ClassDto.ClassRequest.builder()
@@ -148,7 +148,7 @@ class TutorClassControllerTest {
 //                LocalDate.of(2024, 6, 29), // startDate
 //                LocalDate.of(2024, 7, 1), // endDate
 //                CategoryType.FITNESS, // category
-//                1L, // userId
+//                1L, // tutorId
 //                new ArrayList<>(),
 //                Arrays.asList(
 //                        new LessonDto(1L, LocalDate.of(2024, 7, 1), LocalTime.of(14, 0, 0), LocalTime.of(15, 30, 0), 0),

@@ -6,9 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ResponseMessage {
-    HELLO_GET_SUCCESS("Hello 조회 성공"),
-    HELLO_REGISTER_SUCCESS("Hello 등록 성공"),
-    HELLO_UPDATE_SUCCESS("Hello 수정 성공"),
     REVIEW_REGISTER_SUCCESS("리뷰 등록 성공"),
     REVIEW_UPDATE_SUCCESS("리뷰 수정 성공"),
     REVIEW_DELETE_SUCCESS("리뷰 삭제 성공"),
@@ -36,6 +33,9 @@ public enum ResponseMessage {
     WISH_GET_SUCCESS("Wish 리스트 조회 성공"),
     WISH_ADD_SUCCESS("Wish 추가 성공"),
     WISH_DELETE_SUCCESS("Wish 삭제 성공"),
+
+    ONE_DAY_CLASS_SEARCH_SUCCESS("검색 성공"),
+    ONE_DAY_CLASS_AUTO_COMPLETE_SUCCESS("자동 완성 성공"),
 
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
