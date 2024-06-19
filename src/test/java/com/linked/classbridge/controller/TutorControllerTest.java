@@ -104,6 +104,7 @@ class TutorControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("강사 받은 리뷰 목록 조회")
     void getUserReviews() throws Exception {
         // given
@@ -116,6 +117,7 @@ class TutorControllerTest {
         // when & then
         mockMvc.perform(get("/api/tutors/reviews")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
                         .param("page", "0")
                         .param("size", "5")
                         .param("sort", "createdAt,desc")

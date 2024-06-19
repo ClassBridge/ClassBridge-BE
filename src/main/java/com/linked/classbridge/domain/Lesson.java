@@ -58,8 +58,8 @@ public class Lesson extends BaseEntity {
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Review> reviewList;
 
-    @Version
-    private Long version;
+//    @Version
+//    private Long version;
 
     public void addReview(Review review) {
         this.reviewList.add(review);

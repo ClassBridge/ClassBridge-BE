@@ -1,23 +1,27 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.REFUND_NOT_FOUND;
+
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.domain.Reservation;
-import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Requset;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Response;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
+import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.RefundRepository;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.util.RefundPolicyUtils;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -56,9 +60,9 @@ public class KakaoRefundService {
         }
 
         // 환불 비율 계산
-        double refundRate = RefundPolicy.calculateRefundRate(reservation.getLesson().getLessonDate(),
+        double refundRate = RefundPolicyUtils.calculateRefundRate(reservation.getLesson().getLessonDate(),
                 reservation.getLesson().getStartTime(),
-                LocalDateTime.now());
+                LocalDateTime.now(), request.getRefundType());
 
         // 카카오 결제 취소에 필요한 파라미터
         Map<String, String> parameters = getRefundParameters(request, refundRate, payment);
@@ -75,6 +79,14 @@ public class KakaoRefundService {
                 .uri(uriBuilder -> uriBuilder.path("/").build())
                 .bodyValue(parameters)
 //                .retrieve()
+//                .exchangeToMono(clientResponse -> {
+//                    if (clientResponse.statusCode().is5xxServerError()) {
+//                        return Mono.error(new RestApiException(ErrorCode.PAY_ERROR));
+//                    } else {
+//                        return clientResponse.bodyToMono(Response.class);
+//                    }
+//                })
+//                .bodyToMono(Response.class)
                 .exchangeToMono(clientResponse -> {
                     if (clientResponse.statusCode().is5xxServerError()) {
                         return Mono.error(new RestApiException(ErrorCode.PAY_ERROR));
@@ -82,7 +94,6 @@ public class KakaoRefundService {
                         return clientResponse.bodyToMono(Response.class);
                     }
                 })
-//                .bodyToMono(Response.class)
                 .block());
 
         // 취소 응답
@@ -101,7 +112,7 @@ public class KakaoRefundService {
         if (payment.getQuantity() == refundQuantity
                 && request.getRefundType() == PaymentStatusType.PARTIAL_REFUND) {
 
-            payment.setStatus(PaymentStatusType.REFUNDED);
+            payment.setStatus(PaymentStatusType.REFUNDED_BY_CUSTOMER);
             // 예약도 취소상태로
             reservation.setStatus(ReservationStatus.CANCELED_BY_CUSTOMER);
         }
@@ -118,12 +129,18 @@ public class KakaoRefundService {
             // 환불 정보
             Refund refund = getRefund(request, payment, response);
             refundRepository.save(refund);
-        } else if (request.getRefundType() == PaymentStatusType.REFUNDED) {
+        } else if (request.getRefundType() == PaymentStatusType.REFUNDED_BY_CUSTOMER) {
             refundQuantity = reservation.getQuantity();
             // 결제 상태 환불로 변경
-            payment.setStatus(PaymentStatusType.REFUNDED);
+            payment.setStatus(PaymentStatusType.REFUNDED_BY_CUSTOMER);
             // 예약 상태 취소로 변경
             reservation.setStatus(ReservationStatus.CANCELED_BY_CUSTOMER);
+        } else if (request.getRefundType() == PaymentStatusType.REFUNDED_BY_TUTOR) {
+            refundQuantity = reservation.getQuantity();
+            // 결제 상태 환불로 변경
+            payment.setStatus(PaymentStatusType.REFUNDED_BY_TUTOR);
+            // 예약 상태 취소로 변경
+            reservation.setStatus(ReservationStatus.CANCELED_BY_TUTOR);
         }
 
         // 클래스 lesson 참여 인원 수정
@@ -170,5 +187,20 @@ public class KakaoRefundService {
 
     private int calculateNewTotalAmount(Payment payment, int cancelAmount) {
         return payment.getTotalAmount() - cancelAmount;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentRefundDto> getAllRefunds() {
+        List<Refund> refunds = refundRepository.findAll();
+        return refunds.stream()
+                .map(PaymentRefundDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentRefundDto getRefundById(Long refundId) {
+        Refund refund = refundRepository.findById(refundId)
+                .orElseThrow(() -> new RestApiException(REFUND_NOT_FOUND));
+        return PaymentRefundDto.from(refund);
     }
 }
