@@ -12,7 +12,7 @@ access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN
 ### 특정 예약 조회
 GET http://localhost:8080/api/reservations/10
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODY5Nzc0OCwiZXhwIjoxNzE4Njk4MzQ4fQ.VXkdmP5F5gZqHcur3xgz9oDF97joKdpnymh9Sq63f8c
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODc4MjE0NywiZXhwIjoxNzE4NzgyNzQ3fQ.fxdS4oyXOXHDULRIBF9lUTqz28jHrScs6b4VxeiV-58
 
 
 ### 특정 예약 강사 취소

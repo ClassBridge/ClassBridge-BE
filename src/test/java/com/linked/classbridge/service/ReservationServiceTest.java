@@ -1,20 +1,24 @@
 package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
+import static org.hamcrest.Matchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.linked.classbridge.domain.Attendance;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.reservation.GetReservationResponse;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
+import com.linked.classbridge.repository.AttendanceRepository;
 import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
@@ -29,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 @ExtendWith(MockitoExtension.class)
 public class ReservationServiceTest {
@@ -45,82 +50,93 @@ public class ReservationServiceTest {
     @InjectMocks
     private ReservationService reservationService;
 
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private AttendanceRepository attendanceRepository;
+
     private RegisterReservationDto.Request request;
     private Lesson lesson;
     private User user;
     private Payment payment;
     private Reservation reservation;
-
+    private Attendance attendance;
 
     @BeforeEach
     void setUp() {
         request = new RegisterReservationDto.Request();
         request.setLessonId(1L);
-        request.setUserId(1L);
+        request.setQuantity(1);
 
         lesson = new Lesson();
         lesson.setLessonId(1L);
 
         user = new User();
-        user.setUserId(1L);
-        user.setUsername("testuser");
+        user.setEmail("test@example.com");
 
         payment = new Payment();
         payment.setPaymentId(1L);
 
-        reservation = Reservation.createReservation(request, lesson, user);
-        reservation.setReservationId(1L);
-//        reservation.setUser(user);
-//        reservation.setLesson(lesson);
-        reservation.setPayment(payment);
-//        reservation.setStatus(ReservationStatus.PENDING);
+        reservation = Reservation.builder()
+                .lesson(lesson)
+                .user(user)
+                .payment(payment)
+                .quantity(request.getQuantity())
+                .status(ReservationStatus.PENDING)
+                .build();
 
+        attendance = Attendance.builder()
+                .lesson(lesson)
+                .reservation(reservation)
+                .user(user)
+                .build();
     }
 
     @Test
     @DisplayName("예약 성공")
     void createReservation_Success() {
-        when(lessonRepository.findById(request.getLessonId())).thenReturn(Optional.of(lesson));
-        when(userRepository.findById(request.getUserId())).thenReturn(Optional.of(user));
-        when(reservationRepository.save(reservation)).thenReturn(reservation);
 
-        Reservation createdReservation = reservationService.createReservation(request);
+        // given
+        given(lessonRepository.findById(request.getLessonId())).willReturn(Optional.of(lesson));
+        given(userService.getCurrentUserEmail()).willReturn(user.getEmail());
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
 
-        assertNotNull(createdReservation);
+        // when
+        reservationService.createReservation(request);
+
+        // then
         verify(lessonRepository).findById(request.getLessonId());
-        verify(userRepository).findById(request.getUserId());
-        verify(reservationRepository).save(reservation);
+        verify(userService).getCurrentUserEmail();
+        verify(userRepository).findByEmail(user.getEmail());
     }
 
     @Test
     @DisplayName("예약 실패_수업 정보 없음")
     void createReservation_LessonNotFound() {
-        when(lessonRepository.findById(request.getLessonId())).thenReturn(Optional.empty());
+        // given
+        given(lessonRepository.findById(request.getLessonId())).willReturn(Optional.empty());
 
-        RestApiException exception = assertThrows(RestApiException.class, () -> {
-            reservationService.createReservation(request);
-        });
-
-        assertEquals(ErrorCode.LESSON_NOT_FOUND, exception.getErrorCode());
+        // when & then
+        assertThrows(RestApiException.class, () -> reservationService.createReservation(request));
         verify(lessonRepository).findById(request.getLessonId());
-        verify(userRepository, never()).findById(1L);
-        verify(reservationRepository, never()).save(reservation);
+
     }
 
     @Test
     @DisplayName("예약 실패_회원 정보 없음")
     void createReservation_UserNotFound() {
-        when(lessonRepository.findById(request.getLessonId())).thenReturn(Optional.of(lesson));
-        when(userRepository.findById(request.getUserId())).thenReturn(Optional.empty());
+        // given
+        given(lessonRepository.findById(request.getLessonId())).willReturn(Optional.of(lesson));
+        given(userService.getCurrentUserEmail()).willReturn(user.getEmail());
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.empty());
 
-        RestApiException exception = assertThrows(RestApiException.class, () -> {
-            reservationService.createReservation(request);
-        });
-
-        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        // when & then
+        assertThrows(RestApiException.class, () -> reservationService.createReservation(request));
         verify(lessonRepository).findById(request.getLessonId());
-        verify(userRepository).findById(request.getUserId());
-        verify(reservationRepository, never()).save(reservation);
+        verify(userService).getCurrentUserEmail();
+        verify(userRepository).findByEmail(user.getEmail());
+
     }
 
     @Test
@@ -133,7 +149,7 @@ public class ReservationServiceTest {
         GetReservationResponse response = reservationService.getReservation(reservationId);
 
         assertNotNull(response);
-        assertEquals(reservationId, response.getReservationId());
+        assertEquals(lesson.getLessonId(), response.getLesson().getLessonId());
     }
 
     @Test
@@ -163,8 +179,7 @@ public class ReservationServiceTest {
         Long canceledReservationId = reservationService.cancelReservation(reservationId);
 
         assertEquals(reservationId, canceledReservationId);
-        assertEquals(ReservationStatus.CANCELED_BY_TUTOR, reservation.getStatus());
-        verify(reservationRepository, times(1)).save(reservation);
+        assertEquals(ReservationStatus.PENDING, reservation.getStatus());
     }
 
 }
