@@ -88,6 +88,7 @@ class KakaoPaymentServiceTest {
     void shutdown() throws IOException {
         mockWebServer.shutdown();
     }
+
     @Test
     void testInitiatePayment_MaxParticipantsExceeded() {
         // given
