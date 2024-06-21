@@ -7,7 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class MonthlySales {
+public class ClassMonthlySales {
+    private Long classId;
+    private String className;
     private int month;
     private int amount;
 }
