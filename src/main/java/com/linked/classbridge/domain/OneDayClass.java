@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -103,7 +104,8 @@ public class OneDayClass extends BaseEntity {
     private List<Lesson> lessonList;
 
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Review> reviewList;
+    @Builder.Default
+    private List<Review> reviewList = new ArrayList<>();
 
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ClassFAQ> faqList;
@@ -111,7 +113,7 @@ public class OneDayClass extends BaseEntity {
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ClassTag> tagList;
 
-     public void addReview(Review review) {
+    public void addReview(Review review) {
         this.reviewList.add(review);
         this.totalStarRate += review.getRating();
         this.totalReviews++;
@@ -123,7 +125,7 @@ public class OneDayClass extends BaseEntity {
         this.totalReviews--;
     }
 
-    public void updateTotalStarRate(Double diff) {
+    public void addStartRateDiff(Double diff) {
         this.totalStarRate += diff;
     }
 
@@ -133,7 +135,7 @@ public class OneDayClass extends BaseEntity {
         this.totalAge += userAge;
         this.averageAge = Math.round(totalAge / studentCount * 100.0) / 100.0;
 
-        if(userGender == Gender.MALE) {
+        if (userGender == Gender.MALE) {
             this.maleCount = this.maleCount != null ? this.maleCount + 1 : 1;
         } else {
             this.femaleCount = this.femaleCount != null ? this.femaleCount + 1 : 1;
