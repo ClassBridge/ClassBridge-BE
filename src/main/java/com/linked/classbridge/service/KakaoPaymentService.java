@@ -91,6 +91,10 @@ public class KakaoPaymentService {
                     .block();// 동기식 처리
 
         } catch (WebClientResponseException e) {
+            log.error("header :: {}", getHeaders());
+            log.error("getHeaders().toSingleValueMap() :: {}", getHeaders().toSingleValueMap());
+            log.error("parameters :: {}", parameters);
+            log.error("url :: {}", payProperties.getReadyUrl());
             throw new RestApiException(ErrorCode.PAY_ERROR);
         }
     }
