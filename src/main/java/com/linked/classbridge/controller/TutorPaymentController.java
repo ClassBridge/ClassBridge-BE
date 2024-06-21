@@ -22,14 +22,14 @@ public class TutorPaymentController {
     private final TutorPaymentService tutorPaymentService;
 
     @GetMapping("/payments")
-    public ResponseEntity<SuccessResponse<List<TutorPaymentResponse>>> getTutorPayments(@RequestParam Long userId,
-                                                                                        @RequestParam(required = false) String yearMonth) {
+    public ResponseEntity<SuccessResponse<List<TutorPaymentResponse>>> getTutorPayments(
+            @RequestParam(required = false) String yearMonth) {
         List<TutorPaymentResponse> tutorPaymentResponseList;
         if (yearMonth != null) {
             YearMonth ym = YearMonth.parse(yearMonth);
-            tutorPaymentResponseList = tutorPaymentService.getTutorPaymentsByUserIdAndPeriod(userId, ym);
+            tutorPaymentResponseList = tutorPaymentService.getTutorPaymentsByUserIdAndPeriod(ym);
         } else {
-            tutorPaymentResponseList = tutorPaymentService.getTutorPaymentsByUserId(userId);
+            tutorPaymentResponseList = tutorPaymentService.getTutorPaymentsByUserId();
         }
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(

@@ -1,6 +1,10 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+
 import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.domain.User;
+import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.TutorPaymentDetailRepository;
 import com.linked.classbridge.repository.TutorPaymentRepository;
@@ -8,6 +12,7 @@ import com.linked.classbridge.domain.TutorPayment;
 import com.linked.classbridge.domain.TutorPaymentDetail;
 import com.linked.classbridge.dto.tutorPayment.TutorPaymentDetailResponse;
 import com.linked.classbridge.dto.tutorPayment.TutorPaymentResponse;
+import com.linked.classbridge.repository.UserRepository;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +32,8 @@ public class TutorPaymentService {
     private final PaymentRepository paymentRepository;
     private final TutorPaymentRepository tutorPaymentRepository;
     private final TutorPaymentDetailRepository tutorPaymentDetailRepository;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Transactional
     public void processMonthlySettlement() {
@@ -66,11 +73,14 @@ public class TutorPaymentService {
     }
 
     @Transactional(readOnly = true)
-    public List<TutorPaymentResponse> getTutorPaymentsByUserIdAndPeriod(Long userId, YearMonth yearMonth) {
+    public List<TutorPaymentResponse> getTutorPaymentsByUserIdAndPeriod(YearMonth yearMonth) {
+
+        User user = getUser();
+
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
 
-        List<TutorPayment> tutorPayments = tutorPaymentRepository.findByUserIdAndPeriodStartDateBetween(userId, startDate, endDate)
+        List<TutorPayment> tutorPayments = tutorPaymentRepository.findByUserIdAndPeriodStartDateBetween(user.getUserId(), startDate, endDate)
                 .orElse(Collections.emptyList());
 
         return tutorPayments.stream()
@@ -78,9 +88,19 @@ public class TutorPaymentService {
                 .collect(Collectors.toList());
     }
 
+    private User getUser() {
+        String userEmail = userService.getCurrentUserEmail();
+        return userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> {
+                    log.warn("User with email '{}' not found", userEmail);
+                    return new RestApiException(USER_NOT_FOUND);
+                });
+    }
+
     @Transactional(readOnly = true)
-    public List<TutorPaymentResponse> getTutorPaymentsByUserId(Long userId) {
-        List<TutorPayment> tutorPayments = tutorPaymentRepository.findByUserId(userId)
+    public List<TutorPaymentResponse> getTutorPaymentsByUserId() {
+        User user = getUser();
+        List<TutorPayment> tutorPayments = tutorPaymentRepository.findByUserId(user.getUserId())
                 .orElse(Collections.emptyList());
         return tutorPayments.stream()
                 .map(this::convertToDto)
