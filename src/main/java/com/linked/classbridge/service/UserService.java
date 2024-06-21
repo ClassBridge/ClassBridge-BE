@@ -195,6 +195,10 @@ public class UserService {
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
 
+        if (userDto.getUsername() == null) {
+            userDto.setUsername(additionalInfoDto.getNickname());
+        }
+
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
         Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
