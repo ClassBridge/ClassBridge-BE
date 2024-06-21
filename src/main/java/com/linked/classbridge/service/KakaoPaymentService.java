@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -52,6 +53,9 @@ public class KakaoPaymentService {
     private final ReservationRepository reservationRepository;
     private final LessonRepository lessonRepository;
     private final LessonService lessonService;
+
+    @Value("${baseUrl}")
+    private String baseUrl;
 
     /**
      * 카카오페이 결제 요청 로직
@@ -132,7 +136,7 @@ public class KakaoPaymentService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             WebClient localWebClient = WebClient.builder()
-                    .baseUrl("http://localhost:8080")
+                    .baseUrl(baseUrl)
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 //                    .defaultHeader(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + payProperties.getDevKey())
                     .build();
@@ -223,9 +227,9 @@ public class KakaoPaymentService {
         parameters.put("quantity", Integer.toString(request.getQuantity()));
         parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
-        parameters.put("approval_url", "http://localhost:8080/api/payments/complete"); // 성공 시 redirect url
-        parameters.put("cancel_url", "http://localhost:8080/api/payments/cancel"); // 취소 시 redirect url
-        parameters.put("fail_url", "http://localhost:8080/api/payments/fail"); // 실패 시 redirect url
+        parameters.put("approval_url", baseUrl+"/api/payments/complete"); // 성공 시 redirect url
+        parameters.put("cancel_url", baseUrl+"/api/payments/cancel"); // 취소 시 redirect url
+        parameters.put("fail_url", baseUrl+"/api/payments/fail"); // 실패 시 redirect url
 
         return parameters;
     }
