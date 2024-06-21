@@ -12,11 +12,12 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -56,7 +57,8 @@ public class Lesson extends BaseEntity {
     private OneDayClass oneDayClass;
 
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Review> reviewList;
+    @Builder.Default
+    private List<Review> reviewList = new ArrayList<>();
 
 //    @Version
 //    private Long version;

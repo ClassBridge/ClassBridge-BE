@@ -94,3 +94,5 @@ openapi:
 kakaomap:
   admin-key: ${KAKAO_MAP_ADMIN_KEY}
   map-url: https://dapi.kakao.com/v2/local/search/address.json
+
+baseUrl: http://localhost:8080
