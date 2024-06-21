@@ -30,9 +30,6 @@
     "price": {
       "type": "integer"
     },
-    "personal": {
-      "type": "integer"
-    },
     "starRate": {
       "type": "double"
     },
@@ -47,13 +44,6 @@
       "items": {
         "type": "text"
       }
-    },
-    "hasParking": {
-      "type": "boolean"
-    },
-    "startDate": {
-      "type": "date",
-      "format": "yyyy-MM-dd"
     },
     "endDate": {
       "type": "date",
