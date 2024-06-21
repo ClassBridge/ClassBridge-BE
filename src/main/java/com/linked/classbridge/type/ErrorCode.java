@@ -33,8 +33,11 @@ public enum ErrorCode {
     INVALID_REVIEW_RATING(HttpStatus.BAD_REQUEST, "리뷰 평점은 1점부터 5점까지 가능합니다."),
     INVALID_REVIEW_CONTENTS(HttpStatus.BAD_REQUEST, "리뷰 내용은 10자 이상 200자 이하로 작성해주세요."),
     INVALID_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "유효한 이미지 파일이 아닙니다."),
+    REVIEW_IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰 이미지를 찾을 수 없습니다."),
+    INVALID_REVIEW_IMAGE_ACTION(HttpStatus.BAD_REQUEST, "유효하지 않은 이미지 업로드 액션입니다."),
     FAILED_TO_UPLOAD_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다."),
     FAILED_TO_DELETE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제에 실패했습니다."),
+
 
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
     REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
@@ -78,8 +81,8 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
     INVALID_PAYMENT_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 정보입니다."),
     NULL_RESPONSE_FROM_PAYMENT_GATEWAY(HttpStatus.BAD_REQUEST, "결제 게이트웨이 응답이 없습니다."),
-    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
-    INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST,"환불 가능 수량을 확인해주세요."),
+    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST, "세션에 결제 정보가 없습니다."),
+    INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST, "환불 가능 수량을 확인해주세요."),
     INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
     NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
     REFUND_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 환불입니다."),
@@ -96,8 +99,8 @@ public enum ErrorCode {
     USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
 
     NOT_TODAY_LESSON(HttpStatus.BAD_REQUEST, "레슨 당일에만 출석체크가 가능합니다."),
-    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다."),
-    ;
+    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다.");
+
     private final HttpStatus httpStatus;
     private final String description;
 }

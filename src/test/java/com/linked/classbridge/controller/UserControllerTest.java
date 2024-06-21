@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.review.GetReviewImageDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
@@ -119,28 +120,28 @@ class UserControllerTest {
                 "userNickname", 4.5, "review1 content",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 3, 15, 0),
-                List.of("url1", "url2", "url3")
+                List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
         reviewResponse2 = new GetReviewResponse(
                 2L, 1L, "className", 2L, 1L,
                 "userNickname", 2.3, "review2 content",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 2, 17, 0),
-                List.of("url4", "url5", "url6")
+                List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
         reviewResponse3 = new GetReviewResponse(
                 3L, 2L, "className", 3L, 1L,
                 "userNickname", 3.7, "review3 content",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 1, 20, 0),
-                List.of("url7", "url8", "url9")
+                List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
         reviewResponse4 = new GetReviewResponse(
                 4L, 2L, "className", 4L, 1L,
                 "userNickname", 5.0, "review4 content",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 1, 23, 0),
-                List.of("url10", "url11", "url12")
+                List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
     }
 
