@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.review.GetReviewImageDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.tutor.TutorInfoDto;
 import com.linked.classbridge.exception.RestApiException;
@@ -84,22 +85,22 @@ class TutorControllerTest {
         reviewResponse1 = new GetReviewResponse(
                 1L, 1L, "className", 1L, 1L,
                 "userNickname", 4.5, "review1 content",
-                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
         reviewResponse2 = new GetReviewResponse(
                 1L, 1L, "className", 2L, 1L,
                 "userNickname", 4.5, "review1 content",
-                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of(new GetReviewImageDto(2L, 1, "url2"))
         );
         reviewResponse3 = new GetReviewResponse(
                 1L, 2L, "className", 3L, 2L,
                 "userNickname", 4.5, "review1 content",
-                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of(new GetReviewImageDto(3L, 1, "url3"))
         );
         reviewResponse4 = new GetReviewResponse(
                 1L, 2L, "className", 4L, 2L,
                 "userNickname", 4.5, "review1 content",
-                LocalDate.now(), LocalDateTime.now(), List.of("url1", "url2", "url3")
+                LocalDate.now(), LocalDateTime.now(), List.of(new GetReviewImageDto(4L, 1, "url4"))
         );
     }
 
