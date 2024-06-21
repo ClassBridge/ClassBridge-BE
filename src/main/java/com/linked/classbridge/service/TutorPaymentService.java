@@ -65,13 +65,18 @@ public class TutorPaymentService {
                 });
     }
 
-//    public List<TutorPayment> getTutorPaymentsByUserId(Long userId) {
-//        return tutorPaymentRepository.findByUserId(userId).orElse(Collections.emptyList());
-//    }
-//
-//    public List<TutorPaymentDetail> getTutorPaymentDetails(TutorPayment tutorPayment) {
-//        return tutorPaymentDetailRepository.findByTutorPayment(tutorPayment).orElse(Collections.emptyList());
-//    }
+    @Transactional(readOnly = true)
+    public List<TutorPaymentResponse> getTutorPaymentsByUserIdAndPeriod(Long userId, YearMonth yearMonth) {
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
+
+        List<TutorPayment> tutorPayments = tutorPaymentRepository.findByUserIdAndPeriodStartDateBetween(userId, startDate, endDate)
+                .orElse(Collections.emptyList());
+
+        return tutorPayments.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
 
     @Transactional(readOnly = true)
     public List<TutorPaymentResponse> getTutorPaymentsByUserId(Long userId) {
