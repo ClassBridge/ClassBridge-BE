@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,18 +14,22 @@ import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.domain.Attendance;
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.reservation.GetReservationResponse;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
 import com.linked.classbridge.repository.AttendanceRepository;
+import com.linked.classbridge.repository.OneDayClassRepository;
+import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.util.AgeUtil;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,12 +61,16 @@ public class ReservationServiceTest {
     @Mock
     private AttendanceRepository attendanceRepository;
 
+    @Mock
+    private OneDayClassRepository oneDayClassRepository;
+
     private RegisterReservationDto.Request request;
     private Lesson lesson;
     private User user;
     private Payment payment;
     private Reservation reservation;
     private Attendance attendance;
+    private OneDayClass oneDayClass;
 
     @BeforeEach
     void setUp() {
@@ -69,8 +78,12 @@ public class ReservationServiceTest {
         request.setLessonId(1L);
         request.setQuantity(1);
 
+        oneDayClass = new OneDayClass();
+        oneDayClass.setClassId(1L);
+
         lesson = new Lesson();
         lesson.setLessonId(1L);
+        lesson.setOneDayClass(oneDayClass);
 
         user = new User();
         user.setEmail("test@example.com");

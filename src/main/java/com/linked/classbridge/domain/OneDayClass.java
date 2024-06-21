@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -78,7 +79,9 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;      // 종료일
 
+    @Builder.Default
     private Long studentCount = 0L; // 전체 예약자 및 수강생 수
+    @Builder.Default
     private Double totalAge = 0.0; // 예약자 및 수강생들의 나이의 총합
     private Double averageAge; // 예약자 및 수강생들의 평균 나이
     private Long maleCount; // 클래스를 수강하거나 예약한 남성의 수
