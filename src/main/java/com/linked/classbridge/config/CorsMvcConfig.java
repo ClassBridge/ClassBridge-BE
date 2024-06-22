@@ -13,8 +13,7 @@ public class CorsMvcConfig implements WebMvcConfigurer {
         corsRegistry.addMapping("/**")
                 .exposedHeaders("Set-Cookie")
                 .exposedHeaders("access")
-                .allowedOrigins("https://class-bridge.vercel.app")
-                .allowedOrigins("https://open-api.kakaopay.com")
+                .allowedOrigins("https://class-bridge.vercel.app", "https://open-api.kakaopay.com")
                 ;
     }
 }

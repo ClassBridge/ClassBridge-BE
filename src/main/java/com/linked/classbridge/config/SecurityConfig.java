@@ -8,6 +8,7 @@ import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
 import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,8 +50,8 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("https://class-bridge.vercel.app"));
-                        configuration.setAllowedOrigins(Collections.singletonList("https://open-api.kakaopay.com"));
+                        configuration.setAllowedOrigins(
+                                Arrays.asList("https://class-bridge.vercel.app", "https://open-api.kakaopay.com"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
