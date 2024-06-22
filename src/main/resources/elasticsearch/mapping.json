@@ -40,10 +40,7 @@
       "type": "text"
     },
     "tagList": {
-      "type": "array",
-      "items": {
-        "type": "text"
-      }
+      "type": "text"
     },
     "endDate": {
       "type": "date",
