@@ -13,4 +13,6 @@ public interface ClassImageRepository extends JpaRepository<ClassImage, Long> {
     void deleteAllByOneDayClassClassId(long classId);
 
     List<ClassImage> findAllByOneDayClassClassId(long classId);
+
+    List<ClassImage> findAllByOneDayClassClassIdOrderBySequence(long classId);
 }
