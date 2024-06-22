@@ -46,13 +46,10 @@ public class ClassSearchDto {
         this.lng = oneDayClassDocument.getLocation().getLon();
         this.duration = oneDayClassDocument.getDuration();
         this.price = oneDayClassDocument.getPrice();
-        this.personal = oneDayClassDocument.getPersonal();
         this.starRate = oneDayClassDocument.getStarRate();
         this.totalWish = oneDayClassDocument.getTotalWish();
         this.imageUrl = oneDayClassDocument.getImageUrl();
         this.tagList = oneDayClassDocument.getTagList();
-        this.hasParking = oneDayClassDocument.isHasParking();
-        this.startDate = oneDayClassDocument.getStartDate();
         this.endDate = oneDayClassDocument.getEndDate();
         this.category = oneDayClassDocument.getCategory();
     }
