@@ -50,6 +50,7 @@ public class SecurityConfig {
                         CorsConfiguration configuration = new CorsConfiguration();
 
                         configuration.setAllowedOrigins(Collections.singletonList("https://class-bridge.vercel.app"));
+                        configuration.setAllowedOrigins(Collections.singletonList("https://open-api.kakaopay.com"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -90,7 +91,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**", "/api/payments/complete").permitAll()
                         .requestMatchers("/", "/api/users/auth/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("/api/tutors/**").permitAll()
