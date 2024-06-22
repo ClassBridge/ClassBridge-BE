@@ -1,16 +1,16 @@
 package com.linked.classbridge.service;
 
 import com.linked.classbridge.domain.Category;
-import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import static org.mockito.BDDMockito.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,25 +50,25 @@ public class RecommendationServiceTest {
         user.setInterests(Collections.singletonList(category));
 
         OneDayClass oneDayClass = new OneDayClass();
+        oneDayClass.setClassId(1L);
         oneDayClass.setClassName("Test Class");
+        oneDayClass.setAverageAge(20.0);
+        oneDayClass.setMaleCount(10L);
+        oneDayClass.setFemaleCount(5L);
+        oneDayClass.setCategory(category);
         oneDayClass.setTotalStarRate(4.0);
         oneDayClass.setTotalReviews(10);
-        oneDayClass.setTotalWish(50);
-        oneDayClass.setCategory(category);
-        oneDayClass.setReviewList(new ArrayList<>());
-
-        Lesson lesson = new Lesson();
-        lesson.setOneDayClass(oneDayClass);
-        lesson.setReviewList(new ArrayList<>());
-
-        oneDayClass.setLessonList(Arrays.asList(lesson));
+        oneDayClass.setTotalWish(5);
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
-        given(oneDayClassRepository.findAll()).willReturn(Arrays.asList(oneDayClass));
+        given(oneDayClassRepository.findAllIds()).willReturn(Arrays.asList(1L));
+        given(oneDayClassRepository.findById(1L)).willReturn(Optional.of(oneDayClass));
+        given(oneDayClassRepository.findAllByClassIdIn(Arrays.asList(1L), PageRequest.of(0, 5)))
+                .willReturn(new PageImpl<>(Arrays.asList(oneDayClass)));
 
-        List<OneDayClass> result = recommendationService.recommendClassesForUser("test@test.com");
+        List<ClassDto> result = recommendationService.recommendClassesForUser("test@test.com");
 
         assertEquals(1, result.size());
-        assertEquals(oneDayClass, result.get(0));
+        assertEquals(oneDayClass.getClassId(), result.get(0).getClassId());
     }
 }

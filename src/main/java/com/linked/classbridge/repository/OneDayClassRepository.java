@@ -14,6 +14,10 @@ public interface OneDayClassRepository extends JpaRepository<OneDayClass, Long> 
 
     Page<OneDayClass> findAllByClassIdIn(List<Long> list, Pageable pageable);
 
-    @Query("SELECT c FROM OneDayClass c ORDER BY (c.totalStarRate + c.totalWish) DESC")
-    List<OneDayClass> findTopClassesByRatingAndWish(Pageable pageable);
+    @Query("SELECT c.classId FROM OneDayClass c")
+    List<Long> findAllIds();
+
+    @Query("SELECT c.classId FROM OneDayClass c ORDER BY c.totalStarRate DESC, c.totalWish DESC")
+    List<Long> getTopClassesId(Pageable pageable);
 }
+

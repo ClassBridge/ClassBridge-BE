@@ -3,6 +3,7 @@ package com.linked.classbridge.service;
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +25,18 @@ public class RecommendationService {
 
     private final UserRepository userRepository;
     private final OneDayClassRepository oneDayClassRepository;
+    private final OneDayClassService oneDayClassService;
 
-    public RecommendationService(UserRepository userRepository, OneDayClassRepository oneDayClassRepository) {
+    public RecommendationService(UserRepository userRepository, OneDayClassRepository oneDayClassRepository,
+                                 OneDayClassService oneDayClassService) {
 
         this.userRepository = userRepository;
         this.oneDayClassRepository = oneDayClassRepository;
+        this.oneDayClassService = oneDayClassService;
     }
 
-    public List<OneDayClass> recommendClassesForUser(String userEmail) {
+
+    public List<ClassDto> recommendClassesForUser(String userEmail) {
 
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
@@ -41,14 +47,17 @@ public class RecommendationService {
         List<Category> userInterests = user.getInterests();
 
         if(userAge == 0 || userGender == null || userInterests == null) {
-            return oneDayClassRepository.findTopClassesByRatingAndWish(PageRequest.of(0, 5));
+            return getTopClasses();
         }
 
-        List<OneDayClass> allClasses = oneDayClassRepository.findAll();
+        List<Long> allClassIds = oneDayClassRepository.findAllIds();
 
-        Map<OneDayClass, Double> correlationScores = new HashMap<>();
+        Map<Long, Double> correlationScores = new HashMap<>();
 
-        for (OneDayClass oneDayClass : allClasses) {
+        for (Long classId : allClassIds) {
+            OneDayClass oneDayClass = oneDayClassRepository.findById(classId)
+                    .orElseThrow(() -> new RestApiException(ErrorCode.CLASS_NOT_FOUND));
+
             double classAge = oneDayClass.getAverageAge() != null ? oneDayClass.getAverageAge() : 20.0; // 평균 연령 20세가 기본값
             Long maleCount = oneDayClass.getMaleCount() != null ? oneDayClass.getMaleCount() : 0L;
             Long femaleCount = oneDayClass.getFemaleCount() != null ? oneDayClass.getFemaleCount() : 0L;
@@ -61,13 +70,26 @@ public class RecommendationService {
             PearsonsCorrelation correlation = new PearsonsCorrelation();
             double correlationScore = correlation.correlation(userVector, classVector);
 
-            correlationScores.put(oneDayClass, correlationScore);
+            correlationScores.put(classId, correlationScore);
         }
 
-        return correlationScores.entrySet().stream()
+        List<Long> topClassIds = correlationScores.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .limit(5)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
+
+        Page<OneDayClass> page = oneDayClassRepository.findAllByClassIdIn(topClassIds, PageRequest.of(0, 5));
+
+        return page.getContent().stream().map(ClassDto::new).collect(Collectors.toList());
+    }
+
+
+    public List<ClassDto> getTopClasses() {
+
+        List<Long> topClassIds = oneDayClassRepository.getTopClassesId(PageRequest.of(0, 5));
+        Page<OneDayClass> page = oneDayClassRepository.findAllByClassIdIn(topClassIds, PageRequest.of(0, 5));
+
+        return page.getContent().stream().map(ClassDto::new).collect(Collectors.toList());
     }
 }
