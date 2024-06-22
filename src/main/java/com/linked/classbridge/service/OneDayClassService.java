@@ -384,12 +384,12 @@ public class OneDayClassService {
                                    List<UpdateClassImageDto> updateClassImageDtoList,
                                    MultipartFile[] classImages) {
 
-        List<ClassImage> reviewImagesList = imageRepository.findAllByOneDayClassClassId(oneDayClass.getClassId());
+        List<ClassImage> oneDayClassImageList = imageRepository.findAllByOneDayClassClassId(oneDayClass.getClassId());
 
         for (UpdateClassImageDto updateClassImageDto : updateClassImageDtoList) {
             ClassImage classImage = updateClassImageDto.getAction() == ADD ?
                     null :
-                    reviewImagesList.stream()
+                    oneDayClassImageList.stream()
                             .filter(image ->
                                     Objects.equals(image.getClassImageId(), updateClassImageDto.getImageId()))
                             .findFirst()
@@ -415,7 +415,7 @@ public class OneDayClassService {
                 }
                 case REPLACE -> {
                     s3Service.delete(classImage.getUrl());
-                    String newUrl = s3Service.uploadReviewImage(classImages[updateClassImageDto.getSequence() - 1]);
+                    String newUrl = s3Service.uploadOneDayClassImage(classImages[updateClassImageDto.getSequence() - 1]);
                     classImage.setUrl(newUrl);
                     classImage.setSequence(updateClassImageDto.getSequence());
                 }
