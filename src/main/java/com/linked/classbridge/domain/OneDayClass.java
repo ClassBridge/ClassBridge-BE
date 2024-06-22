@@ -80,10 +80,8 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;      // 종료일
 
-    @Builder.Default
-    private Long studentCount = 0L; // 전체 예약자 및 수강생 수
-    @Builder.Default
-    private Double totalAge = 0.0; // 예약자 및 수강생들의 나이의 총합
+    private Long studentCount; // 전체 예약자 및 수강생 수
+    private Double totalAge; // 예약자 및 수강생들의 나이의 총합
     private Double averageAge; // 예약자 및 수강생들의 평균 나이
     private Long maleCount; // 클래스를 수강하거나 예약한 남성의 수
     private Long femaleCount; // 클래스를 수강하거나 예약한 여성의 수
