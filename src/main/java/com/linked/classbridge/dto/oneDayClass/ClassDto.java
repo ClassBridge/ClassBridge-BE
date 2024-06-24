@@ -210,7 +210,9 @@ public class ClassDto {
 
             String className,  // 클래스명
 
-            String address,    // 주소
+            String address1,    // 주소
+            String address2,    // 주소
+            String address3,    // 주소
 
             double latitude,    // 위도
             double longitude,   // 경도
@@ -244,7 +246,9 @@ public class ClassDto {
             return new ClassResponseByUser(
                     oneDayClass.getClassId(),
                     oneDayClass.getClassName(),
-                    oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3(),
+                    oneDayClass.getAddress1(),
+                    oneDayClass.getAddress2(),
+                    oneDayClass.getAddress3(),
                     oneDayClass.getLatitude(),
                     oneDayClass.getLongitude(),
                     oneDayClass.getDuration(),
