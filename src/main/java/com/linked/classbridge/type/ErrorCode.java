@@ -58,6 +58,7 @@ public enum ErrorCode {
     WISH_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 찜을 찾을 수 없습니다."),
     MISMATCH_USER_WISH(HttpStatus.BAD_REQUEST, "로그인 한 유저와 해당 찜의 유저가 일치하지 않습니다."),
     CANNOT_ADD_WISH_OWN_CLASS(HttpStatus.BAD_REQUEST, "자신의 클래스는 찜목록에 추가할 수 없습니다."),
+    INVALID_CLASS_IMAGE_ACTION(HttpStatus.BAD_REQUEST, "존재하지 않는 image action입니다."),
 
     FAQ_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
     MISMATCH_CLASS_FAQ(HttpStatus.BAD_REQUEST, "클래스 id와 faq의 클래스 id가 일치하지 않습니다."),

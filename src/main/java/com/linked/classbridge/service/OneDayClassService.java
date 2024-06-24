@@ -24,6 +24,7 @@ import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_LESSON;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_TAG;
 import static com.linked.classbridge.type.ErrorCode.TAG_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static com.linked.classbridge.type.ImageUpdateAction.ADD;
 
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.ClassFAQ;
@@ -46,6 +47,7 @@ import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
 import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail.Request;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
+import com.linked.classbridge.dto.oneDayClass.UpdateClassImageDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
@@ -119,7 +121,7 @@ public class OneDayClassService {
     private final RestHighLevelClient client;
 
     @Transactional
-    public ClassResponseByTutor registerClass(String email, ClassRequest request, List<MultipartFile> files)
+    public ClassResponseByTutor registerClass(String email, ClassRequest request, MultipartFile[] files)
     {
         User tutor = getUser(email);
 
@@ -188,17 +190,19 @@ public class OneDayClassService {
         }
     }
 
-    private List<ClassImage> saveImages(OneDayClass oneDayClass, List<MultipartFile> files) {
+    private List<ClassImage> saveImages(OneDayClass oneDayClass, MultipartFile[] files) {
         List<ClassImage> images = new ArrayList<>();
-        int sequence = 1;
-        for(MultipartFile file : files) {
-            String url = s3Service.uploadOneDayClassImage(file);
-            images.add(ClassImage.builder()
-                    .url(url)
-                    .name(file.getOriginalFilename())
-                    .sequence(sequence++)
-                    .oneDayClass(oneDayClass)
-                    .build());
+
+        for(int i=0; i<files.length; i++) {
+            if(files[i] != null) {
+                String url = s3Service.uploadOneDayClassImage(files[i]);
+                images.add(ClassImage.builder()
+                        .url(url)
+                        .name(files[i].getOriginalFilename())
+                        .sequence(i + 1)
+                        .oneDayClass(oneDayClass)
+                        .build());
+            }
         }
         return !images.isEmpty() ? classImageRepository.saveAll(images) : new ArrayList<>();
     }
@@ -251,7 +255,8 @@ public class OneDayClassService {
     }
 
     @Transactional
-    public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request, long classId) {
+    public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request,
+                                                    MultipartFile[] fileList, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
@@ -261,6 +266,7 @@ public class OneDayClassService {
         changeClass.setTotalReviews(oneDayClass.getTotalReviews());
         changeClass.setTotalStarRate(oneDayClass.getTotalStarRate());
         changeClass.setTutor(oneDayClass.getTutor());
+        changeClass.setTotalWish(oneDayClass.getTotalWish());
 
         changeClass.setCategory(categoryRepository.findByName(request.categoryType()));
 
@@ -332,14 +338,90 @@ public class OneDayClassService {
             lessonRepository.saveAll(lessonList);
         }
 
-        OneDayClassDocument beforeDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        List<ClassTag> tagList = tagRepository.findAllByOneDayClassClassId(classId);
+        List<ClassTag> deleteTagList = new ArrayList<>();
+        for (ClassTag tag : tagList) {
+            boolean isTrue = false;
+            for (int j = 0; j < request.tagList().size(); j++) {
+                if (tag.getName().equals(request.tagList().get(j))) {
+                    isTrue = true;
+                    request.tagList().remove(j);
+                    break;
+                }
+            }
+            if (!isTrue) {
+                deleteTagList.add(tag);
+            }
+        }
 
+        tagRepository.deleteAll(deleteTagList);
+        List<ClassTag> newTagList = new ArrayList<>();
+        for(int i=0; i<request.tagList().size(); i++) {
+            newTagList.add(ClassTag.builder().oneDayClass(oneDayClass).name(request.tagList().get(i)).build());
+        }
+
+        tagRepository.saveAll(newTagList);
+
+        if(request.updateClassImageDtoList() != null) {
+            updateClassImages(oneDayClass, request.updateClassImageDtoList(), fileList);
+        }
+
+        List<ClassImage> classImageList = classImageRepository.findAllByOneDayClassClassIdOrderBySequence(classId);
+
+        changeClass.setImageList(classImageList);
+        changeClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
+
+        String imageUrl = classImageList.isEmpty() ? "" : classImageList.get(0).getUrl();
         OneDayClassDocument afterDocument = new OneDayClassDocument(changeClass);
-        afterDocument.setImageUrl(beforeDocument.getImageUrl());
-
+        afterDocument.setImageUrl(imageUrl);
         operations.save(afterDocument);
 
         return ClassUpdateDto.ClassResponse.fromEntity(changeClass);
+    }
+
+    @Transactional
+    public void updateClassImages(OneDayClass oneDayClass,
+                                   List<UpdateClassImageDto> updateClassImageDtoList,
+                                   MultipartFile[] classImages) {
+
+        List<ClassImage> oneDayClassImageList = imageRepository.findAllByOneDayClassClassId(oneDayClass.getClassId());
+
+        for (UpdateClassImageDto updateClassImageDto : updateClassImageDtoList) {
+            ClassImage classImage = updateClassImageDto.getAction() == ADD ?
+                    null :
+                    oneDayClassImageList.stream()
+                            .filter(image ->
+                                    Objects.equals(image.getClassImageId(), updateClassImageDto.getImageId()))
+                            .findFirst()
+                            .orElseThrow(() -> new RestApiException(ErrorCode.REVIEW_IMAGE_NOT_FOUND));
+
+            switch (updateClassImageDto.getAction()) {
+                case KEEP -> {
+                    classImage.setSequence(updateClassImageDto.getSequence());
+                }
+                case ADD -> {
+                    String url = s3Service.uploadOneDayClassImage(classImages[updateClassImageDto.getSequence() - 1]);
+                    classImage = ClassImage.builder()
+                            .oneDayClass(oneDayClass)
+                            .url(url)
+                            .name(classImages[updateClassImageDto.getSequence() - 1].getName())
+                            .sequence(updateClassImageDto.getSequence())
+                            .build();
+                    classImageRepository.save(classImage);
+                }
+                case DELETE -> {
+                    s3Service.delete(classImage.getUrl());
+                    classImageRepository.delete(classImage);
+                }
+                case REPLACE -> {
+                    s3Service.delete(classImage.getUrl());
+                    String newUrl = s3Service.uploadOneDayClassImage(classImages[updateClassImageDto.getSequence() - 1]);
+                    classImage.setUrl(newUrl);
+                    classImage.setSequence(updateClassImageDto.getSequence());
+                }
+                default -> throw new RestApiException(ErrorCode.INVALID_CLASS_IMAGE_ACTION);
+            }
+        }
     }
 
     @Transactional
@@ -380,7 +462,7 @@ public class OneDayClassService {
         oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
-        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
 
         return ClassResponseByTutor.fromEntity(oneDayClass);
     }
@@ -393,7 +475,8 @@ public class OneDayClassService {
         oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfter(classId, LocalDate.now().minusDays(1)));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
-        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
+        oneDayClass.setTutor(userRepository.findByUserId(oneDayClass.getTutor().getUserId()).orElseThrow(() -> new RestApiException(USER_NOT_FOUND)));
 
         if(email != null) {
             User user = getUser(email);

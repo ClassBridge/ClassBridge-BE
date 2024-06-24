@@ -6,8 +6,8 @@ import static org.springframework.http.HttpStatus.OK;
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
-import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.dto.review.GetReviewResponse;
@@ -19,8 +19,6 @@ import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -128,15 +126,13 @@ public class TutorController {
     @PostMapping(path = "/class", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<ClassResponseByTutor>> registerClass(
             @RequestPart(value = "request") @Valid ClassDto.ClassRequest request,
-            @RequestPart(value = "file1", required = false) MultipartFile file1,
-            @RequestPart(value = "file2", required = false) MultipartFile file2,
-            @RequestPart(value = "file3", required = false) MultipartFile file3
+            @RequestPart(value = "images", required = false) MultipartFile[] images
+
     ) {
-        List<MultipartFile> fileList = Arrays.stream((new MultipartFile[] {file1, file2, file3}))
-                .filter(item -> item != null && !item.isEmpty()).toList();
+
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
-                oneDayClassService.registerClass(userService.getCurrentUserEmail(), request, fileList))
+                oneDayClassService.registerClass(userService.getCurrentUserEmail(), request, images))
         );
     }
 
@@ -146,14 +142,15 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>>
      */
     @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
-    @PutMapping(path = "/class/{classId}")
+    @PutMapping(path = "/class/{classId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
             @PathVariable Long classId,
-            @RequestBody @Valid ClassUpdateDto.ClassRequest request
+            @RequestPart(value = "request") @Valid ClassUpdateDto.ClassRequest request,
+            @RequestPart(value = "images", required = false) MultipartFile[] files
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_UPDATE_SUCCESS,
-                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, classId))
+                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, files, classId))
         );
     }
 
