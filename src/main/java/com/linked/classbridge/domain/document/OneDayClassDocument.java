@@ -42,6 +42,7 @@ public class OneDayClassDocument {
     private GeoPoint location;
     private int duration;      // 소요 시간
     private int price;          // 가격
+    private int totalReviews;   // 총 댓글 수
     private Double starRate; // 별점
     private int totalWish;  // 총 찜 개수
 
@@ -63,6 +64,7 @@ public class OneDayClassDocument {
         location = new GeoPoint(oneDayClass.getLatitude(), oneDayClass.getLongitude());
         duration = oneDayClass.getDuration();
         price = oneDayClass.getPrice();
+        totalReviews = oneDayClass.getTotalReviews();
         starRate = oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews());
         totalWish = oneDayClass.getTotalWish();
         endDate = oneDayClass.getEndDate();
