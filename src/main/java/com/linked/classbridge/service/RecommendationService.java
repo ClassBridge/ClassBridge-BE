@@ -46,9 +46,10 @@ public class RecommendationService {
         // 유저의 나이, 성별, 관심 카테고리 정보 가져오기
         int userAge = AgeUtil.calculateAge(user.getBirthDate());
         Gender userGender = user.getGender();
-        List<Category> userInterests = user.getInterests();
+        List<Long> userInterestsId = user.getInterests() != null ?
+                user.getInterests().stream().map(Category::getCategoryId).toList() : null;
 
-        if(userAge == 0 || userGender == null || userInterests == null) {
+        if(userAge == 0 || userGender == null || userInterestsId == null) {
             return getTopClasses();
         }
 
@@ -64,7 +65,9 @@ public class RecommendationService {
             Long femaleCount = oneDayClass.getFemaleCount() != null ? oneDayClass.getFemaleCount() : 0L;
             Gender classGender = maleCount > femaleCount ? Gender.MALE : Gender.FEMALE;
 
-            double[] userVector = {userAge, userGender.ordinal(), userInterests.contains(oneDayClass.getCategory()) ? 1 : 0};
+            double matchInterest = userInterestsId.stream()
+                    .anyMatch(id -> id.equals(oneDayClass.getCategory().getCategoryId())) ? 1 : 0;
+            double[] userVector = {userAge, userGender.ordinal(), matchInterest};
             double[] classVector = {classAge, classGender.ordinal(), 1};
 
             // 두 벡터 간의 피어슨 상관 계수를 계산
