@@ -21,18 +21,17 @@ public class ClassSearchDto {
     private Long classId;
     private String className;   // 클래스명
     private String tutorName;   // 강사 닉네임
-    private String address;    // 시도 명
+    private String address1;    // 시도 명
+    private String address2;    // 시,군,구 명
+    private String address3;    // 상세 주소 명
     private double lat;     // 위도
     private double lng;     // 경도
     private int duration;      // 소요 시간
     private int price;          // 가격
-    private int personal;   // 수강 최대 인원
     private Double starRate; // 별점
     private int totalWish;  // 총 찜 개수
     private String imageUrl;
     private List<String> tagList;
-    private boolean hasParking;  // 주차장
-    private LocalDate startDate;    // 시작일
     private LocalDate endDate;      // 종료일
     private CategoryType category;
     private boolean isWish;
@@ -41,7 +40,9 @@ public class ClassSearchDto {
         this.classId = oneDayClassDocument.getClassId();
         this.className = oneDayClassDocument.getClassName();
         this.tutorName = oneDayClassDocument.getTutorName();
-        this.address = oneDayClassDocument.getAddress1() + " " + oneDayClassDocument.getAddress2() + " " + oneDayClassDocument.getAddress3();
+        this.address1 = oneDayClassDocument.getAddress1() ;
+        this.address2 = oneDayClassDocument.getAddress2();
+        this.address3 = oneDayClassDocument.getAddress3();
         this.lat = oneDayClassDocument.getLocation().getLat();
         this.lng = oneDayClassDocument.getLocation().getLon();
         this.duration = oneDayClassDocument.getDuration();

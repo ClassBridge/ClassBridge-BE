@@ -476,6 +476,7 @@ public class OneDayClassService {
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
+        oneDayClass.setTutor(userRepository.findByUserId(oneDayClass.getTutor().getUserId()).orElseThrow(() -> new RestApiException(USER_NOT_FOUND)));
 
         if(email != null) {
             User user = getUser(email);
