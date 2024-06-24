@@ -28,6 +28,7 @@ public class ClassSearchDto {
     private double lng;     // 경도
     private int duration;      // 소요 시간
     private int price;          // 가격
+    private int totalReviews;
     private Double starRate; // 별점
     private int totalWish;  // 총 찜 개수
     private String imageUrl;
@@ -47,6 +48,7 @@ public class ClassSearchDto {
         this.lng = oneDayClassDocument.getLocation().getLon();
         this.duration = oneDayClassDocument.getDuration();
         this.price = oneDayClassDocument.getPrice();
+        this.totalReviews = oneDayClassDocument.getTotalReviews();
         this.starRate = oneDayClassDocument.getStarRate();
         this.totalWish = oneDayClassDocument.getTotalWish();
         this.imageUrl = oneDayClassDocument.getImageUrl();
