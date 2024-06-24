@@ -16,10 +16,12 @@
       "analyzer": "korean"
     },
     "address2": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "address3": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "location": {
       "type": "geo_point"
@@ -28,6 +30,9 @@
       "type": "integer"
     },
     "price": {
+      "type": "integer"
+    },
+    "totalReviews": {
       "type": "integer"
     },
     "starRate": {
