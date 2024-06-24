@@ -42,7 +42,6 @@ public class OneDayClassDocument {
     private GeoPoint location;
     private int duration;      // 소요 시간
     private int price;          // 가격
-    private int personal;   // 수강 최대 인원
     private Double starRate; // 별점
     private int totalWish;  // 총 찜 개수
 
@@ -50,9 +49,6 @@ public class OneDayClassDocument {
 
     private List<String> tagList;
 
-    private boolean hasParking;  // 주차장
-    @Field(type= FieldType.Date, format = DateFormat.date)
-    private LocalDate startDate;    // 시작일
     @Field(type= FieldType.Date, format = DateFormat.date)
     private LocalDate endDate;      // 종료일
     private CategoryType category;
@@ -67,11 +63,8 @@ public class OneDayClassDocument {
         location = new GeoPoint(oneDayClass.getLatitude(), oneDayClass.getLongitude());
         duration = oneDayClass.getDuration();
         price = oneDayClass.getPrice();
-        personal = oneDayClass.getPersonal();
         starRate = oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews());
-        hasParking = oneDayClass.isHasParking();
         totalWish = oneDayClass.getTotalWish();
-        startDate = oneDayClass.getStartDate();
         endDate = oneDayClass.getEndDate();
         category = oneDayClass.getCategory().getName();
         tagList = oneDayClass.getTagList().stream().map(ClassTag::getName).toList();

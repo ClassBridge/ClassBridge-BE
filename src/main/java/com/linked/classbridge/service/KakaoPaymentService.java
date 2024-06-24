@@ -95,6 +95,9 @@ public class KakaoPaymentService {
             log.error("getHeaders().toSingleValueMap() :: {}", getHeaders().toSingleValueMap());
             log.error("parameters :: {}", parameters);
             log.error("url :: {}", payProperties.getReadyUrl());
+            log.error("error message :: {}", e.getMessage());
+            log.error("error status code :: {}", e.getStatusCode());
+            log.error("error response body :: {}", e.getResponseBodyAsString());
             throw new RestApiException(ErrorCode.PAY_ERROR);
         }
     }

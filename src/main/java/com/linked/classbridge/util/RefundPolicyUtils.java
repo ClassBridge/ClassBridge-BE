@@ -24,6 +24,8 @@ public class RefundPolicyUtils {
             return FULL_REFUND_RATE;
         } else if (refundType == PaymentStatusType.REFUNDED_BY_CUSTOMER) {
             return calculateCustomerRefundRate(lessonDate, startTime, currentTime);
+        } else if (refundType == PaymentStatusType.PARTIAL_REFUND) {
+            return calculateCustomerRefundRate(lessonDate, startTime, currentTime);
         }
         return NO_REFUND_RATE;
     }

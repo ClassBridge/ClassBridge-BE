@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Builder;
 
 public class ClassUpdateDto {
@@ -62,7 +63,12 @@ public class ClassUpdateDto {
 
             @Schema(description = "카테고리", example = "FITNESS")
             @NotNull
-            CategoryType categoryType
+            CategoryType categoryType,
+
+            @NotNull
+            List<String> tagList,
+
+            List<UpdateClassImageDto> updateClassImageDtoList
 
     ) {
         public static OneDayClass toEntity(ClassUpdateDto.ClassRequest request) {
@@ -109,7 +115,9 @@ public class ClassUpdateDto {
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
             CategoryType categoryType,
-            Long userId
+            Long userId,
+            List<ClassTagDto> tagList,
+            List<ClassImageDto> imageDtoList
     ) {
         public static ClassUpdateDto.ClassResponse fromEntity(OneDayClass oneDayClass) {
             return new ClassUpdateDto.ClassResponse(
@@ -130,8 +138,9 @@ public class ClassUpdateDto {
                     oneDayClass.getStartDate(),
                     oneDayClass.getEndDate(),
                     oneDayClass.getCategory().getName(),
-                    oneDayClass.getTutor().getUserId());
-
+                    oneDayClass.getTutor().getUserId(),
+                    oneDayClass.getTagList().stream().map(ClassTagDto::new).toList(),
+                    oneDayClass.getImageList().stream().map(ClassImageDto::new).toList());
         }
     }
 }
