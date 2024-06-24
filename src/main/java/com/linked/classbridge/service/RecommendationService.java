@@ -4,7 +4,9 @@ import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.OneDayClassProjection;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
@@ -25,17 +27,17 @@ public class RecommendationService {
 
     private final UserRepository userRepository;
     private final OneDayClassRepository oneDayClassRepository;
-    private final OneDayClassService oneDayClassService;
+    private final ClassImageRepository classImageRepository;
 
     public RecommendationService(UserRepository userRepository, OneDayClassRepository oneDayClassRepository,
-                                 OneDayClassService oneDayClassService) {
+                                 ClassImageRepository classImageRepository) {
 
         this.userRepository = userRepository;
         this.oneDayClassRepository = oneDayClassRepository;
-        this.oneDayClassService = oneDayClassService;
+        this.classImageRepository = classImageRepository;
     }
 
-
+    // 사용자에게 맞는 추천 클래스 반환
     public List<ClassDto> recommendClassesForUser(String userEmail) {
 
         User user = userRepository.findByEmail(userEmail)
@@ -50,13 +52,12 @@ public class RecommendationService {
             return getTopClasses();
         }
 
-        List<Long> allClassIds = oneDayClassRepository.findAllIds();
+        // 조회 최적화를 위해 인터페이스 기반 Projection 사용
+        List<OneDayClassProjection> allClasses = oneDayClassRepository.findAllWithSelectedColumns();
 
         Map<Long, Double> correlationScores = new HashMap<>();
 
-        for (Long classId : allClassIds) {
-            OneDayClass oneDayClass = oneDayClassRepository.findById(classId)
-                    .orElseThrow(() -> new RestApiException(ErrorCode.CLASS_NOT_FOUND));
+        for (OneDayClassProjection oneDayClass : allClasses) {
 
             double classAge = oneDayClass.getAverageAge() != null ? oneDayClass.getAverageAge() : 20.0; // 평균 연령 20세가 기본값
             Long maleCount = oneDayClass.getMaleCount() != null ? oneDayClass.getMaleCount() : 0L;
@@ -70,7 +71,7 @@ public class RecommendationService {
             PearsonsCorrelation correlation = new PearsonsCorrelation();
             double correlationScore = correlation.correlation(userVector, classVector);
 
-            correlationScores.put(classId, correlationScore);
+            correlationScores.put(oneDayClass.getClassId(), correlationScore);
         }
 
         List<Long> topClassIds = correlationScores.entrySet().stream()
@@ -81,15 +82,24 @@ public class RecommendationService {
 
         Page<OneDayClass> page = oneDayClassRepository.findAllByClassIdIn(topClassIds, PageRequest.of(0, 5));
 
-        return page.getContent().stream().map(ClassDto::new).collect(Collectors.toList());
+        return page.getContent().stream().map(oneDayClass -> {
+            ClassDto classDto = new ClassDto(oneDayClass);
+            classDto.setClassImage(classImageRepository);
+            return classDto;
+        }).collect(Collectors.toList());
     }
 
-
+    // 기본 추천 클래스 반환
     public List<ClassDto> getTopClasses() {
 
         List<Long> topClassIds = oneDayClassRepository.getTopClassesId(PageRequest.of(0, 5));
-        Page<OneDayClass> page = oneDayClassRepository.findAllByClassIdIn(topClassIds, PageRequest.of(0, 5));
 
-        return page.getContent().stream().map(ClassDto::new).collect(Collectors.toList());
+        return oneDayClassRepository
+                .findAllByClassIdIn(topClassIds, PageRequest.of(0, 5))
+                .getContent().stream().map(oneDayClass -> {
+            ClassDto classDto = new ClassDto(oneDayClass);
+            classDto.setClassImage(classImageRepository);
+            return classDto;
+        }).collect(Collectors.toList());
     }
 }

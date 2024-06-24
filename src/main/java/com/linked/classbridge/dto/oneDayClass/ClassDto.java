@@ -1,8 +1,10 @@
 package com.linked.classbridge.dto.oneDayClass;
 
 import com.linked.classbridge.domain.ClassFAQ;
+import com.linked.classbridge.domain.ClassImage;
 import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.OneDayClass;
+import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.type.CategoryType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -55,6 +57,12 @@ public class ClassDto {
         this.totalStarRate = oneDayClass.getTotalStarRate();
         this.totalReviews = oneDayClass.getTotalReviews();
         this.totalWish = oneDayClass.getTotalWish();
+    }
+
+    public void setClassImage(ClassImageRepository classImageRepository) {
+        ClassImage classImage = classImageRepository.findFirstByOneDayClassClassIdAndSequence(this.classId, 0)
+                .orElse(null);
+        this.classImageUrl = classImage != null ? classImage.getUrl() : null;
     }
 
     @Builder
