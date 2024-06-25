@@ -270,6 +270,11 @@ public class OneDayClassService {
         changeClass.setTotalStarRate(oneDayClass.getTotalStarRate());
         changeClass.setTutor(oneDayClass.getTutor());
         changeClass.setTotalWish(oneDayClass.getTotalWish());
+        changeClass.setStudentCount(oneDayClass.getStudentCount());
+        changeClass.setAverageAge(oneDayClass.getAverageAge());
+        changeClass.setTotalAge(oneDayClass.getTotalAge());
+        changeClass.setMaleCount(oneDayClass.getMaleCount());
+        changeClass.setFemaleCount(oneDayClass.getFemaleCount());
 
         changeClass.setCategory(categoryRepository.findByName(request.categoryType()));
 

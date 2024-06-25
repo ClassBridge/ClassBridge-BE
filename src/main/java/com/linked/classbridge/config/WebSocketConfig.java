@@ -30,7 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/CB-websocket")
-                .setAllowedOrigins("https://class-bridge.vercel.app")
+                .setAllowedOrigins("https://class-bridge.vercel.app", "http://localhost:3000")
                 .addInterceptors(httpHandshakeInterceptor)
                 .setHandshakeHandler(new CustomHandshakeHandler())
                 .withSockJS();
