@@ -51,15 +51,17 @@ public class SecurityConfig {
                         CorsConfiguration configuration = new CorsConfiguration();
 
                         configuration.setAllowedOrigins(
-                                Arrays.asList("https://class-bridge.vercel.app", "https://open-api.kakaopay.com"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
+                                Arrays.asList("https://class-bridge.vercel.app", "https://open-api.kakaopay.com", "http://localhost:3000"));
+//                        configuration.setAllowedMethods(Collections.singletonList("*"));
+                        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(3600L);
 
-                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
-                        configuration.setExposedHeaders(Collections.singletonList("access"));
+//                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
+//                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+//                        configuration.setExposedHeaders(Collections.singletonList("access"));
+                        configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization", "access"));
 
                         return configuration;
                     }
