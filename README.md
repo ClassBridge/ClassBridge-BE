@@ -1,5 +1,11 @@
 # ClassBridge
 
+## **🔗 ClassBridge 노션 링크**
+
+---
+
+- https://fern-nyala-e74.notion.site/ClassBridge-bfba69182bd24255858604b1756dfcc7?pvs=4
+
 ## **💡 기획 배경**
 
 ---
@@ -158,6 +164,7 @@
 ## **👀 Swagger**
 
 ---
+http://3.38.165.201:8080/swagger-ui/index.html
 
 ![swagger](https://github.com/ClassBridge/ClassBridge-BE/assets/68321360/3aded0f0-3983-4cd4-94eb-0d2cfab91c74)
 
