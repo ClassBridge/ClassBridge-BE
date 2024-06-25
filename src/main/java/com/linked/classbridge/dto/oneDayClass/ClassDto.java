@@ -4,12 +4,17 @@ import com.linked.classbridge.domain.ClassFAQ;
 import com.linked.classbridge.domain.ClassImage;
 import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.OneDayClass;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.repository.ClassImageRepository;
+import com.linked.classbridge.repository.OneDayClassRepository;
+import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
 import com.linked.classbridge.type.CategoryType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -28,7 +33,11 @@ import lombok.ToString;
 public class ClassDto {
     private Long classId;
     private String className;
+    private String tutorName;
     private String address;
+    private String address1;
+    private String address2;
+    private String address3;
     private int duration;
     private int price;
     private int personal;
@@ -36,16 +45,21 @@ public class ClassDto {
     private String introduction;
     private LocalDate startDate;
     private LocalDate endDate;
-    private CategoryType categoryType;
+    private CategoryType category;
     private double totalStarRate;
     private long totalReviews;
     private int totalWish;
+    private Double starRate;
+    private boolean wish;
     private String classImageUrl;
 
     public ClassDto(OneDayClass oneDayClass) {
         this.classId = oneDayClass.getClassId();
         this.className = oneDayClass.getClassName();
         this.address = oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3();
+        this.address1 = oneDayClass.getAddress1();
+        this.address2 = oneDayClass.getAddress2();
+        this.address3 = oneDayClass.getAddress3();
         this.duration = oneDayClass.getDuration();
         this.price = oneDayClass.getPrice();
         this.personal = oneDayClass.getPersonal();
@@ -53,13 +67,41 @@ public class ClassDto {
         this.introduction = oneDayClass.getIntroduction();
         this.startDate = oneDayClass.getStartDate();
         this.endDate = oneDayClass.getEndDate();
-        this.categoryType = oneDayClass.getCategory().getName();
+        this.category = oneDayClass.getCategory().getName();
         this.totalStarRate = oneDayClass.getTotalStarRate();
         this.totalReviews = oneDayClass.getTotalReviews();
         this.totalWish = oneDayClass.getTotalWish();
+
+        if(oneDayClass.getTotalReviews() == 0){
+            this.starRate = 0.0;
+        } else {
+            DecimalFormat df = new DecimalFormat("#.#");
+            this.starRate = Double.valueOf(df.format(oneDayClass.getTotalStarRate() / oneDayClass.getTotalReviews()));
+        }
+    }
+
+    public void setTutorName(OneDayClassRepository oneDayClassRepository) {
+
+        String tutorName = oneDayClassRepository.findTutorNameByClassId(this.classId);
+        this.tutorName = tutorName;
+    }
+
+    public void setIsWish(User user, WishRepository wishRepository) {
+
+        if(user == null || wishRepository == null){
+            this.wish = false;
+            return;
+        }
+
+        if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), this.classId)){
+            this.wish = true;
+        } else {
+            this.wish = false;
+        }
     }
 
     public void setClassImage(ClassImageRepository classImageRepository) {
+
         ClassImage classImage = classImageRepository.findFirstByOneDayClassClassIdAndSequence(this.classId, 0)
                 .orElse(null);
         this.classImageUrl = classImage != null ? classImage.getUrl() : null;

@@ -9,6 +9,7 @@ import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.Gender;
 import com.linked.classbridge.util.AgeUtil;
@@ -28,13 +29,15 @@ public class RecommendationService {
     private final UserRepository userRepository;
     private final OneDayClassRepository oneDayClassRepository;
     private final ClassImageRepository classImageRepository;
+    private final WishRepository wishRepository;
 
     public RecommendationService(UserRepository userRepository, OneDayClassRepository oneDayClassRepository,
-                                 ClassImageRepository classImageRepository) {
+                                 ClassImageRepository classImageRepository, WishRepository wishRepository) {
 
         this.userRepository = userRepository;
         this.oneDayClassRepository = oneDayClassRepository;
         this.classImageRepository = classImageRepository;
+        this.wishRepository = wishRepository;
     }
 
     // 사용자에게 맞는 추천 클래스 반환
@@ -66,7 +69,7 @@ public class RecommendationService {
             Gender classGender = maleCount > femaleCount ? Gender.MALE : Gender.FEMALE;
 
             double matchInterest = userInterestsId.stream()
-                    .anyMatch(id -> id.equals(oneDayClass.getCategory().getCategoryId())) ? 1 : 0;
+                    .anyMatch(id -> id != null && id.equals(oneDayClass.getCategory().getCategoryId())) ? 1 : 0;
             double[] userVector = {userAge, userGender.ordinal(), matchInterest};
             double[] classVector = {classAge, classGender.ordinal(), 1};
 
@@ -88,6 +91,8 @@ public class RecommendationService {
         return page.getContent().stream().map(oneDayClass -> {
             ClassDto classDto = new ClassDto(oneDayClass);
             classDto.setClassImage(classImageRepository);
+            classDto.setTutorName(oneDayClassRepository);
+            classDto.setIsWish(user, wishRepository);
             return classDto;
         }).collect(Collectors.toList());
     }
@@ -102,6 +107,8 @@ public class RecommendationService {
                 .getContent().stream().map(oneDayClass -> {
             ClassDto classDto = new ClassDto(oneDayClass);
             classDto.setClassImage(classImageRepository);
+            classDto.setTutorName(oneDayClassRepository);
+            classDto.setIsWish(null, wishRepository);
             return classDto;
         }).collect(Collectors.toList());
     }
