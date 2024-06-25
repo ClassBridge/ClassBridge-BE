@@ -128,6 +128,9 @@ public class OneDayClassService {
         OneDayClass oneDayClass = ClassDto.ClassRequest.toEntity(request);
         oneDayClass.setTutor(tutor);
 
+        oneDayClass.setStudentCount(0L);
+        oneDayClass.setTotalAge(0.0);
+
         Category category = categoryRepository.findByName(request.categoryType());
         oneDayClass.setCategory(category);
 
@@ -876,7 +879,5 @@ public class OneDayClassService {
 
         return list.size() > 5 ? list.subList(0, 5) : list;
     }
-
-
 }
 
