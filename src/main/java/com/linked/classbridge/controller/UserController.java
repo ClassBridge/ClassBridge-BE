@@ -185,6 +185,7 @@ public class UserController {
     }
 
     @Operation(summary = "수강생 찜목록 조회", description = "수강생 찜목록 조회")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/wish")
     public ResponseEntity<SuccessResponse<Page<WishDto>>> getWish(
             @PageableDefault Pageable pageable
@@ -198,6 +199,7 @@ public class UserController {
     }
 
     @Operation(summary = "수강생 찜목록 추가", description = "수강생 찜목록 추가")
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/wish")
     public ResponseEntity<SuccessResponse<Boolean>> addWish(
             @RequestBody WishDto.Request request
@@ -211,6 +213,7 @@ public class UserController {
     }
 
     @Operation(summary = "수강생 찜목록 삭제", description = "수강생 찜목록 삭제")
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/wish/{wishId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteWish(
             @PathVariable Long wishId) {
