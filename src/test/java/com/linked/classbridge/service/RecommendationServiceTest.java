@@ -1,16 +1,18 @@
 package com.linked.classbridge.service;
 
 import com.linked.classbridge.domain.Category;
-import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.dto.oneDayClass.ClassDto;
+import com.linked.classbridge.dto.oneDayClass.OneDayClassProjection;
+import com.linked.classbridge.repository.ClassImageRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.Gender;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import static org.mockito.BDDMockito.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +39,10 @@ public class RecommendationServiceTest {
     @Mock
     private OneDayClassRepository oneDayClassRepository;
 
+    @Mock
+    private ClassImageRepository classImageRepository;
+
+
     @Test
     public void recommendClassesForUserTest() throws ExecutionException, InterruptedException {
 
@@ -49,25 +56,50 @@ public class RecommendationServiceTest {
         user.setInterests(Collections.singletonList(category));
 
         OneDayClass oneDayClass = new OneDayClass();
-        oneDayClass.setClassName("Test Class");
-        oneDayClass.setTotalStarRate(4.0);
+        oneDayClass.setClassId(1L);
+        oneDayClass.setTotalStarRate(4.5);
         oneDayClass.setTotalReviews(10);
-        oneDayClass.setTotalWish(50);
+        oneDayClass.setTotalWish(20);
+        oneDayClass.setAverageAge(20.0);
+        oneDayClass.setMaleCount(10L);
+        oneDayClass.setFemaleCount(5L);
         oneDayClass.setCategory(category);
-        oneDayClass.setReviewList(new ArrayList<>());
 
-        Lesson lesson = new Lesson();
-        lesson.setOneDayClass(oneDayClass);
-        lesson.setReviewList(new ArrayList<>());
+        OneDayClassProjection oneDayClassProjection = new OneDayClassProjection() {
+            @Override
+            public Long getClassId() {
+                return 1L;
+            }
 
-        oneDayClass.setLessonList(Arrays.asList(lesson));
+            @Override
+            public Double getAverageAge() {
+                return 20.0;
+            }
+
+            @Override
+            public Long getMaleCount() {
+                return 10L;
+            }
+
+            @Override
+            public Long getFemaleCount() {
+                return 5L;
+            }
+
+            @Override
+            public Category getCategory() {
+                return category;
+            }
+        };
 
         given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
-        given(oneDayClassRepository.findAll()).willReturn(Arrays.asList(oneDayClass));
+        given(oneDayClassRepository.findAllWithSelectedColumns()).willReturn(Arrays.asList(oneDayClassProjection));
+        given(oneDayClassRepository.findAllByClassIdIn(Arrays.asList(1L), PageRequest.of(0, 5)))
+                .willReturn(new PageImpl<>(Arrays.asList(oneDayClass)));
 
-        List<OneDayClass> result = recommendationService.recommendClassesForUser("test@test.com");
+        List<ClassDto> result = recommendationService.recommendClassesForUser("test@test.com");
 
         assertEquals(1, result.size());
-        assertEquals(oneDayClass, result.get(0));
+        assertEquals(oneDayClassProjection.getClassId(), result.get(0).getClassId());
     }
 }
