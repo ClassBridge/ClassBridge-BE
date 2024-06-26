@@ -813,6 +813,7 @@ public class OneDayClassService {
                 break;
             case DATE:
                 searchSourceBuilder.sort("endDate", SortOrder.ASC);
+                break;
             default:
                 searchSourceBuilder.sort("totalWish", SortOrder.DESC);
                 break;
