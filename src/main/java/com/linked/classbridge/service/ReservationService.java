@@ -44,6 +44,7 @@ public class ReservationService {
     /**
      * 예약 생성
      */
+    @Transactional
     public Reservation createReservation(RegisterReservationDto.Request request) {
 
         Lesson lesson = lessonRepository.findById(request.getLessonId())
@@ -62,8 +63,8 @@ public class ReservationService {
         Double userAge = (double) AgeUtil.calculateAge(user.getBirthDate());
         Gender userGender = user.getGender();
 
-//        oneDayClass.addStudent(userAge, userGender);
-//        oneDayClassRepository.save(oneDayClass);
+        oneDayClass.addStudent(userAge, userGender);
+        oneDayClassRepository.save(oneDayClass);
 
         return reservation;
     }

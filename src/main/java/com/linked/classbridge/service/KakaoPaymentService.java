@@ -68,7 +68,7 @@ public class KakaoPaymentService {
 
         Long reservationId = request.getReservationId();
 
-        Reservation reservation = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findByIdWithLesson(reservationId)
                 .orElseThrow(() -> new RestApiException(RESERVATION_NOT_FOUND));
 
         Long lessonId = reservation.getLesson().getLessonId();
