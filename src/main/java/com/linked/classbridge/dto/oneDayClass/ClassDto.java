@@ -102,7 +102,7 @@ public class ClassDto {
 
     public void setClassImage(ClassImageRepository classImageRepository) {
 
-        ClassImage classImage = classImageRepository.findFirstByOneDayClassClassIdAndSequence(this.classId, 0)
+        ClassImage classImage = classImageRepository.findFirstByOneDayClassClassIdAndSequence(this.classId, 1)
                 .orElse(null);
         this.classImageUrl = classImage != null ? classImage.getUrl() : null;
     }
