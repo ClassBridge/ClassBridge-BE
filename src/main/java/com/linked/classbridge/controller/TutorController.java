@@ -182,7 +182,7 @@ public class TutorController {
      */
     @Operation(summary = "Class FAQ 추가", description = "Class FAQ 추가")
     @PreAuthorize("hasRole('TUTOR')")
-    @PostMapping(path = "/class/{classId}/faq")
+    @PostMapping(path = "/class/{classId}/faqs")
     public ResponseEntity<SuccessResponse<ClassFAQDto>> registerFAQ(
             @RequestBody @Valid ClassFAQDto request,
             @PathVariable Long classId
@@ -200,7 +200,7 @@ public class TutorController {
      */
     @Operation(summary = "Class FAQ 수정", description = "Class FAQ 수정")
     @PreAuthorize("hasRole('TUTOR')")
-    @PutMapping(path = "/class/{classId}/faq/{faqId}")
+    @PutMapping(path = "/class/{classId}/faqs/{faqId}")
     public ResponseEntity<SuccessResponse<ClassFAQDto>> updateFAQ(
             @RequestBody @Valid ClassFAQDto request,
             @PathVariable Long classId,
@@ -219,7 +219,7 @@ public class TutorController {
      */
     @Operation(summary = "Class FAQ 삭제", description = "Class FAQ 삭제")
     @PreAuthorize("hasRole('TUTOR')")
-    @DeleteMapping(path = "/class/{classId}/faq/{faqId}")
+    @DeleteMapping(path = "/class/{classId}/faqs/{faqId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteFAQ(
             @PathVariable Long classId,
             @PathVariable Long faqId
@@ -237,7 +237,7 @@ public class TutorController {
      */
     @Operation(summary = "Class lesson 추가", description = "Class lesson 추가")
     @PreAuthorize("hasRole('TUTOR')")
-    @PostMapping(path = "/class/{classId}/lesson")
+    @PostMapping(path = "/class/{classId}/lessons")
     public ResponseEntity<SuccessResponse<LessonDtoDetail>> registerFAQ(
             @RequestBody @Valid LessonDtoDetail.Request request,
             @PathVariable Long classId
@@ -255,7 +255,7 @@ public class TutorController {
      */
     @Operation(summary = "Class lesson 수정", description = "Class lesson 수정")
     @PreAuthorize("hasRole('TUTOR')")
-    @PutMapping(path = "/class/{classId}/lesson/{lessonId}")
+    @PutMapping(path = "/class/{classId}/lessons/{lessonId}")
     public ResponseEntity<SuccessResponse<LessonDtoDetail>> updateLesson(
             @PathVariable Long classId,
             @PathVariable Long lessonId,
@@ -274,7 +274,7 @@ public class TutorController {
      */
     @Operation(summary = "Class lesson 삭제", description = "Class lesson 삭제")
     @PreAuthorize("hasRole('TUTOR')")
-    @DeleteMapping(path = "/class/{classId}/lesson/{lessonId}")
+    @DeleteMapping(path = "/class/{classId}/lessons/{lessonId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteLesson(
             @PathVariable Long classId,
             @PathVariable Long lessonId
@@ -292,7 +292,7 @@ public class TutorController {
      */
     @Operation(summary = "Class tag 추가", description = "Class tag 추가")
     @PreAuthorize("hasRole('TUTOR')")
-    @PostMapping(path = "/class/{classId}/tag")
+    @PostMapping(path = "/class/{classId}/tags")
     public ResponseEntity<SuccessResponse<ClassTagDto>> registerTag(
             @PathVariable Long classId,
             @RequestBody @Valid ClassTagDto request) {
@@ -309,7 +309,7 @@ public class TutorController {
      */
     @Operation(summary = "Class tag 수정", description = "Class tag 수정")
     @PreAuthorize("hasRole('TUTOR')")
-    @PutMapping(path = "/class/{classId}/tag/{tagId}")
+    @PutMapping(path = "/class/{classId}/tags/{tagId}")
     public ResponseEntity<SuccessResponse<ClassTagDto>> updateTag(
             @PathVariable Long classId,
             @RequestBody @Valid ClassTagDto request,
@@ -327,7 +327,7 @@ public class TutorController {
      */
     @Operation(summary = "Class tag 삭제", description = "Class tag 삭제")
     @PreAuthorize("hasRole('TUTOR')")
-    @DeleteMapping(path = "/class/{classId}/tag/{tagId}")
+    @DeleteMapping(path = "/class/{classId}/tags/{tagId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteTag(
             @PathVariable Long classId,
             @PathVariable Long tagId ) {
