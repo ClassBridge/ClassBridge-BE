@@ -40,7 +40,7 @@ public class PaymentController {
 
     @Operation(summary = "결제 요청")
     @PostMapping("/prepare")
-    public String initiatePayment(@RequestBody Request paymentRequest) {
+    public PaymentPrepareDto.PayResponse initiatePayment(@RequestBody Request paymentRequest) {
         paymentResponse = paymentService.initiatePayment(paymentRequest);
         paymentResponse.setPartnerOrderId(paymentRequest.getPartnerOrderId());
         paymentResponse.setPartnerUserId(paymentRequest.getPartnerUserId());
@@ -48,7 +48,7 @@ public class PaymentController {
         paymentResponse.setQuantity(paymentRequest.getQuantity());
         paymentResponse.setReservationId(paymentRequest.getReservationId());
 
-        return paymentResponse.getNext_redirect_pc_url();
+        return PaymentPrepareDto.from(paymentResponse);
     }
 
     /**
