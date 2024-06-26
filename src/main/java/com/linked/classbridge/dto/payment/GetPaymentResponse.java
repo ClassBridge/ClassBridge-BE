@@ -15,6 +15,9 @@ public class GetPaymentResponse {
     private int totalAmount;
     private PaymentStatusType status;
     public static GetPaymentResponse from(Payment payment) {
+        if (payment == null) {
+            return null;
+        }
         return GetPaymentResponse.builder()
                 .paymentId(payment.getPaymentId())
                 .itemName(payment.getItemName())

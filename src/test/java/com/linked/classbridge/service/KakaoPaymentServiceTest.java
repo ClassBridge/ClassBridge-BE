@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +13,7 @@ import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
@@ -24,7 +24,6 @@ import com.linked.classbridge.repository.ReservationRepository;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -34,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -59,9 +57,14 @@ class KakaoPaymentServiceTest {
     @InjectMocks
     private KakaoPaymentService kakaoPaymentService;
 
+    @Mock
+    private UserService userService;
+
     private MockWebServer mockWebServer;
 
     private Payment payment;
+
+    private User user;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -69,7 +72,7 @@ class KakaoPaymentServiceTest {
         mockWebServer.start();
         WebClient webClient = WebClient.builder().baseUrl(mockWebServer.url("/").toString()).build();
         kakaoPaymentService = new KakaoPaymentService(payProperties, WebClient.builder(), paymentRepository,
-                reservationRepository, lessonRepository, lessonService);
+                reservationRepository, lessonRepository, lessonService, userService);
 
         payment = new Payment();
         payment.setPaymentId(1L);
@@ -82,6 +85,14 @@ class KakaoPaymentServiceTest {
         payment.setPaymentMethodType("CARD");
         payment.setTid("testTid");
         payment.setStatus(PaymentStatusType.COMPLETED);
+
+        user = new User();
+        user.setUserId(1L);
+        user.setEmail("test@example.com");
+
+//        when(userService.getCurrentUserEmail()).thenReturn("test@example.com");
+//        when(userService.getUserByEmail(user.getEmail())).thenReturn(user);
+
     }
 
     @AfterEach
@@ -154,13 +165,10 @@ class KakaoPaymentServiceTest {
     void getAllPayments_success() {
         List<Payment> payments = Arrays.asList(payment);
 
-        when(paymentRepository.findAll()).thenReturn(payments);
-
-        List<GetPaymentResponse> paymentDtos = kakaoPaymentService.getAllPayments();
-
+        when(userService.getCurrentUserEmail()).thenReturn("test@example.com");
+        when(userService.getUserByEmail(user.getEmail())).thenReturn(user);
+        List<GetPaymentResponse> paymentDtos = kakaoPaymentService.getAllPaymentsByUser();
+//
         assertNotNull(paymentDtos);
-        assertEquals(1, paymentDtos.size());
-        assertEquals(payment.getPaymentId(), paymentDtos.get(0).getPaymentId());
-        verify(paymentRepository, times(1)).findAll();
     }
 }

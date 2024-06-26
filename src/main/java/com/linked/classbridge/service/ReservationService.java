@@ -44,6 +44,7 @@ public class ReservationService {
     /**
      * 예약 생성
      */
+    @Transactional
     public Reservation createReservation(RegisterReservationDto.Request request) {
 
         Lesson lesson = lessonRepository.findById(request.getLessonId())

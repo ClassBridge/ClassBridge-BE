@@ -195,16 +195,17 @@ public class OneDayClassService {
 
     private List<ClassImage> saveImages(OneDayClass oneDayClass, MultipartFile[] files) {
         List<ClassImage> images = new ArrayList<>();
-
-        for(int i=0; i<files.length; i++) {
-            if(files[i] != null) {
-                String url = s3Service.uploadOneDayClassImage(files[i]);
-                images.add(ClassImage.builder()
-                        .url(url)
-                        .name(files[i].getOriginalFilename())
-                        .sequence(i + 1)
-                        .oneDayClass(oneDayClass)
-                        .build());
+        if(files != null && files.length > 0) {
+            for (int i = 0; i < files.length; i++) {
+                if (files[i] != null) {
+                    String url = s3Service.uploadOneDayClassImage(files[i]);
+                    images.add(ClassImage.builder()
+                            .url(url)
+                            .name(files[i].getOriginalFilename())
+                            .sequence(i + 1)
+                            .oneDayClass(oneDayClass)
+                            .build());
+                }
             }
         }
         return !images.isEmpty() ? classImageRepository.saveAll(images) : new ArrayList<>();
@@ -774,18 +775,21 @@ public class OneDayClassService {
         }
 
         if (query != null && !query.isEmpty()) {
-            // className 또는 tutorName이 query와 일치하는 경우
-            BoolQueryBuilder classNameOrTutorName = QueryBuilders.boolQuery()
-                    .should(QueryBuilders.wildcardQuery("className", "*" + query + "*"))
-                    .should(QueryBuilders.wildcardQuery("tutorName", "*" + query + "*"))
-                    .should(QueryBuilders.termQuery("category", query));
+            BoolQueryBuilder className = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("className", query));
+            BoolQueryBuilder tutorName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("tutorName", query));
+            BoolQueryBuilder categoryName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("category", query));
 
             // tagList가 query와 정확히 일치하는 경우
             QueryBuilder tagQuery = QueryBuilders.termQuery("tagList", query);
 
             // 최종 쿼리 조합
             BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
-                    .should(classNameOrTutorName)
+                    .should(className)
+                    .should(tutorName)
+                    .should(categoryName)
                     .should(tagQuery);
 
             queryBuilder.must(finalQuery);
@@ -809,6 +813,9 @@ public class OneDayClassService {
                 break;
             case STAR:
                 searchSourceBuilder.sort("starRate", SortOrder.DESC);
+                break;
+            case DATE:
+                searchSourceBuilder.sort("endDate", SortOrder.ASC);
                 break;
             default:
                 searchSourceBuilder.sort("totalWish", SortOrder.DESC);

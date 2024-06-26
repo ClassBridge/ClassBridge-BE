@@ -5,6 +5,7 @@ import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.TutorPayment;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.sales.ClassMonthlySales;
 import com.linked.classbridge.dto.sales.MonthlySales;
 import com.linked.classbridge.dto.sales.TutorSalesResponse;
@@ -28,9 +29,12 @@ public class SalesService {
 
     private final TutorPaymentRepository tutorPaymentRepository;
     private final PaymentRepository paymentRepository;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
-    public TutorSalesResponse getSalesData(Long tutorId, int year) {
+    public TutorSalesResponse getSalesData(int year) {
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+        Long tutorId = user.getUserId();
         List<TutorPayment> pastSettlements = tutorPaymentRepository.findByUserId(tutorId)
                 .orElse(Collections.emptyList());
 
