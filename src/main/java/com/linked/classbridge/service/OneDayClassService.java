@@ -775,18 +775,21 @@ public class OneDayClassService {
         }
 
         if (query != null && !query.isEmpty()) {
-            // className 또는 tutorName이 query와 일치하는 경우
-            BoolQueryBuilder classNameOrTutorName = QueryBuilders.boolQuery()
-                    .should(QueryBuilders.wildcardQuery("className", "*" + query + "*"))
-                    .should(QueryBuilders.wildcardQuery("tutorName", "*" + query + "*"))
-                    .should(QueryBuilders.termQuery("category", query));
+            BoolQueryBuilder className = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("className", query));
+            BoolQueryBuilder tutorName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("tutorName", query));
+            BoolQueryBuilder categoryName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("category", query));
 
             // tagList가 query와 정확히 일치하는 경우
             QueryBuilder tagQuery = QueryBuilders.termQuery("tagList", query);
 
             // 최종 쿼리 조합
             BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
-                    .should(classNameOrTutorName)
+                    .should(className)
+                    .should(tutorName)
+                    .should(categoryName)
                     .should(tagQuery);
 
             queryBuilder.must(finalQuery);
