@@ -6,6 +6,7 @@ import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Requset;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Response;
@@ -41,6 +42,7 @@ public class KakaoRefundService {
     private final PaymentRepository paymentRepository;
     private final RefundRepository refundRepository;
     private final LessonService lessonService;
+    private final UserService userService;
 
     /**
      * 결제 환불
@@ -190,8 +192,9 @@ public class KakaoRefundService {
     }
 
     @Transactional(readOnly = true)
-    public List<PaymentRefundDto> getAllRefunds() {
-        List<Refund> refunds = refundRepository.findAll();
+    public List<PaymentRefundDto> getAllRefundsByUser() {
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+        List<Refund> refunds = refundRepository.findAllByUserId(user.getUserId());
         return refunds.stream()
                 .map(PaymentRefundDto::from)
                 .collect(Collectors.toList());

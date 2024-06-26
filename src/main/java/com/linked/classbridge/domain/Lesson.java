@@ -12,6 +12,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -60,8 +61,8 @@ public class Lesson extends BaseEntity {
     @Builder.Default
     private List<Review> reviewList = new ArrayList<>();
 
-//    @Version
-//    private Long version;
+    @Version
+    private Long version;
 
     public void addReview(Review review) {
         this.reviewList.add(review);

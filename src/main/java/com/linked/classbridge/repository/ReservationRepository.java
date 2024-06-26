@@ -4,6 +4,7 @@ import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Reservation;
 import java.util.List;
 import com.linked.classbridge.type.ReservationStatus;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +22,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("userId") Long userId,
             @Param("lessonId") Long lessonId,
             @Param("status") ReservationStatus status);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.lesson WHERE r.reservationId = :reservationId")
+    Optional<Reservation> findByIdWithLesson(@Param("reservationId") Long reservationId);
 }

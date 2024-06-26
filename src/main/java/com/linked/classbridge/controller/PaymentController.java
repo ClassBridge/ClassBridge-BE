@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -95,9 +96,11 @@ public class PaymentController {
     /**
      * 결제 조회
      */
+    @Operation(summary = "결제 조회", description = "결제 내역을 조회합니다.")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping
     public ResponseEntity<SuccessResponse<List<GetPaymentResponse>>> getAllPayments() {
-        List<GetPaymentResponse> payments = paymentService.getAllPayments();
+        List<GetPaymentResponse> payments = paymentService.getAllPaymentsByUser();
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
                         ResponseMessage.PAYMENT_GET_SUCCESS,
@@ -109,6 +112,8 @@ public class PaymentController {
     /**
      * 특정 결제 조회
      */
+    @Operation(summary = "결제 조회", description = "특정 결제 내역을 조회합니다.")
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{paymentId}")
     public ResponseEntity<SuccessResponse<GetPaymentResponse>> getPaymentById(@PathVariable Long paymentId) {
         GetPaymentResponse payment = paymentService.getPaymentById(paymentId);

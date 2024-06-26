@@ -1,10 +1,12 @@
 package com.linked.classbridge.controller;
 
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.reservation.GetReservationResponse;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto;
 import com.linked.classbridge.dto.reservation.RegisterReservationDto.Response;
 import com.linked.classbridge.service.ReservationService;
+import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final UserService userService;
 
     /**
      * 예약 생성
@@ -80,7 +83,8 @@ public class ReservationController {
             @RequestParam(required = false, name = "user_id") Long userId,
             @RequestParam(required = false, name = "lesson_id") Long lessonId,
             @RequestParam(required = false) String status) {
-        List<GetReservationResponse> reservations = reservationService.getReservations(userId, lessonId, status);
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+        List<GetReservationResponse> reservations = reservationService.getReservations(user.getUserId(), lessonId, status);
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
                         ResponseMessage.RESERVATION_GET_SUCCESS,
