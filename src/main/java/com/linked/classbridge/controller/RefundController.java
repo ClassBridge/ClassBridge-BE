@@ -41,7 +41,7 @@ public class RefundController {
     @GetMapping
     public ResponseEntity<SuccessResponse<List<PaymentRefundDto>>> getAllRefunds() {
 
-        List<PaymentRefundDto> refunds = refundService.getAllRefunds();
+        List<PaymentRefundDto> refunds = refundService.getAllRefundsByUser();
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(

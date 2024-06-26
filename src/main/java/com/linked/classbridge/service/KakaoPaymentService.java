@@ -9,6 +9,7 @@ import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.payment.CreatePaymentResponse;
 import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
@@ -53,6 +54,7 @@ public class KakaoPaymentService {
     private final ReservationRepository reservationRepository;
     private final LessonRepository lessonRepository;
     private final LessonService lessonService;
+    private final UserService userService;
 
     @Value("${baseUrl}")
     private String baseUrl;
@@ -282,8 +284,9 @@ public class KakaoPaymentService {
      * 결제 조회
      */
     @Transactional(readOnly = true)
-    public List<GetPaymentResponse> getAllPayments() {
-        List<Payment> payments = paymentRepository.findAll();
+    public List<GetPaymentResponse> getAllPaymentsByUser() {
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+        List<Payment> payments = paymentRepository.findAllByUserId(user.getUserId());
         return payments.stream()
                 .map(GetPaymentResponse::from)
                 .collect(Collectors.toList());

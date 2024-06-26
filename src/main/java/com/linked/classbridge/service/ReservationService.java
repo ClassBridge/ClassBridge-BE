@@ -62,8 +62,8 @@ public class ReservationService {
         Double userAge = (double) AgeUtil.calculateAge(user.getBirthDate());
         Gender userGender = user.getGender();
 
-        oneDayClass.addStudent(userAge, userGender);
-        oneDayClassRepository.save(oneDayClass);
+//        oneDayClass.addStudent(userAge, userGender);
+//        oneDayClassRepository.save(oneDayClass);
 
         return reservation;
     }

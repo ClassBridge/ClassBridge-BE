@@ -15,7 +15,7 @@ public class TutorSalesController {
     private final SalesService salesService;
 
     @GetMapping("/sales")
-    public TutorSalesResponse getTutorSales(@RequestParam Long tutorId, @RequestParam int year) {
-        return salesService.getSalesData(tutorId, year);
+    public TutorSalesResponse getTutorSales(@RequestParam int year) {
+        return salesService.getSalesData(year);
     }
 }

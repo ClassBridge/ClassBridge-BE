@@ -18,4 +18,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("SELECT p FROM Payment p JOIN p.reservation r WHERE r.user.userId = :userId AND p.updatedAt BETWEEN :startDateTime AND :endDateTime")
     List<Payment> findByUserIdAndPaymentDateTimeBetween(@Param("userId") Long userId, @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime);
+
+    @Query("SELECT p FROM Payment p WHERE p.reservation.user.userId = :userId")
+    List<Payment> findAllByUserId(@Param("userId") Long userId);
 }

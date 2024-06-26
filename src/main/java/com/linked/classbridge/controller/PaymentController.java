@@ -97,7 +97,7 @@ public class PaymentController {
      */
     @GetMapping
     public ResponseEntity<SuccessResponse<List<GetPaymentResponse>>> getAllPayments() {
-        List<GetPaymentResponse> payments = paymentService.getAllPayments();
+        List<GetPaymentResponse> payments = paymentService.getAllPaymentsByUser();
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(
                         ResponseMessage.PAYMENT_GET_SUCCESS,
