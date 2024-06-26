@@ -195,16 +195,17 @@ public class OneDayClassService {
 
     private List<ClassImage> saveImages(OneDayClass oneDayClass, MultipartFile[] files) {
         List<ClassImage> images = new ArrayList<>();
-
-        for(int i=0; i<files.length; i++) {
-            if(files[i] != null) {
-                String url = s3Service.uploadOneDayClassImage(files[i]);
-                images.add(ClassImage.builder()
-                        .url(url)
-                        .name(files[i].getOriginalFilename())
-                        .sequence(i + 1)
-                        .oneDayClass(oneDayClass)
-                        .build());
+        if(files != null && files.length > 0) {
+            for (int i = 0; i < files.length; i++) {
+                if (files[i] != null) {
+                    String url = s3Service.uploadOneDayClassImage(files[i]);
+                    images.add(ClassImage.builder()
+                            .url(url)
+                            .name(files[i].getOriginalFilename())
+                            .sequence(i + 1)
+                            .oneDayClass(oneDayClass)
+                            .build());
+                }
             }
         }
         return !images.isEmpty() ? classImageRepository.saveAll(images) : new ArrayList<>();
@@ -810,6 +811,8 @@ public class OneDayClassService {
             case STAR:
                 searchSourceBuilder.sort("starRate", SortOrder.DESC);
                 break;
+            case DATE:
+                searchSourceBuilder.sort("endDate", SortOrder.ASC);
             default:
                 searchSourceBuilder.sort("totalWish", SortOrder.DESC);
                 break;
