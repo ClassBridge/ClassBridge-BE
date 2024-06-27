@@ -1,6 +1,7 @@
 package com.linked.classbridge.repository;
 
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.dto.reservation.SuccessReservationDto;
 import com.linked.classbridge.type.ReservationStatus;
@@ -35,4 +36,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             + " FROM Reservation r JOIN r.lesson l JOIN l.oneDayClass o JOIN o.tutor t "
             + " WHERE r.reservationId = :reservationId")
     SuccessReservationDto findByIdAndGetOneDayClass(Long reservationId);
+
+    @Query("SELECT o FROM Reservation r JOIN r.lesson l JOIN l.oneDayClass o WHERE r.reservationId = :reservationId")
+    Optional<OneDayClass> findOneDayClassById(Long reservationId);
 }
