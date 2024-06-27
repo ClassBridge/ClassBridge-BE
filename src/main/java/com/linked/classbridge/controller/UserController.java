@@ -30,7 +30,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -227,13 +226,13 @@ public class UserController {
 
     @Operation(summary = "수강생 찜목록 삭제", description = "수강생 찜목록 삭제")
     @PreAuthorize("hasRole('USER')")
-    @DeleteMapping("/wish/{wishId}")
+    @DeleteMapping("/wish")
     public ResponseEntity<SuccessResponse<Boolean>> deleteWish(
-            @PathVariable Long wishId) {
+            @RequestBody WishDto.Request request) {
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.WISH_DELETE_SUCCESS,
-                        userService.deleteWish(userService.getCurrentUserEmail(), wishId)
+                        userService.deleteWish(userService.getCurrentUserEmail(), request.classId())
                 )
         );
     }
