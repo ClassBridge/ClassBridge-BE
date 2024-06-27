@@ -9,7 +9,6 @@ import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
-import com.linked.classbridge.dto.reservation.SuccessReservationDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.KakaoPaymentService;
 import com.linked.classbridge.type.ResponseMessage;
@@ -56,8 +55,8 @@ public class PaymentController {
      * 결제 성공
      */
     @GetMapping("/complete")
-    public ResponseEntity<SuccessReservationDto> approvePayment(HttpServletRequest request,
-                                                                @RequestParam("pg_token") String pgToken) throws Exception {
+    public ResponseEntity<String> approvePayment(HttpServletRequest request,
+                                                 @RequestParam("pg_token") String pgToken) throws Exception {
         paymentResponse.setPgToken(pgToken);
 
         return paymentService.approvePayment(paymentResponse, request.getHeader("Authorization"));

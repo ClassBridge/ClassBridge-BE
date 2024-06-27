@@ -1,5 +1,6 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.INVALID_PAYMENT_ID;
 import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.MAX_PARTICIPANTS_EXCEEDED;
@@ -7,6 +8,7 @@ import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
 
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
 import com.linked.classbridge.domain.User;
@@ -16,7 +18,6 @@ import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
-import com.linked.classbridge.dto.reservation.SuccessReservationDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
@@ -111,7 +112,7 @@ public class KakaoPaymentService {
     /**
      * 카카오페이 결제 승인 로직
      */
-    public ResponseEntity<SuccessReservationDto> approvePayment(PaymentPrepareDto.Response response, String header) {
+    public ResponseEntity<String> approvePayment(PaymentPrepareDto.Response response, String header) {
         try {
             // 카카오 요청
             Map<String, String> parameters = new HashMap<>();
@@ -166,20 +167,12 @@ public class KakaoPaymentService {
 //            return entity.block();
             ResponseEntity<String> result = entity.block();
 
-            SuccessReservationDto successReservationDto = reservationRepository.findByIdAndGetOneDayClass(response.getReservationId());
-            successReservationDto.setTotalPrice(successReservationDto.getPrice() * successReservationDto.getQuantity());
-            log.info("결제 완료 후 data {} ", successReservationDto.getReservationId());
-
+            OneDayClass oneDayClass = reservationRepository.findOneDayClassById(response.getReservationId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+            log.info("classId {}, reservationId {}", oneDayClass.getClassId(), response.getReservationId());
             // 성공 후 리디렉션 URL 반환
-//            return ResponseEntity.status(HttpStatus.FOUND)
-//                    .header(HttpHeaders.LOCATION, "https://class-bridge.vercel.app/redirect?type=payment&success=true")
-//                    .body("Redirecting to payment success page");
-            headers = new HttpHeaders();
-            headers.add(HttpHeaders.LOCATION, "https://class-bridge.vercel.app/redirect?type=payment&success=true");
-
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .headers(headers)
-                    .body(successReservationDto);
+                    .header(HttpHeaders.LOCATION, "https://class-bridge.vercel.app/redirect?type=payment&success=true&reservationId=" + response.getReservationId() + "&classId=" + oneDayClass.getClassId())
+                    .body("Redirecting to payment success page");
 
         } catch (WebClientResponseException e) {
             log.error(e.getMessage());
