@@ -53,11 +53,11 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             response.addCookie(createCookie(TokenType.REFRESH.getValue(), refresh));
             response.setStatus(HttpStatus.OK.value());
 
-            response.sendRedirect("https://class-bridge.vercel.app/redirect?type=login&newUser=false");
+            response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=false");
         } else {
             HttpSession session = request.getSession();
             session.setAttribute("customOAuth2User", customOAuth2User);
-            response.sendRedirect("https://class-bridge.vercel.app/redirect?type=login&newUser=true");
+            response.sendRedirect("http://localhost:3000/redirect?type=login&newUser=true");
         }
     }
 }
