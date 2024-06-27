@@ -13,6 +13,7 @@ public enum ResponseMessage {
     NO_MATCHED_EMAIL("사용 가능한 이메일 입니다"),
     SIGNUP_SUCCESS("회원가입 성공"),
     LOGIN_SUCCESS("로그인 성공"),
+    GET_USER_SUCCESS("회원 정보 조회 성공"),
     ONE_DAY_CLASS_LIST_GET_SUCCESS("강사 클래스 리스트 조회 성공"),
     ONE_DAY_CLASS_GET_SUCCESS("강사 클래스 조회 성공"),
     CLASS_REGISTER_SUCCESS("클래스 등록 성공"),

@@ -25,6 +25,7 @@ import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.GoogleResponse;
 import com.linked.classbridge.dto.user.UserDto;
+import com.linked.classbridge.dto.user.UserInfoDto;
 import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
@@ -425,5 +426,11 @@ public class UserService {
     public User getUserByEmail(String userEmail) {
         return findByEmail(userEmail)
                 .orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+    }
+
+    public UserInfoDto getUser() {
+        User user = getUserByEmail(getCurrentUserEmail());
+
+        return new UserInfoDto(user);
     }
 }
