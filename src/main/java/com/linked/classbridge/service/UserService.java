@@ -398,9 +398,9 @@ public class UserService {
         return true;
     }
 
-    public Boolean deleteWish(String email, Long wishId) {
+    public Boolean deleteWish(String email, Long classId) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        Wish wish = wishRepository.findById(wishId).orElseThrow(() -> new RestApiException(WISH_NOT_FOUND));
+        Wish wish = wishRepository.findByUserUserIdAndOneDayClassClassId(user.getUserId(), classId).orElseThrow(() -> new RestApiException(WISH_NOT_FOUND));
         OneDayClass oneDayClass = oneDayClassRepository.findById(wish.getOneDayClass().getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
         if(!Objects.equals(user.getUserId(), wish.getUser().getUserId())) {
