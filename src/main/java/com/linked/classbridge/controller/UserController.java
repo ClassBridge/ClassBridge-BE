@@ -11,6 +11,7 @@ import com.linked.classbridge.dto.user.AdditionalInfoDto;
 import com.linked.classbridge.dto.user.AuthDto;
 import com.linked.classbridge.dto.user.CustomOAuth2User;
 import com.linked.classbridge.dto.user.UserDto;
+import com.linked.classbridge.dto.user.UserInfoDto;
 import com.linked.classbridge.dto.user.WishDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.ReviewService;
@@ -149,6 +150,18 @@ public class UserController {
                 SuccessResponse.of(
                         ResponseMessage.LOGIN_SUCCESS,
                         "success"
+                )
+        );
+    }
+
+    @Operation(summary = "유저 정보 조회", description = "유저 정보 조회")
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping
+    public ResponseEntity<SuccessResponse<UserInfoDto>> getUser() {
+        return ResponseEntity.status(OK).body(
+                SuccessResponse.of(
+                        ResponseMessage.GET_USER_SUCCESS,
+                        userService.getUser()
                 )
         );
     }
