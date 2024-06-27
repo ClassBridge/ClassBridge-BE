@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -159,7 +160,13 @@ public class KakaoPaymentService {
                     .retrieve()
                     .toEntity(String.class);
 
-            return entity.block();
+//            return entity.block();
+            ResponseEntity<String> result = entity.block();
+
+            // 성공 후 리디렉션 URL 반환
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, "https://class-bridge.vercel.app/redirect?type=payment&success=true")
+                    .body("Redirecting to payment success page");
 
         } catch (WebClientResponseException e) {
             log.error(e.getMessage());
@@ -237,8 +244,10 @@ public class KakaoPaymentService {
         parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
         parameters.put("approval_url", baseUrl+"/api/payments/complete"); // 성공 시 redirect url
+//        parameters.put("approval_url", "https://class-bridge.vercel.app/redirect?type=payment&success=true"); // 성공 시 redirect url
         parameters.put("cancel_url", baseUrl+"/api/payments/cancel"); // 취소 시 redirect url
-        parameters.put("fail_url", baseUrl+"/api/payments/fail"); // 실패 시 redirect url
+//        parameters.put("fail_url", baseUrl+"/api/payments/fail"); // 실패 시 redirect url
+        parameters.put("fail_url", "https://class-bridge.vercel.app/redirect?type=payment&success=false"); // 실패 시 redirect url
 
         return parameters;
     }
