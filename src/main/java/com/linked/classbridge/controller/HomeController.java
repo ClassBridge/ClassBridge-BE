@@ -11,6 +11,6 @@ public class HomeController {
 
     @GetMapping
     public String redirectToHome() {
-        return "redirect:http://localhost:3000";  // 홈 화면으로 리다이렉션
+        return "redirect:http://localhost:3000";  // 홈화면으로 리다이렉션
     }
 }
