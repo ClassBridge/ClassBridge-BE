@@ -285,8 +285,9 @@ public class ReviewService {
     private void updateOneDayClassDocumentStarRate(OneDayClass oneDayClass) {
         OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId())
                 .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-        oneDayClassDocument.setStarRate(oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1
+        oneDayClassDocument.setStarRate(oneDayClass.getTotalStarRate() / (double)(oneDayClass.getTotalReviews() == 0 ? 1
                 : oneDayClass.getTotalReviews()));
+        oneDayClassDocument.setTotalReviews(oneDayClass.getTotalReviews());
         operations.save(oneDayClassDocument);
     }
 }

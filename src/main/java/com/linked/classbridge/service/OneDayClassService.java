@@ -468,7 +468,7 @@ public class OneDayClassService {
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
 
-        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdOrderByLessonDateAscStartTimeAsc(classId));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
@@ -481,7 +481,7 @@ public class OneDayClassService {
         boolean isWish = false;
         boolean isWanted = false;
 
-        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfter(classId, LocalDate.now().minusDays(1)));
+        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfterOrderByLessonDateAscStartTimeAsc(classId, LocalDate.now().minusDays(1)));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
