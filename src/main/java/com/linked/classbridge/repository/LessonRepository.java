@@ -23,14 +23,15 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     boolean existsByOneDayClassClassIdAndLessonDateIsBetweenAndParticipantNumberIsGreaterThan(long classId, LocalDate startDate, LocalDate changeStartDate,
                                                                                               int zero);
-
     List<Lesson> findAllByOneDayClassClassIdAndLessonDateIsAfter(long classId, LocalDate localDate);
 
     boolean existsByOneDayClassClassIdAndParticipantNumberIsGreaterThanAndLessonDateIsAfter(long classId, int personal, LocalDate now);
 
-    List<Lesson> findAllByOneDayClassClassId(long classId);
-
     boolean existsByOneDayClassClassIdAndLessonDateAndStartTime(Long classId, LocalDate localDate, LocalTime localTime);
 
     boolean existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsLessThan(Long classId, LocalDate localDate, int personal);
+
+    List<Lesson> findAllByOneDayClassClassIdAndLessonDateIsAfterOrderByLessonDateAscStartTimeAsc(long classId, LocalDate localDate);
+
+    List<Lesson> findAllByOneDayClassClassIdOrderByLessonDateAscStartTimeAsc(long classId);
 }
