@@ -7,9 +7,9 @@ import jakarta.validation.constraints.NotNull;
 public class CreateChatRoom {
 
     public record Request(
-            @Schema(description = "문의할 클래스 ID", example = "1")
-            @NotNull(message = "클래스 ID는 필수 입력 값입니다.")
-            Long classId
+            @Schema(description = "채팅 상대 유저 ID", example = "1")
+            @NotNull(message = "유저 ID는 필수 입력 값입니다.")
+            Long userId
     ) {
 
     }

@@ -20,7 +20,6 @@ import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
-import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.type.ErrorCode;
@@ -59,7 +58,6 @@ public class KakaoPaymentService {
     private final LessonRepository lessonRepository;
     private final LessonService lessonService;
     private final UserService userService;
-    private final OneDayClassRepository classRepository;
 
     @Value("${baseUrl}")
     private String baseUrl;
@@ -167,11 +165,14 @@ public class KakaoPaymentService {
 //            return entity.block();
             ResponseEntity<String> result = entity.block();
 
-            OneDayClass oneDayClass = reservationRepository.findOneDayClassById(response.getReservationId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+            OneDayClass oneDayClass = reservationRepository.findOneDayClassById(response.getReservationId())
+                    .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
             log.info("classId {}, reservationId {}", oneDayClass.getClassId(), response.getReservationId());
             // 성공 후 리디렉션 URL 반환
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, "https://class-bridge.vercel.app/redirect?type=payment&success=true&reservationId=" + response.getReservationId() + "&classId=" + oneDayClass.getClassId())
+                    .header(HttpHeaders.LOCATION,
+                            "https://class-bridge.vercel.app/redirect?type=payment&success=true&reservationId="
+                                    + response.getReservationId() + "&classId=" + oneDayClass.getClassId())
                     .body("Redirecting to payment success page");
 
         } catch (WebClientResponseException e) {
@@ -249,11 +250,12 @@ public class KakaoPaymentService {
         parameters.put("quantity", Integer.toString(request.getQuantity()));
         parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
-        parameters.put("approval_url", baseUrl+"/api/payments/complete"); // 성공 시 redirect url
+        parameters.put("approval_url", baseUrl + "/api/payments/complete"); // 성공 시 redirect url
 //        parameters.put("approval_url", "https://class-bridge.vercel.app/redirect?type=payment&success=true"); // 성공 시 redirect url
-        parameters.put("cancel_url", baseUrl+"/api/payments/cancel"); // 취소 시 redirect url
+        parameters.put("cancel_url", baseUrl + "/api/payments/cancel"); // 취소 시 redirect url
 //        parameters.put("fail_url", baseUrl+"/api/payments/fail"); // 실패 시 redirect url
-        parameters.put("fail_url", "https://class-bridge.vercel.app/redirect?type=payment&success=false"); // 실패 시 redirect url
+        parameters.put("fail_url",
+                "https://class-bridge.vercel.app/redirect?type=payment&success=false"); // 실패 시 redirect url
 
         return parameters;
     }

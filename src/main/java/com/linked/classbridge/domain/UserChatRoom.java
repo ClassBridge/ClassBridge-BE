@@ -44,6 +44,9 @@ public class UserChatRoom extends BaseEntity {
     @Builder.Default
     private boolean isOnline = false;
 
+    @Builder.Default
+    private boolean isDeleted = false;
+
     public void setOnline() {
         this.isOnline = true;
     }
