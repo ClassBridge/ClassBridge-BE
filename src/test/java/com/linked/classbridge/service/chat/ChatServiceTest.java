@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.domain.ChatMessage;
 import com.linked.classbridge.domain.ChatRoom;
-import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
 import com.linked.classbridge.domain.UserChatRoom;
 import com.linked.classbridge.dto.chat.ChatRoomUnreadCountInfoDto;
@@ -24,7 +23,6 @@ import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.dto.chat.ReadReceipt;
 import com.linked.classbridge.dto.chat.ReadReceiptList;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ErrorCode;
 import java.time.LocalDateTime;
@@ -53,9 +51,6 @@ class ChatServiceTest {
     private UserChatRoomService userChatRoomService;
     @Mock
     private MessageSendingService messageSendingService;
-    @Mock
-    private OneDayClassService oneDayClassService;
-
     private User user;
     private User tutor;
     private User otherUser;
@@ -66,7 +61,6 @@ class ChatServiceTest {
     private ChatMessage chatMessage1;
     private ChatMessage chatMessage2;
     private ChatMessage chatMessage3;
-    private OneDayClass oneDayClass;
 
     @BeforeEach
     void setUp() {
@@ -109,10 +103,6 @@ class ChatServiceTest {
                 .sendTime(LocalDateTime.of(2024, 1, 1, 0, 2))
                 .isRead(false)
                 .build();
-        oneDayClass = OneDayClass.builder()
-                .classId(1L)
-                .tutor(tutor)
-                .build();
 
         userChatRoom1 = UserChatRoom.builder()
                 .user(user)
@@ -132,13 +122,12 @@ class ChatServiceTest {
     @Test
     void createChatRoomProcess() {
         // given
-        Long classId = 1L;
-
-        given(oneDayClassService.findClassById(classId)).willReturn(oneDayClass);
+        Long chatPartnerId = 2L;
+        given(userService.findUserById(chatPartnerId)).willReturn(tutor);
         given(chatRoomService.createOrFindChatRoomByUsers(user, tutor)).willReturn(chatRoom1);
 
         // when
-        CreateChatRoom.Response createChatRoom = chatService.createChatRoomProcess(user, classId);
+        CreateChatRoom.Response createChatRoom = chatService.createChatRoomProcess(user, chatPartnerId);
 
         // then
         assertEquals(chatRoom1.getChatRoomId(), createChatRoom.chatRoomId());
@@ -147,12 +136,12 @@ class ChatServiceTest {
     @Test
     void createChatRoomProcessInitiatedToMyself() {
         // given
-        Long classId = 1L;
-        given(oneDayClassService.findClassById(classId)).willReturn(oneDayClass);
+        Long chatPartnerId = 2L;
+        given(userService.findUserById(chatPartnerId)).willReturn(tutor);
 
         // when
         RestApiException exception = assertThrows(RestApiException.class,
-                () -> chatService.createChatRoomProcess(tutor, classId));
+                () -> chatService.createChatRoomProcess(tutor, chatPartnerId));
 
         // then
         assertEquals(ErrorCode.BAD_REQUEST, exception.getErrorCode());

@@ -16,7 +16,6 @@ import com.linked.classbridge.dto.chat.JoinChatRoom;
 import com.linked.classbridge.dto.chat.ReadReceipt;
 import com.linked.classbridge.dto.chat.ReadReceiptList;
 import com.linked.classbridge.exception.RestApiException;
-import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.UserService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,16 +39,14 @@ public class ChatService {
 
     private final MessageSendingService messageSendingService;
 
-    private final OneDayClassService oneDayClassService;
-
     // 채팅방 생성
-    public CreateChatRoom.Response createChatRoomProcess(User initiatedBy, Long classId) {
-        log.info("Create chat room initiated by user: {}", initiatedBy.getUserId());
-        User initiatedTo = oneDayClassService.findClassById(classId).getTutor();
+    public CreateChatRoom.Response createChatRoomProcess(User chatStartUser, Long chatPartnerId) {
+        log.info("Create chat room initiated by user: {}", chatStartUser.getUserId());
+        User chatPartner = userService.findUserById(chatPartnerId);
 
-        validateChatRoomInitiation(initiatedBy, initiatedTo);
+        validateChatRoomInitiation(chatStartUser, chatPartner);
 
-        ChatRoom chatRoom = chatRoomService.createOrFindChatRoomByUsers(initiatedBy, initiatedTo);
+        ChatRoom chatRoom = chatRoomService.createOrFindChatRoomByUsers(chatStartUser, chatPartner);
 
         log.info("Chat room created: {}", chatRoom.getChatRoomId());
         return CreateChatRoom.Response.fromEntity(chatRoom);
