@@ -1,7 +1,7 @@
 package com.linked.classbridge.service;
 
 import com.linked.classbridge.domain.Lesson;
-import com.linked.classbridge.dto.oneDayClass.LessonDto;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.type.ErrorCode;
@@ -21,10 +21,10 @@ public class LessonService {
                 .orElseThrow(() -> new RestApiException(ErrorCode.LESSON_NOT_FOUND));
     }
 
-    public LessonDto findLessonDto(Long lessonId) {
+    public LessonDtoDetail findLessonDto(Long lessonId) {
         Lesson lesson = findLessonById(lessonId);
 
-        return new LessonDto(lesson, lesson.getOneDayClass().getPersonal());
+        return new LessonDtoDetail(lesson, lesson.getOneDayClass().getPersonal());
     }
 
     @Transactional

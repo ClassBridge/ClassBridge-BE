@@ -21,10 +21,10 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 @Slf4j
 public class OpenSearchRestConfig extends AbstractOpenSearchConfiguration {
 
-    @Value("${ELASTICSEARCH_ENDPOINT}")
+    @Value("${cloud.aws.es.endPoint}")
     private String endpoint;
 
-    @Value("${ELASTICSEARCH_REGION}")
+    @Value("${cloud.aws.es.region}")
     private String region;
 
     private final AWSCredentialsProvider credentialsProvider;

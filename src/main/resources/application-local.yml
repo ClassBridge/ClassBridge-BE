@@ -22,9 +22,9 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        show-sql: true
-        format_sql: true
-        use_sql_comments: true
+        show-sql: false
+        #        format_sql: true
+        #        use_sql_comments: true
         jdbc:
           time_zone: UTC
   security:
@@ -61,11 +61,14 @@ cloud:
     credentials:
       access-key: ${AWS_ACCESS_KEY}
       secret-key: ${AWS_SECRET_KEY}
+    es:
+      endPoint: ${ELASTICSEARCH_ENDPOINT}
+      region: ${ELASTICSEARCH_REGION}
 
 pay:
   ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
   approve-url: https://open-api.kakaopay.com/online/v1/payment/approve
-  cancel-url: http://localhost:8080/payment/kakao/cancel
+  cancel-url: https://open-api.kakaopay.com/online/v1/payment/cancel
   cid: ${KAKAO_PAY_CID}
   dev-key: ${KAKAO_PAY_DEV_KEY}
 
@@ -87,3 +90,9 @@ springdoc:
 openapi:
   url: ${OPEN_API_BASE_URL}
   key: ${OPEN_API_KEY}
+
+kakaomap:
+  admin-key: ${KAKAO_MAP_ADMIN_KEY}
+  map-url: https://dapi.kakao.com/v2/local/search/address.json
+
+baseUrl: http://localhost:8080

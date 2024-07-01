@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.springframework.web.multipart.MultipartFile;
 
 public class RegisterReviewDto {
 
@@ -32,10 +31,8 @@ public class RegisterReviewDto {
             @Min(value = 0, message = "평점은 0 이상 5 이하로 입력해 주세요.")
             @Max(value = 5, message = "평점은 0 이상 5 이하로 입력해 주세요.")
             @NotNull(message = "평점을 입력해 주세요.")
-            Double rating,
-            MultipartFile image1,
-            MultipartFile image2,
-            MultipartFile image3
+            Double rating
+
     ) {
 
         public static Review toEntity(

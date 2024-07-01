@@ -5,10 +5,11 @@ import static org.springframework.http.HttpStatus.OK;
 
 import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
-import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
-import com.linked.classbridge.dto.oneDayClass.LessonDto;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.tutor.TutorInfoDto;
 import com.linked.classbridge.service.OneDayClassService;
@@ -18,8 +19,6 @@ import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -95,6 +94,7 @@ public class TutorController {
      * @return ResponseEntity<SuccessResponse<Page<ClassDto>>
      */
     @Operation(summary = "Class list 조회", description = "Class list 조회")
+    @PreAuthorize("hasRole('TUTOR')")
     @GetMapping("/class")
     public ResponseEntity<SuccessResponse<Page<ClassDto>>> getOneDayClassList(Pageable pageable) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
@@ -109,12 +109,13 @@ public class TutorController {
      * @return ResponseEntity<SuccessResponse<ClassDto.Response>
      */
     @Operation(summary = "Class 조회", description = "Class 조회")
+    @PreAuthorize("hasRole('TUTOR')")
     @GetMapping("/class/{classId}")
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> getOneDayClass(
+    public ResponseEntity<SuccessResponse<ClassResponseByTutor>> getOneDayClass(
             @PathVariable Long classId) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.ONE_DAY_CLASS_GET_SUCCESS,
-                oneDayClassService.getOneDayClass(userService.getCurrentUserEmail(), classId))
+                oneDayClassService.getOneDayClassByTutor(userService.getCurrentUserEmail(), classId))
         );
     }
 
@@ -124,18 +125,17 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class 등록", description = "Class 등록")
+    @PreAuthorize("hasRole('TUTOR')")
     @PostMapping(path = "/class", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponse<ClassDto.ClassResponse>> registerClass(
+    public ResponseEntity<SuccessResponse<ClassResponseByTutor>> registerClass(
             @RequestPart(value = "request") @Valid ClassDto.ClassRequest request,
-            @RequestPart(value = "file1", required = false) MultipartFile file1,
-            @RequestPart(value = "file2", required = false) MultipartFile file2,
-            @RequestPart(value = "file3", required = false) MultipartFile file3
+            @RequestPart(value = "images", required = false) MultipartFile[] images
+
     ) {
-        List<MultipartFile> fileList = Arrays.stream((new MultipartFile[] {file1, file2, file3}))
-                .filter(item -> item != null && !item.isEmpty()).toList();
+
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
                 ResponseMessage.CLASS_REGISTER_SUCCESS,
-                oneDayClassService.registerClass(userService.getCurrentUserEmail(), request, fileList))
+                oneDayClassService.registerClass(userService.getCurrentUserEmail(), request, images))
         );
     }
 
@@ -145,14 +145,16 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>>
      */
     @Operation(summary = "Class 세부 정보 수정", description = "Class 세부 정보 수정")
-    @PutMapping(path = "/class/{classId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PutMapping(path = "/class/{classId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
     public ResponseEntity<SuccessResponse<ClassUpdateDto.ClassResponse>> updateClass(
             @PathVariable Long classId,
-            @RequestBody @Valid ClassUpdateDto.ClassRequest request
+            @RequestPart(value = "request") @Valid ClassUpdateDto.ClassRequest request,
+            @RequestPart(value = "images", required = false) MultipartFile[] files
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_UPDATE_SUCCESS,
-                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, classId))
+                oneDayClassService.updateClass(userService.getCurrentUserEmail(), request, files, classId))
         );
     }
 
@@ -162,6 +164,7 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class 삭제", description = "Class 삭제")
+    @PreAuthorize("hasRole('TUTOR')")
     @DeleteMapping(path = "/class/{classId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteClass(
             @PathVariable Long classId
@@ -178,7 +181,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class FAQ 추가", description = "Class FAQ 추가")
-    @PostMapping(path = "/class/{classId}/faq")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PostMapping(path = "/class/{classId}/faqs")
     public ResponseEntity<SuccessResponse<ClassFAQDto>> registerFAQ(
             @RequestBody @Valid ClassFAQDto request,
             @PathVariable Long classId
@@ -195,7 +199,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassFAQDto>>
      */
     @Operation(summary = "Class FAQ 수정", description = "Class FAQ 수정")
-    @PutMapping(path = "/class/{classId}/faq/{faqId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PutMapping(path = "/class/{classId}/faqs/{faqId}")
     public ResponseEntity<SuccessResponse<ClassFAQDto>> updateFAQ(
             @RequestBody @Valid ClassFAQDto request,
             @PathVariable Long classId,
@@ -213,7 +218,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassFAQDto>>
      */
     @Operation(summary = "Class FAQ 삭제", description = "Class FAQ 삭제")
-    @DeleteMapping(path = "/class/{classId}/faq/{faqId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @DeleteMapping(path = "/class/{classId}/faqs/{faqId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteFAQ(
             @PathVariable Long classId,
             @PathVariable Long faqId
@@ -230,9 +236,10 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassDto>>
      */
     @Operation(summary = "Class lesson 추가", description = "Class lesson 추가")
-    @PostMapping(path = "/class/{classId}/lesson")
-    public ResponseEntity<SuccessResponse<LessonDto>> registerFAQ(
-            @RequestBody @Valid LessonDto.Request request,
+    @PreAuthorize("hasRole('TUTOR')")
+    @PostMapping(path = "/class/{classId}/lessons")
+    public ResponseEntity<SuccessResponse<LessonDtoDetail>> registerFAQ(
+            @RequestBody @Valid LessonDtoDetail.Request request,
             @PathVariable Long classId
     ) {
         return ResponseEntity.status(CREATED).body(SuccessResponse.of(
@@ -247,11 +254,12 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<Boolean>>
      */
     @Operation(summary = "Class lesson 수정", description = "Class lesson 수정")
-    @PutMapping(path = "/class/{classId}/lesson/{lessonId}")
-    public ResponseEntity<SuccessResponse<LessonDto>> updateLesson(
+    @PreAuthorize("hasRole('TUTOR')")
+    @PutMapping(path = "/class/{classId}/lessons/{lessonId}")
+    public ResponseEntity<SuccessResponse<LessonDtoDetail>> updateLesson(
             @PathVariable Long classId,
             @PathVariable Long lessonId,
-            @RequestBody LessonDto.Request request
+            @RequestBody LessonDtoDetail.Request request
     ) {
         return ResponseEntity.status(OK).body(SuccessResponse.of(
                 ResponseMessage.CLASS_LESSON_UPDATE_SUCCESS,
@@ -265,7 +273,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<Boolean>>
      */
     @Operation(summary = "Class lesson 삭제", description = "Class lesson 삭제")
-    @DeleteMapping(path = "/class/{classId}/lesson/{lessonId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @DeleteMapping(path = "/class/{classId}/lessons/{lessonId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteLesson(
             @PathVariable Long classId,
             @PathVariable Long lessonId
@@ -282,7 +291,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassTagDto>>
      */
     @Operation(summary = "Class tag 추가", description = "Class tag 추가")
-    @PostMapping(path = "/class/{classId}/tag")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PostMapping(path = "/class/{classId}/tags")
     public ResponseEntity<SuccessResponse<ClassTagDto>> registerTag(
             @PathVariable Long classId,
             @RequestBody @Valid ClassTagDto request) {
@@ -298,7 +308,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<ClassTagDto>>
      */
     @Operation(summary = "Class tag 수정", description = "Class tag 수정")
-    @PutMapping(path = "/class/{classId}/tag/{tagId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @PutMapping(path = "/class/{classId}/tags/{tagId}")
     public ResponseEntity<SuccessResponse<ClassTagDto>> updateTag(
             @PathVariable Long classId,
             @RequestBody @Valid ClassTagDto request,
@@ -315,7 +326,8 @@ public class TutorController {
      * @return  ResponseEntity<SuccessResponse<Boolean>>
      */
     @Operation(summary = "Class tag 삭제", description = "Class tag 삭제")
-    @DeleteMapping(path = "/class/{classId}/tag/{tagId}")
+    @PreAuthorize("hasRole('TUTOR')")
+    @DeleteMapping(path = "/class/{classId}/tags/{tagId}")
     public ResponseEntity<SuccessResponse<Boolean>> deleteTag(
             @PathVariable Long classId,
             @PathVariable Long tagId ) {

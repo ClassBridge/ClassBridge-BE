@@ -17,11 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequiredArgsConstructor
@@ -34,14 +35,15 @@ public class ReviewController {
     @Operation(summary = "리뷰 등록", description = "리뷰 등록")
     @PostMapping
     public ResponseEntity<SuccessResponse<RegisterReviewDto.Response>> registerReview(
-            @Valid @ModelAttribute RegisterReviewDto.Request request
+            @RequestPart(value = "request") @Valid RegisterReviewDto.Request request,
+            @RequestPart(value = "reviewImages", required = false) MultipartFile[] reviewImages
     ) {
         User user = userService.getUserByEmail(userService.getCurrentUserEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 SuccessResponse.of(
                         ResponseMessage.REVIEW_REGISTER_SUCCESS,
-                        reviewService.registerReview(user, request)
+                        reviewService.registerReview(user, request, reviewImages)
                 )
         );
     }
@@ -49,10 +51,13 @@ public class ReviewController {
     @Operation(summary = "리뷰 수정", description = "리뷰 수정")
     @PutMapping("/{reviewId}")
     public ResponseEntity<SuccessResponse<UpdateReviewDto.Response>> updateReview(
-            @Valid @ModelAttribute UpdateReviewDto.Request request,
+            @RequestPart @Valid UpdateReviewDto.Request request,
+            @RequestPart(value = "reviewImages", required = false) MultipartFile[] reviewImages,
             @PathVariable Long reviewId
     ) {
         User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+
+        reviewService.updateReviewImages(user, reviewId, request.updateReviewImageRequest(), reviewImages);
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 SuccessResponse.of(

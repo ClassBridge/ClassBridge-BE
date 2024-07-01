@@ -28,16 +28,16 @@ public enum ErrorCode {
     REQUIRED_USER_INFO(HttpStatus.BAD_REQUEST, "가입시 필요한 사용자 필수 정보가 빠져있습니다."),
     NO_INFORMATION_TO_UPDATE(HttpStatus.BAD_REQUEST, "수정할 정보가 없습니다."),
 
-    HELLO_NAME_IS_REQUIRED(HttpStatus.BAD_REQUEST, "Hello 이름은 필수입니다."),
-    HELLO_NOT_FOUND(HttpStatus.BAD_REQUEST, "Hello를 찾을 수 없습니다."),
-
     REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 리뷰를 작성하셨습니다."),
     INVALID_ONE_DAY_CLASS_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 클래스 ID 입니다."),
     INVALID_REVIEW_RATING(HttpStatus.BAD_REQUEST, "리뷰 평점은 1점부터 5점까지 가능합니다."),
     INVALID_REVIEW_CONTENTS(HttpStatus.BAD_REQUEST, "리뷰 내용은 10자 이상 200자 이하로 작성해주세요."),
     INVALID_IMAGE_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "유효한 이미지 파일이 아닙니다."),
+    REVIEW_IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰 이미지를 찾을 수 없습니다."),
+    INVALID_REVIEW_IMAGE_ACTION(HttpStatus.BAD_REQUEST, "유효하지 않은 이미지 업로드 액션입니다."),
     FAILED_TO_UPLOAD_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다."),
     FAILED_TO_DELETE_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제에 실패했습니다."),
+
 
     LESSON_NOT_FOUND(HttpStatus.BAD_REQUEST, "클래스를 찾을 수 없습니다."),
     REVIEW_NOT_FOUND(HttpStatus.BAD_REQUEST, "리뷰를 찾을 수 없습니다."),
@@ -58,6 +58,7 @@ public enum ErrorCode {
     WISH_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 찜을 찾을 수 없습니다."),
     MISMATCH_USER_WISH(HttpStatus.BAD_REQUEST, "로그인 한 유저와 해당 찜의 유저가 일치하지 않습니다."),
     CANNOT_ADD_WISH_OWN_CLASS(HttpStatus.BAD_REQUEST, "자신의 클래스는 찜목록에 추가할 수 없습니다."),
+    INVALID_CLASS_IMAGE_ACTION(HttpStatus.BAD_REQUEST, "존재하지 않는 image action입니다."),
 
     FAQ_NOT_FOUND(HttpStatus.BAD_REQUEST, "해당 FAQ를 찾을 수 없습니다."),
     MISMATCH_CLASS_FAQ(HttpStatus.BAD_REQUEST, "클래스 id와 faq의 클래스 id가 일치하지 않습니다."),
@@ -71,6 +72,7 @@ public enum ErrorCode {
     CLASS_HAVE_MAX_FAQ(HttpStatus.BAD_REQUEST, "클래스는 최대 5개의 FAQ를 만들 수 있습니다."),
     INVALIDATE_CLASS_NAME(HttpStatus.BAD_REQUEST, "클래스 이름은 2자 이상 20자 이하로 작성해주세요."),
     INVALIDATE_CLASS_INTRODUCTION(HttpStatus.BAD_REQUEST, "클래스 설명은 20자 이상 500자 이하로 작성해주세요."),
+    INVALIDATE_CLASS_DATE(HttpStatus.BAD_REQUEST, "허용하지 않는 클래스 날짜입니다."),
     INVALIDATE_CLASS_PERSONAL(HttpStatus.BAD_REQUEST, "최대 인원을 변경할 수 없습니다."),
     MAX_PARTICIPANTS_EXCEEDED(HttpStatus.BAD_REQUEST, "최대 인원을 초과했습니다."),
 
@@ -80,10 +82,11 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 토큰입니다."),
     INVALID_PAYMENT_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 정보입니다."),
     NULL_RESPONSE_FROM_PAYMENT_GATEWAY(HttpStatus.BAD_REQUEST, "결제 게이트웨이 응답이 없습니다."),
-    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST,"세션에 결제 정보가 없습니다."),
-    INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST,"환불 가능 수량을 확인해주세요."),
+    MISSING_PAY_RESPONSE_IN_SESSION(HttpStatus.BAD_REQUEST, "세션에 결제 정보가 없습니다."),
+    INVALID_REFUND_QUANTITY(HttpStatus.BAD_REQUEST, "환불 가능 수량을 확인해주세요."),
     INVALID_RESERVATION_ID(HttpStatus.BAD_REQUEST, "유효하지 않은 예약입니다."),
     NO_REFUND_AVAILABLE(HttpStatus.BAD_REQUEST, "환불 가능 금액이 아닙니다."),
+    REFUND_NOT_FOUND(HttpStatus.BAD_REQUEST, "존재하지 않는 환불입니다."),
 
     NOT_VALID_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 사업자등록번호입니다."),
     NOT_REGISTERED_BUSINESS_REGISTRATION_NUMBER(HttpStatus.BAD_REQUEST, "등록되지 않은 사업자등록번호입니다."),
@@ -97,8 +100,8 @@ public enum ErrorCode {
     USER_NOT_IN_CHAT_ROOM(HttpStatus.BAD_REQUEST, "채팅방에 참여하지 않은 사용자입니다."),
 
     NOT_TODAY_LESSON(HttpStatus.BAD_REQUEST, "레슨 당일에만 출석체크가 가능합니다."),
-    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다."),
-    ;
+    NOT_YET_ATTENDANCE(HttpStatus.BAD_REQUEST, "레슨 시작 30분 전부터 출석체크가 가능합니다.");
+
     private final HttpStatus httpStatus;
     private final String description;
 }

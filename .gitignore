@@ -38,8 +38,11 @@ out/
 
 application-prod.yml
 application-test.yml
+application-dev.yml
 application-personal.yml
 .env
 *.log
 
 .DS_Store
+
+Dockerfile

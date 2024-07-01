@@ -12,13 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class S3Service {
 
     private final AmazonS3Client s3Client;
@@ -35,31 +33,21 @@ public class S3Service {
 
     private static final String ONE_DAY_CLASS_FOLDER = "oneDayClass/";
 
-    @Transactional
     public String uploadReviewImage(MultipartFile image) {
 
         return uploadImage(image, REVIEW_FOLDER);
     }
 
-    @Transactional
     public String uploadOneDayClassImage(MultipartFile image) {
         return uploadImage(image, ONE_DAY_CLASS_FOLDER);
     }
 
-    @Transactional
     public String uploadUserProfileImage(MultipartFile image) {
 
         return uploadImage(image, USER_PROFILE_FOLDER);
     }
 
-    /**
-     * S3에 파일 업로드
-     *
-     * @param file   파일
-     * @param folder 폴더
-     * @return 업로드된 파일 URL
-     */
-    @Transactional
+
     public String uploadImage(MultipartFile file, String folder) {
         String fileName = folder + UUID.randomUUID() + file.getOriginalFilename();
 
@@ -86,7 +74,7 @@ public class S3Service {
      *
      * @param url 이미지 URL
      */
-    @Transactional
+
     public void delete(String url) {
         try {
             s3Client.deleteObject(bucket, getFileNameFromURL(url));

@@ -81,7 +81,7 @@ public class User extends BaseEntity {
 
     private String profileImageUrl;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_interests",
             joinColumns = @JoinColumn(name = "user_id"),

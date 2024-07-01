@@ -9,9 +9,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.linked.classbridge.dto.review.GetReviewImageDto;
 import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.exception.RestApiException;
+import com.linked.classbridge.service.OneDayClassService;
 import com.linked.classbridge.service.ReviewService;
+import com.linked.classbridge.service.UserService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -38,6 +41,12 @@ class OneDayClassControllerTest {
     @MockBean
     private ReviewService reviewService;
 
+    @MockBean
+    private OneDayClassService oneDayClassService;
+
+    @MockBean
+    private UserService userService;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -54,14 +63,14 @@ class OneDayClassControllerTest {
                 "userNickname1", 4.5, "content1",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 3, 15, 0),
-                List.of("url1", "url2", "url3")
+                List.of(new GetReviewImageDto(1L, 1, "url1"))
         );
         reviewResponse2 = new GetReviewResponse(
                 2L, 1L, "className", 2L, 2L,
                 "userNickname2", 2.3, "content2",
                 LocalDate.of(2024, 6, 1),
                 LocalDateTime.of(2024, 6, 2, 17, 0),
-                List.of("url4", "url5", "url6")
+                List.of(new GetReviewImageDto(2L, 2, "url2"))
         );
     }
 

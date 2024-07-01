@@ -1,5 +1,6 @@
 package com.linked.classbridge.domain;
 
+import com.linked.classbridge.type.Gender;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,8 +15,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Min;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -77,6 +80,12 @@ public class OneDayClass extends BaseEntity {
     @Column(nullable = false)
     private LocalDate endDate;      // 종료일
 
+    private Long studentCount; // 전체 예약자 및 수강생 수
+    private Double totalAge; // 예약자 및 수강생들의 나이의 총합
+    private Double averageAge; // 예약자 및 수강생들의 평균 나이
+    private Long maleCount; // 클래스를 수강하거나 예약한 남성의 수
+    private Long femaleCount; // 클래스를 수강하거나 예약한 여성의 수
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -93,7 +102,8 @@ public class OneDayClass extends BaseEntity {
     private List<Lesson> lessonList;
 
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Review> reviewList;
+    @Builder.Default
+    private List<Review> reviewList = new ArrayList<>();
 
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ClassFAQ> faqList;
@@ -101,7 +111,7 @@ public class OneDayClass extends BaseEntity {
     @OneToMany(mappedBy = "oneDayClass", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ClassTag> tagList;
 
-     public void addReview(Review review) {
+    public void addReview(Review review) {
         this.reviewList.add(review);
         this.totalStarRate += review.getRating();
         this.totalReviews++;
@@ -113,7 +123,20 @@ public class OneDayClass extends BaseEntity {
         this.totalReviews--;
     }
 
-    public void updateTotalStarRate(Double diff) {
+    public void addStartRateDiff(Double diff) {
         this.totalStarRate += diff;
+    }
+
+    public void addStudent(Double userAge, Gender userGender) {
+
+        this.studentCount++;
+        this.totalAge += userAge;
+        this.averageAge = Math.round(totalAge / studentCount * 100.0) / 100.0;
+
+        if (userGender == Gender.MALE) {
+            this.maleCount = this.maleCount != null ? this.maleCount + 1 : 1;
+        } else {
+            this.femaleCount = this.femaleCount != null ? this.femaleCount + 1 : 1;
+        }
     }
 }

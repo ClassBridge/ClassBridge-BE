@@ -6,9 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ResponseMessage {
-    HELLO_GET_SUCCESS("Hello 조회 성공"),
-    HELLO_REGISTER_SUCCESS("Hello 등록 성공"),
-    HELLO_UPDATE_SUCCESS("Hello 수정 성공"),
     REVIEW_REGISTER_SUCCESS("리뷰 등록 성공"),
     REVIEW_UPDATE_SUCCESS("리뷰 수정 성공"),
     REVIEW_DELETE_SUCCESS("리뷰 삭제 성공"),
@@ -16,6 +13,7 @@ public enum ResponseMessage {
     NO_MATCHED_EMAIL("사용 가능한 이메일 입니다"),
     SIGNUP_SUCCESS("회원가입 성공"),
     LOGIN_SUCCESS("로그인 성공"),
+    GET_USER_SUCCESS("회원 정보 조회 성공"),
     ONE_DAY_CLASS_LIST_GET_SUCCESS("강사 클래스 리스트 조회 성공"),
     ONE_DAY_CLASS_GET_SUCCESS("강사 클래스 조회 성공"),
     CLASS_REGISTER_SUCCESS("클래스 등록 성공"),
@@ -37,6 +35,9 @@ public enum ResponseMessage {
     WISH_ADD_SUCCESS("Wish 추가 성공"),
     WISH_DELETE_SUCCESS("Wish 삭제 성공"),
 
+    ONE_DAY_CLASS_SEARCH_SUCCESS("검색 성공"),
+    ONE_DAY_CLASS_AUTO_COMPLETE_SUCCESS("자동 완성 성공"),
+
     PAYMENT_SUCCESS("결제 승인"),
     ACCESS_TOKEN_ISSUED("Access 토큰 발급 성공"),
     USER_UPDATE_SUCCESS("사용자 정보 수정 성공"),
@@ -46,7 +47,15 @@ public enum ResponseMessage {
     TUTOR_UPDATE_SUCCESS("강사 정보 수정 성공"),
 
     RESERVATION_SUCCESS("예약 생성 성공"),
+    PAYMENT_GET_SUCCESS("결제 조회 성공"),
+
+    RESERVATION_REGISTER_SUCCESS("예약 생성 성공"),
+    RESERVATION_GET_SUCCESS("예약 조회 성공"),
+    RESERVATION_CANCELED_BY_TUTOR_SUCCESS("예약 취소 성공"),
     REFUND_SUCCESS("환불 승인"),
+    REFUND_GET_SUCCESS("환불 조회 성공"),
+
+    TUTOR_PAYMENT_GET_SUCCESS("정산 조회 성공"),
 
     CHAT_ROOM_CREATE_SUCCESS("채팅방 생성 성공"),
     CHAT_ROOM_JOIN_SUCCESS("채팅방 참여 성공"),
@@ -56,6 +65,9 @@ public enum ResponseMessage {
     ATTENDANCE_CHECK_SUCCESS("출석 체크 성공"),
     GET_USER_BADGES_SUCCESS("사용자 뱃지 조회 성공"),
     UPLOAD_BADGE_SUCCESS("뱃지 등록 성공"),
+
+    GET_TOP_CLASSES_SUCCESS("기본 추천 클래스 조회 성공"),
+    GET_TOP_CLASSES_FOR_USER_SUCCESS("사용자 추천 클래스 조회 성공"),
     ;
     private final String message;
 }

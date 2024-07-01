@@ -15,8 +15,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -33,7 +35,7 @@ import org.hibernate.annotations.SQLRestriction;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Setter
 @ToString
-@SQLDelete(sql = "UPDATE LESSON SET deleted_at = now() WHERE lesson_id = ? and version = ?")
+@SQLDelete(sql = "UPDATE lesson SET deleted_at = now() WHERE lesson_id = ? and version = ?")
 @SQLRestriction("deleted_at is null")
 public class Lesson extends BaseEntity {
 
@@ -56,7 +58,8 @@ public class Lesson extends BaseEntity {
     private OneDayClass oneDayClass;
 
     @OneToMany(mappedBy = "lesson", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Review> reviewList;
+    @Builder.Default
+    private List<Review> reviewList = new ArrayList<>();
 
     @Version
     private Long version;
