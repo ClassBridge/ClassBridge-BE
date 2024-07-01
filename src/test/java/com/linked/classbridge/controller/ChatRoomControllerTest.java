@@ -26,7 +26,6 @@ import com.linked.classbridge.service.chat.ChatService;
 import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,8 +78,7 @@ class ChatRoomControllerTest {
 
         createChatRoomRequest = new Request(1L);
 
-        given(userService.findByEmail(userService.getCurrentUserEmail()))
-                .willReturn(Optional.of(mockUser));
+        given(userService.getCurrentUser()).willReturn(mockUser);
     }
 
     @Test
@@ -90,8 +88,7 @@ class ChatRoomControllerTest {
         // given
         CreateChatRoom.Response response = new CreateChatRoom.Response(1L, "/chatRooms/1");
 
-        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.classId()))
-                .willReturn(response);
+        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.userId())).willReturn(response);
 
         // when & then
         mockMvc.perform(post("/api/chatRooms")
@@ -113,7 +110,7 @@ class ChatRoomControllerTest {
     @DisplayName("채팅방 생성 실패 - 나의 클래스일 경우")
     void createChatRoom_fail_request_to_my_class() throws Exception {
         // given
-        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.classId()))
+        given(chatService.createChatRoomProcess(mockUser, createChatRoomRequest.userId()))
                 .willThrow(new RestApiException(BAD_REQUEST));
 
         // when & then
@@ -209,7 +206,7 @@ class ChatRoomControllerTest {
                 .userId(user.getUserId())
                 .build();
         getChatRoomsResponse.addChatRoomInfo(chatRoom1, partner, chatRoomUnreadCountInfoDto);
-        given(userService.findByEmail(userService.getCurrentUserEmail())).willReturn(Optional.of(user));
+        given(userService.getCurrentUser()).willReturn(user);
         given(chatService.getChatRoomListProcess(user)).willReturn(getChatRoomsResponse);
 
         // when & then

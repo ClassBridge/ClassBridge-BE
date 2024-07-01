@@ -83,10 +83,12 @@ public class UserService {
     private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
     private final ElasticsearchOperations operations;
 
-    public UserService(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder,
+    public UserService(UserRepository userRepository, CategoryRepository categoryRepository,
+                       PasswordEncoder passwordEncoder,
                        JWTService jwtService, S3Service s3Service, OneDayClassRepository oneDayClassRepository,
                        WishRepository wishRepository, ClassImageRepository classImageRepository,
-                       OneDayClassDocumentRepository oneDayClassDocumentRepository, ElasticsearchOperations operations) {
+                       OneDayClassDocumentRepository oneDayClassDocumentRepository,
+                       ElasticsearchOperations operations) {
 
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
@@ -104,7 +106,7 @@ public class UserService {
 
         log.info("Checking if nickname '{}' exists", nickname);
 
-        if(userRepository.existsByNickname(nickname)){
+        if (userRepository.existsByNickname(nickname)) {
             log.warn("Nickname '{}' already exists", nickname);
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
@@ -117,7 +119,7 @@ public class UserService {
 
         log.info("Checking if email '{}' exists", email);
 
-        if(userRepository.existsByEmail(email)){
+        if (userRepository.existsByEmail(email)) {
             log.warn("Email '{}' is already registered", email);
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
@@ -191,7 +193,7 @@ public class UserService {
             throw new RestApiException(ALREADY_REGISTERED_EMAIL);
         }
 
-        if(userRepository.existsByNickname(additionalInfoDto.getNickname())) {
+        if (userRepository.existsByNickname(additionalInfoDto.getNickname())) {
             log.warn("Nickname '{}' already exists", additionalInfoDto.getNickname());
             throw new RestApiException(ALREADY_EXIST_NICKNAME);
         }
@@ -202,7 +204,9 @@ public class UserService {
 
         List<UserRole> roles = new ArrayList<>();
         roles.add(UserRole.ROLE_USER);
-        Gender gender = additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase()) : null;
+        Gender gender =
+                additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender().toUpperCase())
+                        : null;
 
         // 관심 카테고리 String -> Category 변환
         List<Category> interests = additionalInfoDto.getInterests().stream()
@@ -229,14 +233,16 @@ public class UserService {
             user.setProfileImageUrl(profileImageUrl);
         }
 
-        if(signupRequest.getUserDto().getPassword() != null) {
+        if (signupRequest.getUserDto().getPassword() != null) {
             user.setPassword(passwordEncoder.encode(signupRequest.getUserDto().getPassword()));
         }
         userRepository.save(user);
         log.info("User '{}' added successfully", user.getUsername());
 
-        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(), TokenType.ACCESS.getExpiryTime());
-        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(), TokenType.REFRESH.getExpiryTime());
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), userDto.getRoles(),
+                TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), userDto.getRoles(),
+                TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
@@ -265,8 +271,10 @@ public class UserService {
                 .map(Enum::name)
                 .collect(Collectors.toList());
 
-        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles, TokenType.ACCESS.getExpiryTime());
-        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles, TokenType.REFRESH.getExpiryTime());
+        String access = jwtService.createJwt(TokenType.ACCESS.getValue(), user.getEmail(), roles,
+                TokenType.ACCESS.getExpiryTime());
+        String refresh = jwtService.createJwt(TokenType.REFRESH.getValue(), user.getEmail(), roles,
+                TokenType.REFRESH.getExpiryTime());
         // JWT 토큰을 클라이언트로 전송
         HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         if (response != null) {
@@ -287,7 +295,7 @@ public class UserService {
                     return new RestApiException(USER_NOT_FOUND);
                 });
 
-        if(additionalInfoDto == null && profileImage == null) {
+        if (additionalInfoDto == null && profileImage == null) {
             log.warn("No information to update");
             throw new RestApiException(NO_INFORMATION_TO_UPDATE);
         }
@@ -302,9 +310,12 @@ public class UserService {
                 user.setNickname(additionalInfoDto.getNickname());
             }
 
-            user.setPhone(additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
-            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender()) : user.getGender());
-            user.setBirthDate(additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
+            user.setPhone(
+                    additionalInfoDto.getPhoneNumber() != null ? additionalInfoDto.getPhoneNumber() : user.getPhone());
+            user.setGender(additionalInfoDto.getGender() != null ? Gender.valueOf(additionalInfoDto.getGender())
+                    : user.getGender());
+            user.setBirthDate(
+                    additionalInfoDto.getBirthDate() != null ? additionalInfoDto.getBirthDate() : user.getBirthDate());
 
             if (additionalInfoDto.getInterests() != null) {
                 List<Category> interests = additionalInfoDto.getInterests().stream()
@@ -357,7 +368,8 @@ public class UserService {
 
         Page<OneDayClass> classList = oneDayClassRepository.findAllByClassIdIn(classIdList, pageable);
 
-        Map<Long, String> imageMap = (classImageRepository.findAllByOneDayClassClassIdInAndSequence(classList.map(OneDayClass::getClassId).toList(), 1))
+        Map<Long, String> imageMap = (classImageRepository.findAllByOneDayClassClassIdInAndSequence(
+                classList.map(OneDayClass::getClassId).toList(), 1))
                 .stream().collect(Collectors.toMap(
                         classImage -> classImage.getOneDayClass().getClassId(),
                         ClassImage::getUrl
@@ -366,7 +378,7 @@ public class UserService {
         Page<WishDto> wishDtoPage = classList.map(WishDto::new);
         wishDtoPage.forEach(item -> {
             item.setWishId(wishMap.get(item.getClassId()));
-            if(imageMap.containsKey(item.getClassId())) {
+            if (imageMap.containsKey(item.getClassId())) {
                 item.setClassImageUrl(imageMap.get(item.getClassId()));
             }
         });
@@ -376,13 +388,14 @@ public class UserService {
 
     public Boolean addWish(String email, Long classId) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        OneDayClass oneDayClass = oneDayClassRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        OneDayClass oneDayClass = oneDayClassRepository.findById(classId)
+                .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        if(Objects.equals(user.getUserId(), oneDayClass.getTutor().getUserId())) {
+        if (Objects.equals(user.getUserId(), oneDayClass.getTutor().getUserId())) {
             throw new RestApiException(CANNOT_ADD_WISH_OWN_CLASS);
         }
 
-        if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())) {
+        if (wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())) {
             throw new RestApiException(EXISTS_WISH_CLASS);
         }
 
@@ -400,10 +413,12 @@ public class UserService {
 
     public Boolean deleteWish(String email, Long classId) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
-        Wish wish = wishRepository.findByUserUserIdAndOneDayClassClassId(user.getUserId(), classId).orElseThrow(() -> new RestApiException(WISH_NOT_FOUND));
-        OneDayClass oneDayClass = oneDayClassRepository.findById(wish.getOneDayClass().getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        Wish wish = wishRepository.findByUserUserIdAndOneDayClassClassId(user.getUserId(), classId)
+                .orElseThrow(() -> new RestApiException(WISH_NOT_FOUND));
+        OneDayClass oneDayClass = oneDayClassRepository.findById(wish.getOneDayClass().getClassId())
+                .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
 
-        if(!Objects.equals(user.getUserId(), wish.getUser().getUserId())) {
+        if (!Objects.equals(user.getUserId(), wish.getUser().getUserId())) {
             throw new RestApiException(MISMATCH_USER_WISH);
         }
 
@@ -418,7 +433,8 @@ public class UserService {
     }
 
     private void updateOneDayClassDocumentTotalWish(OneDayClass oneDayClass) {
-        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId())
+                .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
         oneDayClassDocument.setTotalWish(oneDayClass.getTotalWish());
         operations.save(oneDayClassDocument);
     }
@@ -432,5 +448,13 @@ public class UserService {
         User user = getUserByEmail(getCurrentUserEmail());
 
         return new UserInfoDto(user);
+    }
+
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new RestApiException(USER_NOT_FOUND));
+    }
+
+    public User getCurrentUser() {
+        return getUserByEmail(getCurrentUserEmail());
     }
 }
