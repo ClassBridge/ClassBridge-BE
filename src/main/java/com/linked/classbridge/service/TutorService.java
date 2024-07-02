@@ -127,7 +127,6 @@ public class TutorService {
 
         // 출석 확인 후 예약 상태 변경
         reservation.setStatus(ReservationStatus.ATTENDED);
-        reservationRepository.save(reservation);
 
         return "attendance checked and stamp issued successfully";
     }
