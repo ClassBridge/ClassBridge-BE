@@ -9,6 +9,7 @@ import com.linked.classbridge.repository.AttendanceRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.type.UserRole;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -119,9 +120,13 @@ public class TutorService {
         String userEmail = user.getEmail();
         String categoryName = String.valueOf(reservation.getLesson().getOneDayClass().getCategory().getName());
 
+        // 스탬프 부여
         badgeService.addStamp(userEmail, categoryName);
 
         log.info("{}: stamp issued successfully", user.getEmail());
+
+        // 출석 확인 후 예약 상태 변경
+        reservation.setStatus(ReservationStatus.ATTENDED);
 
         return "attendance checked and stamp issued successfully";
     }
