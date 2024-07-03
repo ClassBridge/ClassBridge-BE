@@ -5,10 +5,8 @@ import com.linked.classbridge.dto.SuccessResponse;
 import com.linked.classbridge.dto.chat.CreateChatRoom;
 import com.linked.classbridge.dto.chat.GetChatRoomsResponse;
 import com.linked.classbridge.dto.chat.JoinChatRoom;
-import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.service.UserService;
 import com.linked.classbridge.service.chat.ChatService;
-import com.linked.classbridge.type.ErrorCode;
 import com.linked.classbridge.type.ResponseMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -35,14 +33,12 @@ public class ChatRoomController {
     public ResponseEntity<SuccessResponse<CreateChatRoom.Response>> createChatRoom(
             @Valid @RequestBody CreateChatRoom.Request request
     ) {
-
-        User user = userService.findByEmail(userService.getCurrentUserEmail())
-                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.getCurrentUser();
         // 채팅방 생성
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
                         ResponseMessage.CHAT_ROOM_CREATE_SUCCESS,
-                        chatService.createChatRoomProcess(user, request.classId())
+                        chatService.createChatRoomProcess(user, request.userId())
                 )
         );
     }
@@ -52,8 +48,7 @@ public class ChatRoomController {
     public ResponseEntity<SuccessResponse<JoinChatRoom.Response>> joinChatRoom(
             @PathVariable Long chatRoomId
     ) {
-        User user = userService.findByEmail(userService.getCurrentUserEmail())
-                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.getCurrentUser();
         // 채팅방 참여
         return ResponseEntity.ok().body(
                 SuccessResponse.of(
@@ -68,8 +63,7 @@ public class ChatRoomController {
     public ResponseEntity<SuccessResponse<String>> leaveChatRoom(
             @PathVariable Long chatRoomId
     ) {
-        User user = userService.findByEmail(userService.getCurrentUserEmail())
-                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.getCurrentUser();
         // 채팅방 나가기
         chatService.closeChatRoomProcess(user, chatRoomId);
         return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_CLOSE_SUCCESS));
@@ -80,8 +74,7 @@ public class ChatRoomController {
     public ResponseEntity<SuccessResponse<String>> deleteChatRoom(
             @PathVariable Long chatRoomId
     ) {
-        User user = userService.findByEmail(userService.getCurrentUserEmail())
-                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.getCurrentUser();
         // 채팅방 삭제
         chatService.leaveChatRoomProcess(user, chatRoomId);
         return ResponseEntity.ok().body(SuccessResponse.of(ResponseMessage.CHAT_ROOM_LEAVE_SUCCESS));
@@ -90,9 +83,7 @@ public class ChatRoomController {
     @Operation(summary = "채팅방 목록 조회", description = "채팅방 목록을 조회합니다.")
     @GetMapping
     public ResponseEntity<SuccessResponse<GetChatRoomsResponse>> getChatRooms() {
-        User user = userService.findByEmail(userService.getCurrentUserEmail())
-                .orElseThrow(() -> new RestApiException(ErrorCode.USER_NOT_FOUND));
-
+        User user = userService.getCurrentUser();
         return ResponseEntity.ok().body(SuccessResponse.of(chatService.getChatRoomListProcess(user)));
     }
 }

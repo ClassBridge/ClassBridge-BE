@@ -1,6 +1,7 @@
 package com.linked.classbridge.dto.payment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,5 +37,23 @@ public class PaymentPrepareDto {
         private String itemName;            // 상품명
         private int quantity;               // 상품 수량
         private Long reservationId;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    public static class PayResponse {
+        private String next_redirect_pc_url;
+        private String itemName;
+        private int quantity;
+        private Long reservationId;
+    }
+    public static PayResponse from(PaymentPrepareDto.Response response) {
+        return PayResponse.builder()
+                .next_redirect_pc_url(response.getNext_redirect_pc_url())
+                .itemName(response.getItemName())
+                .quantity(response.getQuantity())
+                .reservationId(response.getReservationId())
+                .build();
     }
 }

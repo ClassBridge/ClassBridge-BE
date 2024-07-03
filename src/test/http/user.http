@@ -36,6 +36,25 @@ Content-Type: application/json
   "password": "securepassword"
 }
 
+### dev
+POST http://13.125.180.170:8080/api/users/auth/signin
+Content-Type: application/json
+
+{
+"email": "usertest@example.com",
+"password": "securepassword"
+}
+
+### prod
+POST http://ec2-3-38-165-201.ap-northeast-2.compute.amazonaws.com:8080/api/users/auth/signin
+Content-Type: application/json
+
+{
+  "email": "usertest@example.com",
+  "password": "securepassword"
+}
+
+
 ### 이메일 중복 확인 테스트
 GET http://localhost:8080/api/users/auth/check-email?email=testuser@example.com
 Content-Type: application/json

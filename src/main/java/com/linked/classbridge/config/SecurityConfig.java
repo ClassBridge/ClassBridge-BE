@@ -8,9 +8,11 @@ import com.linked.classbridge.security.JWTFilter;
 import com.linked.classbridge.service.CustomOAuth2UserService;
 import com.linked.classbridge.service.JWTService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -48,15 +50,18 @@ public class SecurityConfig {
 
                         CorsConfiguration configuration = new CorsConfiguration();
 
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
+                        configuration.setAllowedOrigins(
+                                Arrays.asList("https://class-bridge.vercel.app", "https://open-api.kakaopay.com", "http://localhost:3000"));
+//                        configuration.setAllowedMethods(Collections.singletonList("*"));
+                        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(3600L);
 
-                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
-                        configuration.setExposedHeaders(Collections.singletonList("access"));
+//                        configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
+//                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+//                        configuration.setExposedHeaders(Collections.singletonList("access"));
+                        configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization", "access"));
 
                         return configuration;
                     }
@@ -89,7 +94,7 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/*", "/v3/api-docs/**", "/api/payments/complete").permitAll()
                         .requestMatchers("/", "/api/users/auth/**").permitAll()
                         .requestMatchers("/api/users/auth/reissue").permitAll()
                         .requestMatchers("/api/tutors/**").permitAll()
@@ -97,6 +102,8 @@ public class SecurityConfig {
                         .requestMatchers("/CB-websocket/**").permitAll()
                         .requestMatchers("/api/users/badges/**").permitAll()
                         .requestMatchers("/api/openapi/**").permitAll()
+                        .requestMatchers("/api/class/recommend/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                         .requestMatchers("/api/users").hasRole("USER")
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .anyRequest().authenticated())

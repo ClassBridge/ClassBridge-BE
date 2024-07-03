@@ -2,6 +2,7 @@ package com.linked.classbridge.service;
 
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static com.linked.classbridge.type.ImageUpdateAction.ADD;
 
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
@@ -14,6 +15,7 @@ import com.linked.classbridge.dto.review.GetReviewResponse;
 import com.linked.classbridge.dto.review.RegisterReviewDto;
 import com.linked.classbridge.dto.review.RegisterReviewDto.Request;
 import com.linked.classbridge.dto.review.UpdateReviewDto;
+import com.linked.classbridge.dto.review.UpdateReviewImageDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.ReviewImageRepository;
@@ -21,6 +23,7 @@ import com.linked.classbridge.repository.ReviewRepository;
 import com.linked.classbridge.repository.UserRepository;
 import com.linked.classbridge.type.ErrorCode;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
@@ -34,17 +37,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReviewService {
-
     private final ReviewRepository reviewRepository;
-
     private final ReviewImageRepository reviewImageRepository;
-
     private final LessonService lessonService;
-
     private final S3Service s3Service;
     private final OneDayClassService classService;
     private final UserRepository userRepository;
-
     private final ElasticsearchOperations operations;
     private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
 
@@ -55,7 +53,8 @@ public class ReviewService {
      * @return 리뷰 등록 응답
      */
     @Transactional
-    public RegisterReviewDto.Response registerReview(User user, RegisterReviewDto.Request request) {
+    public RegisterReviewDto.Response registerReview(User user, RegisterReviewDto.Request request,
+                                                     MultipartFile[] reviewImages) {
         validateRegisterReview(request);
 
         Lesson lesson = lessonService.findLessonById(request.lessonId());
@@ -70,8 +69,9 @@ public class ReviewService {
         Review savedReview =
                 reviewRepository.save(Request.toEntity(user, lesson, oneDayClass, request));
 
-        uploadAndSaveReviewImage(savedReview, request.image1(), request.image2(), request.image3());
-        oneDayClass.addReview(savedReview); // 평점 등록
+        uploadAndSaveReviewImage(savedReview, reviewImages);
+
+        oneDayClass.addReview(savedReview);
 
         updateOneDayClassDocumentStarRate(oneDayClass);
 
@@ -87,8 +87,7 @@ public class ReviewService {
      * @return 수정된 리뷰 응답
      */
     @Transactional
-    public UpdateReviewDto.Response updateReview(User user, UpdateReviewDto.Request request,
-                                                 Long reviewId) {
+    public UpdateReviewDto.Response updateReview(User user, UpdateReviewDto.Request request, Long reviewId) {
         validateUpdateReview(request);
 
         Review review = findReviewById(reviewId);
@@ -96,14 +95,12 @@ public class ReviewService {
 
         validateReviewOwner(user, review);
 
-        updateReviewImage(review, request.image1(), request.image2(), request.image3());
-
         Double prevRating = review.getRating();
         Double diffRating = request.rating() - prevRating; // 평점 차이 계산
 
         review.update(request.contents(), request.rating());
 
-        oneDayClass.updateTotalStarRate(diffRating); // 평점 업데이트
+        oneDayClass.addStartRateDiff(diffRating); // 평점 업데이트
 
         updateOneDayClassDocumentStarRate(oneDayClass);
 
@@ -123,6 +120,8 @@ public class ReviewService {
         reviewImages.forEach(reviewImage -> s3Service.delete(reviewImage.getUrl()));
 
         review.getOneDayClass().removeReview(review);
+
+        updateOneDayClassDocumentStarRate(review.getOneDayClass());
 
         reviewRepository.delete(review);
 
@@ -152,19 +151,16 @@ public class ReviewService {
         }
     }
 
-    private void uploadAndSaveReviewImage(Review savedReview, MultipartFile... images) {
+    private void uploadAndSaveReviewImage(Review savedReview, MultipartFile[] images) {
         // 리뷰 이미지 등록
         int sequence = 1;
         for (MultipartFile image : images) {
-            if (image != null && !image.isEmpty()) {
-                String url = s3Service.uploadReviewImage(image);
-                reviewImageRepository.save(ReviewImage.builder()
-                        .review(savedReview)
-                        .url(url)
-                        .sequence(sequence++)
-                        .build());
-
-            }
+            String url = s3Service.uploadReviewImage(image);
+            reviewImageRepository.save(ReviewImage.builder()
+                    .review(savedReview)
+                    .url(url)
+                    .sequence(sequence++)
+                    .build());
         }
     }
 
@@ -186,28 +182,50 @@ public class ReviewService {
     }
 
 
-    private void updateReviewImage(Review review, MultipartFile... images) {
-        List<ReviewImage> reviewImages =
-                reviewImageRepository.findByReviewOrderBySequenceAsc(review);
-        int sequence = 1;
-        for (MultipartFile image : images) {
-            if (image != null && !image.isEmpty()) {
-                if (sequence > reviewImages.size()) {
-                    String url = s3Service.uploadReviewImage(image);
-                    reviewImageRepository.save(ReviewImage.builder()
+    @Transactional
+    public void updateReviewImages(User user, Long reviewId,
+                                   List<UpdateReviewImageDto> updateReviewImageDtoList,
+                                   MultipartFile[] reviewImages) {
+        Review review = findReviewById(reviewId);
+
+        validateReviewOwner(user, review);
+
+        List<ReviewImage> reviewImagesList = reviewImageRepository.findByReviewOrderBySequenceAsc(review);
+
+        for (UpdateReviewImageDto updateReviewImageDto : updateReviewImageDtoList) {
+            ReviewImage reviewImage = updateReviewImageDto.getAction() == ADD ?
+                    null :
+                    reviewImagesList.stream()
+                            .filter(image ->
+                                    Objects.equals(image.getReviewImageId(), updateReviewImageDto.getImageId()))
+                            .findFirst()
+                            .orElseThrow(() -> new RestApiException(ErrorCode.REVIEW_IMAGE_NOT_FOUND));
+
+            switch (updateReviewImageDto.getAction()) {
+                case KEEP -> {
+                    reviewImage.setSequence(updateReviewImageDto.getSequence());
+                }
+                case ADD -> {
+                    String url = s3Service.uploadReviewImage(reviewImages[updateReviewImageDto.getSequence() - 1]);
+                    reviewImage = ReviewImage.builder()
                             .review(review)
                             .url(url)
-                            .sequence(sequence)
-                            .build());
-                } else {
-                    ReviewImage reviewImage = reviewImages.get(sequence - 1);
-                    String prevImageUrl = reviewImage.getUrl();
-                    s3Service.delete(prevImageUrl);
-                    String url = s3Service.uploadReviewImage(image);
-                    reviewImage.updateUrl(url);
+                            .sequence(updateReviewImageDto.getSequence())
+                            .build();
+                    reviewImageRepository.save(reviewImage);
                 }
+                case DELETE -> {
+                    s3Service.delete(reviewImage.getUrl());
+                    reviewImageRepository.delete(reviewImage);
+                }
+                case REPLACE -> {
+                    s3Service.delete(reviewImage.getUrl());
+                    String newUrl = s3Service.uploadReviewImage(reviewImages[updateReviewImageDto.getSequence() - 1]);
+                    reviewImage.updateUrl(newUrl);
+                    reviewImage.setSequence(updateReviewImageDto.getSequence());
+                }
+                default -> throw new RestApiException(ErrorCode.INVALID_REVIEW_IMAGE_ACTION);
             }
-            sequence++;
         }
     }
 
@@ -265,8 +283,11 @@ public class ReviewService {
     }
 
     private void updateOneDayClassDocumentStarRate(OneDayClass oneDayClass) {
-        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId()).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
-        oneDayClassDocument.setStarRate(oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews()));
+        OneDayClassDocument oneDayClassDocument = oneDayClassDocumentRepository.findById(oneDayClass.getClassId())
+                .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        oneDayClassDocument.setStarRate(oneDayClass.getTotalStarRate() / (double)(oneDayClass.getTotalReviews() == 0 ? 1
+                : oneDayClass.getTotalReviews()));
+        oneDayClassDocument.setTotalReviews(oneDayClass.getTotalReviews());
         operations.save(oneDayClassDocument);
     }
 }

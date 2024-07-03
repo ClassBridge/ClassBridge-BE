@@ -1,30 +1,39 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.INVALID_PAYMENT_ID;
 import static com.linked.classbridge.type.ErrorCode.LESSON_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.MAX_PARTICIPANTS_EXCEEDED;
 import static com.linked.classbridge.type.ErrorCode.RESERVATION_NOT_FOUND;
 
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
+import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.Payment;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.payment.CreatePaymentResponse;
+import com.linked.classbridge.dto.payment.GetPaymentResponse;
 import com.linked.classbridge.dto.payment.PaymentApproveDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Request;
 import com.linked.classbridge.dto.payment.PaymentPrepareDto.Response;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.ReservationRepository;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.type.ReservationStatus;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,6 +57,10 @@ public class KakaoPaymentService {
     private final ReservationRepository reservationRepository;
     private final LessonRepository lessonRepository;
     private final LessonService lessonService;
+    private final UserService userService;
+
+    @Value("${baseUrl}")
+    private String baseUrl;
 
     /**
      * 카카오페이 결제 요청 로직
@@ -58,7 +71,7 @@ public class KakaoPaymentService {
 
         Long reservationId = request.getReservationId();
 
-        Reservation reservation = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findByIdWithLesson(reservationId)
                 .orElseThrow(() -> new RestApiException(RESERVATION_NOT_FOUND));
 
         Long lessonId = reservation.getLesson().getLessonId();
@@ -83,6 +96,13 @@ public class KakaoPaymentService {
                     .block();// 동기식 처리
 
         } catch (WebClientResponseException e) {
+            log.error("header :: {}", getHeaders());
+            log.error("getHeaders().toSingleValueMap() :: {}", getHeaders().toSingleValueMap());
+            log.error("parameters :: {}", parameters);
+            log.error("url :: {}", payProperties.getReadyUrl());
+            log.error("error message :: {}", e.getMessage());
+            log.error("error status code :: {}", e.getStatusCode());
+            log.error("error response body :: {}", e.getResponseBodyAsString());
             throw new RestApiException(ErrorCode.PAY_ERROR);
         }
     }
@@ -128,7 +148,7 @@ public class KakaoPaymentService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             WebClient localWebClient = WebClient.builder()
-                    .baseUrl("http://localhost:8080")
+                    .baseUrl(baseUrl)
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 //                    .defaultHeader(HttpHeaders.AUTHORIZATION, "SECRET_KEY " + payProperties.getDevKey())
                     .build();
@@ -142,7 +162,18 @@ public class KakaoPaymentService {
                     .retrieve()
                     .toEntity(String.class);
 
-            return entity.block();
+//            return entity.block();
+            ResponseEntity<String> result = entity.block();
+
+            OneDayClass oneDayClass = reservationRepository.findOneDayClassById(response.getReservationId())
+                    .orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+            log.info("classId {}, reservationId {}", oneDayClass.getClassId(), response.getReservationId());
+            // 성공 후 리디렉션 URL 반환
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION,
+                            "https://class-bridge.vercel.app/redirect?type=payment&success=true&reservationId="
+                                    + response.getReservationId() + "&classId=" + oneDayClass.getClassId())
+                    .body("Redirecting to payment success page");
 
         } catch (WebClientResponseException e) {
             log.error(e.getMessage());
@@ -219,9 +250,12 @@ public class KakaoPaymentService {
         parameters.put("quantity", Integer.toString(request.getQuantity()));
         parameters.put("total_amount", Integer.toString(request.getTotalAmount()));
         parameters.put("tax_free_amount", Integer.toString(request.getTexFreeAmount()));
-        parameters.put("approval_url", "http://localhost:8080/api/payments/complete"); // 성공 시 redirect url
-        parameters.put("cancel_url", "http://localhost:8080/api/payments/cancel"); // 취소 시 redirect url
-        parameters.put("fail_url", "http://localhost:8080/api/payments/fail"); // 실패 시 redirect url
+        parameters.put("approval_url", baseUrl + "/api/payments/complete"); // 성공 시 redirect url
+//        parameters.put("approval_url", "https://class-bridge.vercel.app/redirect?type=payment&success=true"); // 성공 시 redirect url
+        parameters.put("cancel_url", baseUrl + "/api/payments/cancel"); // 취소 시 redirect url
+//        parameters.put("fail_url", baseUrl+"/api/payments/fail"); // 실패 시 redirect url
+        parameters.put("fail_url",
+                "https://class-bridge.vercel.app/redirect?type=payment&success=false"); // 실패 시 redirect url
 
         return parameters;
     }
@@ -261,5 +295,27 @@ public class KakaoPaymentService {
                 .orElseThrow(() -> new RestApiException(LESSON_NOT_FOUND));
         lesson.setParticipantNumber(lesson.getParticipantNumber() - quantity);
         lessonRepository.save(lesson);
+    }
+
+    /**
+     * 결제 조회
+     */
+    @Transactional(readOnly = true)
+    public List<GetPaymentResponse> getAllPaymentsByUser() {
+        User user = userService.getUserByEmail(userService.getCurrentUserEmail());
+        List<Payment> payments = paymentRepository.findAllByUserId(user.getUserId());
+        return payments.stream()
+                .map(GetPaymentResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 결제 조회
+     */
+    @Transactional(readOnly = true)
+    public GetPaymentResponse getPaymentById(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RestApiException(INVALID_PAYMENT_ID));
+        return GetPaymentResponse.from(payment);
     }
 }

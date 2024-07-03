@@ -3,13 +3,13 @@ package com.linked.classbridge.service;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_END_DATE_CAUSE_RESERVED_PERSON_EXISTS;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_CHANGE_START_DATE;
 import static com.linked.classbridge.type.ErrorCode.CANNOT_DELETE_CLASS_CAUSE_RESERVED_PERSON_EXISTS;
-import static com.linked.classbridge.type.ErrorCode.FAQ_NOT_FOUND;
-import static com.linked.classbridge.type.ErrorCode.TAG_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_FAQ;
 import static com.linked.classbridge.type.ErrorCode.CLASS_HAVE_MAX_TAG;
 import static com.linked.classbridge.type.ErrorCode.CLASS_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_LESSON_DATE_START_TIME;
 import static com.linked.classbridge.type.ErrorCode.EXISTS_RESERVED_PERSON;
+import static com.linked.classbridge.type.ErrorCode.FAQ_NOT_FOUND;
+import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_DATE;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_INTRODUCTION;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_NAME;
 import static com.linked.classbridge.type.ErrorCode.INVALIDATE_CLASS_PERSONAL;
@@ -22,7 +22,9 @@ import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_CLASS;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_FAQ;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_LESSON;
 import static com.linked.classbridge.type.ErrorCode.MISMATCH_USER_TAG;
+import static com.linked.classbridge.type.ErrorCode.TAG_NOT_FOUND;
 import static com.linked.classbridge.type.ErrorCode.USER_NOT_FOUND;
+import static com.linked.classbridge.type.ImageUpdateAction.ADD;
 
 import com.linked.classbridge.domain.Category;
 import com.linked.classbridge.domain.ClassFAQ;
@@ -31,16 +33,21 @@ import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.OneDayClass;
 import com.linked.classbridge.domain.User;
+import com.linked.classbridge.domain.Wish;
 import com.linked.classbridge.domain.document.OneDayClassDocument;
 import com.linked.classbridge.dto.oneDayClass.ClassDto;
 import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassRequest;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByTutor;
+import com.linked.classbridge.dto.oneDayClass.ClassDto.ClassResponseByUser;
 import com.linked.classbridge.dto.oneDayClass.ClassFAQDto;
+import com.linked.classbridge.dto.oneDayClass.ClassSearchDto;
 import com.linked.classbridge.dto.oneDayClass.ClassTagDto;
 import com.linked.classbridge.dto.oneDayClass.ClassUpdateDto;
 import com.linked.classbridge.dto.oneDayClass.DayOfWeekListCreator;
-import com.linked.classbridge.dto.oneDayClass.LessonDto;
-import com.linked.classbridge.dto.oneDayClass.LessonDto.Request;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail;
+import com.linked.classbridge.dto.oneDayClass.LessonDtoDetail.Request;
 import com.linked.classbridge.dto.oneDayClass.RepeatClassDto;
+import com.linked.classbridge.dto.oneDayClass.UpdateClassImageDto;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.CategoryRepository;
 import com.linked.classbridge.repository.ClassFAQRepository;
@@ -50,21 +57,46 @@ import com.linked.classbridge.repository.LessonRepository;
 import com.linked.classbridge.repository.OneDayClassDocumentRepository;
 import com.linked.classbridge.repository.OneDayClassRepository;
 import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
+import com.linked.classbridge.type.CategoryType;
 import com.linked.classbridge.type.ErrorCode;
+import com.linked.classbridge.type.LocationType;
+import com.linked.classbridge.type.OrderType;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.common.geo.GeoPoint;
+import org.opensearch.common.unit.DistanceUnit;
+import org.opensearch.data.client.orhlc.NativeSearchQuery;
+import org.opensearch.data.client.orhlc.NativeSearchQueryBuilder;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.search.sort.GeoDistanceSortBuilder;
+import org.opensearch.search.sort.SortOrder;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -85,14 +117,19 @@ public class OneDayClassService {
     private final ClassImageRepository classImageRepository;
     private final ElasticsearchOperations operations;
     private final OneDayClassDocumentRepository oneDayClassDocumentRepository;
+    private final WishRepository wishRepository;
+    private final RestHighLevelClient client;
 
     @Transactional
-    public ClassDto.ClassResponse registerClass(String email, ClassRequest request,List<MultipartFile> files)
+    public ClassResponseByTutor registerClass(String email, ClassRequest request, MultipartFile[] files)
     {
         User tutor = getUser(email);
 
         OneDayClass oneDayClass = ClassDto.ClassRequest.toEntity(request);
         oneDayClass.setTutor(tutor);
+
+        oneDayClass.setStudentCount(0L);
+        oneDayClass.setTotalAge(0.0);
 
         Category category = categoryRepository.findByName(request.categoryType());
         oneDayClass.setCategory(category);
@@ -103,6 +140,7 @@ public class OneDayClassService {
 
         validateClassName(oneDayClass.getClassName());
         validateClassIntroduction(oneDayClass.getIntroduction());
+        validateClassDate(oneDayClass);
 
         kakaoMapService.extracted(oneDayClass);
 
@@ -124,11 +162,23 @@ public class OneDayClassService {
 
         oneDayClass.setTagList(tagRepository.saveAll(request.tagList()));
 
-        oneDayClass.setImageList(imageRepository.saveAll(saveImages(oneDayClass, files)));
-
         operations.save(new OneDayClassDocument(oneDayClass));
 
-        return ClassDto.ClassResponse.fromEntity(oneDayClass);
+        return ClassResponseByTutor.fromEntity(oneDayClass);
+    }
+
+    private void validateClassDate(OneDayClass oneDayClass) {
+        if(oneDayClass.getStartDate() == null) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
+
+        if(oneDayClass.getEndDate() != null && oneDayClass.getEndDate().isBefore(LocalDate.now())) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
+
+        if(oneDayClass.getEndDate() != null && oneDayClass.getEndDate().isBefore(oneDayClass.getStartDate())) {
+            throw new RestApiException(INVALIDATE_CLASS_DATE);
+        }
     }
 
     private void validateClassName(String className) {
@@ -143,27 +193,33 @@ public class OneDayClassService {
         }
     }
 
-    private List<ClassImage> saveImages(OneDayClass oneDayClass, List<MultipartFile> files) {
+    private List<ClassImage> saveImages(OneDayClass oneDayClass, MultipartFile[] files) {
         List<ClassImage> images = new ArrayList<>();
-        int sequence = 1;
-        for(MultipartFile file : files) {
-            String url = s3Service.uploadOneDayClassImage(file);
-            images.add(ClassImage.builder()
-                    .url(url)
-                    .name(file.getOriginalFilename())
-                    .sequence(sequence++)
-                    .oneDayClass(oneDayClass)
-                    .build());
+        if(files != null && files.length > 0) {
+            for (int i = 0; i < files.length; i++) {
+                if (files[i] != null) {
+                    String url = s3Service.uploadOneDayClassImage(files[i]);
+                    images.add(ClassImage.builder()
+                            .url(url)
+                            .name(files[i].getOriginalFilename())
+                            .sequence(i + 1)
+                            .oneDayClass(oneDayClass)
+                            .build());
+                }
+            }
         }
         return !images.isEmpty() ? classImageRepository.saveAll(images) : new ArrayList<>();
     }
 
     private List<Lesson> createRepeatLesson(ClassRequest request, OneDayClass oneDayClass) {
-        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap = DayOfWeekListCreator.createDayOfWeekLists(oneDayClass.getStartDate(), oneDayClass.getEndDate());
+        Map<DayOfWeek, List<LocalDate>> dayOfWeekListMap =
+                DayOfWeekListCreator.createDayOfWeekLists(oneDayClass.getStartDate().isBefore(LocalDate.now()) ? LocalDate.now() : oneDayClass.getStartDate(), oneDayClass.getEndDate());
 
         List<Lesson> lessonList = new ArrayList<>();
         for(RepeatClassDto repeatClassDto : request.lesson()) {
-            addLesson(dayOfWeekListMap, lessonList, repeatClassDto, oneDayClass);
+            if(dayOfWeekListMap.containsKey(repeatClassDto.getDayOfWeek())) {
+                addLesson(dayOfWeekListMap, lessonList, repeatClassDto, oneDayClass);
+            }
         }
 
         return lessonList;
@@ -203,7 +259,8 @@ public class OneDayClassService {
     }
 
     @Transactional
-    public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request, long classId) {
+    public ClassUpdateDto.ClassResponse updateClass(String email, ClassUpdateDto.ClassRequest request,
+                                                    MultipartFile[] fileList, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
@@ -213,6 +270,12 @@ public class OneDayClassService {
         changeClass.setTotalReviews(oneDayClass.getTotalReviews());
         changeClass.setTotalStarRate(oneDayClass.getTotalStarRate());
         changeClass.setTutor(oneDayClass.getTutor());
+        changeClass.setTotalWish(oneDayClass.getTotalWish());
+        changeClass.setStudentCount(oneDayClass.getStudentCount());
+        changeClass.setAverageAge(oneDayClass.getAverageAge());
+        changeClass.setTotalAge(oneDayClass.getTotalAge());
+        changeClass.setMaleCount(oneDayClass.getMaleCount());
+        changeClass.setFemaleCount(oneDayClass.getFemaleCount());
 
         changeClass.setCategory(categoryRepository.findByName(request.categoryType()));
 
@@ -284,14 +347,90 @@ public class OneDayClassService {
             lessonRepository.saveAll(lessonList);
         }
 
-        OneDayClassDocument beforeDocument = oneDayClassDocumentRepository.findById(classId).orElseThrow(() -> new RestApiException(CLASS_NOT_FOUND));
+        List<ClassTag> tagList = tagRepository.findAllByOneDayClassClassId(classId);
+        List<ClassTag> deleteTagList = new ArrayList<>();
+        for (ClassTag tag : tagList) {
+            boolean isTrue = false;
+            for (int j = 0; j < request.tagList().size(); j++) {
+                if (tag.getName().equals(request.tagList().get(j))) {
+                    isTrue = true;
+                    request.tagList().remove(j);
+                    break;
+                }
+            }
+            if (!isTrue) {
+                deleteTagList.add(tag);
+            }
+        }
 
+        tagRepository.deleteAll(deleteTagList);
+        List<ClassTag> newTagList = new ArrayList<>();
+        for(int i=0; i<request.tagList().size(); i++) {
+            newTagList.add(ClassTag.builder().oneDayClass(oneDayClass).name(request.tagList().get(i)).build());
+        }
+
+        tagRepository.saveAll(newTagList);
+
+        if(request.updateClassImageDtoList() != null) {
+            updateClassImages(oneDayClass, request.updateClassImageDtoList(), fileList);
+        }
+
+        List<ClassImage> classImageList = classImageRepository.findAllByOneDayClassClassIdOrderBySequence(classId);
+
+        changeClass.setImageList(classImageList);
+        changeClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
+
+        String imageUrl = classImageList.isEmpty() ? "" : classImageList.get(0).getUrl();
         OneDayClassDocument afterDocument = new OneDayClassDocument(changeClass);
-        afterDocument.setImageUrl(beforeDocument.getImageUrl());
-
+        afterDocument.setImageUrl(imageUrl);
         operations.save(afterDocument);
 
         return ClassUpdateDto.ClassResponse.fromEntity(changeClass);
+    }
+
+    @Transactional
+    public void updateClassImages(OneDayClass oneDayClass,
+                                   List<UpdateClassImageDto> updateClassImageDtoList,
+                                   MultipartFile[] classImages) {
+
+        List<ClassImage> oneDayClassImageList = imageRepository.findAllByOneDayClassClassId(oneDayClass.getClassId());
+
+        for (UpdateClassImageDto updateClassImageDto : updateClassImageDtoList) {
+            ClassImage classImage = updateClassImageDto.getAction() == ADD ?
+                    null :
+                    oneDayClassImageList.stream()
+                            .filter(image ->
+                                    Objects.equals(image.getClassImageId(), updateClassImageDto.getImageId()))
+                            .findFirst()
+                            .orElseThrow(() -> new RestApiException(ErrorCode.REVIEW_IMAGE_NOT_FOUND));
+
+            switch (updateClassImageDto.getAction()) {
+                case KEEP -> {
+                    classImage.setSequence(updateClassImageDto.getSequence());
+                }
+                case ADD -> {
+                    String url = s3Service.uploadOneDayClassImage(classImages[updateClassImageDto.getSequence() - 1]);
+                    classImage = ClassImage.builder()
+                            .oneDayClass(oneDayClass)
+                            .url(url)
+                            .name(classImages[updateClassImageDto.getSequence() - 1].getName())
+                            .sequence(updateClassImageDto.getSequence())
+                            .build();
+                    classImageRepository.save(classImage);
+                }
+                case DELETE -> {
+                    s3Service.delete(classImage.getUrl());
+                    classImageRepository.delete(classImage);
+                }
+                case REPLACE -> {
+                    s3Service.delete(classImage.getUrl());
+                    String newUrl = s3Service.uploadOneDayClassImage(classImages[updateClassImageDto.getSequence() - 1]);
+                    classImage.setUrl(newUrl);
+                    classImage.setSequence(updateClassImageDto.getSequence());
+                }
+                default -> throw new RestApiException(ErrorCode.INVALID_CLASS_IMAGE_ACTION);
+            }
+        }
     }
 
     @Transactional
@@ -324,17 +463,42 @@ public class OneDayClassService {
         return true;
     }
 
-    public ClassDto.ClassResponse getOneDayClass(String email, long classId) {
+    public ClassResponseByTutor getOneDayClassByTutor(String email, long classId) {
         OneDayClass oneDayClass = getClass(classId);
         User tutor = getUser(email);
         validateOneDayClassMatchTutor(tutor, oneDayClass);
 
-        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdOrderByLessonDateAscStartTimeAsc(classId));
         oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
         oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
-        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
 
-        return ClassDto.ClassResponse.fromEntity(oneDayClass);
+        return ClassResponseByTutor.fromEntity(oneDayClass);
+    }
+
+    public ClassResponseByUser getOneDayClassByUser(String email, long classId) {
+        OneDayClass oneDayClass = getClass(classId);
+        boolean isWish = false;
+        boolean isWanted = false;
+
+        oneDayClass.setLessonList(lessonRepository.findAllByOneDayClassClassIdAndLessonDateIsAfterOrderByLessonDateAscStartTimeAsc(classId, LocalDate.now().minusDays(1)));
+        oneDayClass.setTagList(tagRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setFaqList(faqRepository.findAllByOneDayClassClassId(classId));
+        oneDayClass.setImageList(imageRepository.findAllByOneDayClassClassIdOrderBySequence(classId));
+        oneDayClass.setTutor(userRepository.findByUserId(oneDayClass.getTutor().getUserId()).orElseThrow(() -> new RestApiException(USER_NOT_FOUND)));
+
+        if(email != null) {
+            User user = getUser(email);
+            if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), oneDayClass.getClassId())) {
+                isWish = true;
+            }
+        }
+
+        if(lessonRepository.existsByOneDayClassClassIdAndLessonDateIsAfterAndParticipantNumberIsLessThan(oneDayClass.getClassId(), LocalDate.now().minusDays(1), oneDayClass.getPersonal())) {
+            isWanted = true;
+        }
+
+        return ClassResponseByUser.fromEntity(oneDayClass, isWish, isWanted);
     }
 
     public OneDayClass findClassById(Long classId) {
@@ -477,7 +641,7 @@ public class OneDayClassService {
         }
     }
 
-    public LessonDto registerLesson(String email, LessonDto.Request request, Long classId) {
+    public LessonDtoDetail registerLesson(String email, LessonDtoDetail.Request request, Long classId) {
         if(lessonRepository.existsByOneDayClassClassIdAndLessonDateAndStartTime(classId, request.lessonDate(), request.startTime())) {
             throw new RestApiException(EXISTS_LESSON_DATE_START_TIME);
         }
@@ -491,7 +655,7 @@ public class OneDayClassService {
 
         validateOneDayClassMatchTutor(tutor, oneDayClass);
 
-        return new LessonDto(lessonRepository.save(request.toEntity(oneDayClass)), oneDayClass.getPersonal());
+        return new LessonDtoDetail(lessonRepository.save(request.toEntity(oneDayClass)), oneDayClass.getPersonal());
     }
 
     public Boolean deleteLesson(String email, Long classId, Long lessonId) {
@@ -505,7 +669,7 @@ public class OneDayClassService {
         return true;
     }
 
-    public LessonDto updateLesson(String email, Request request, Long classId, Long lessonId) {
+    public LessonDtoDetail updateLesson(String email, Request request, Long classId, Long lessonId) {
         if(request.lessonDate().isEqual(LocalDate.now()) || request.lessonDate().isBefore(LocalDate.now())) {
             throw new RestApiException(LESSON_DATE_MUST_BE_AFTER_NOW);
         }
@@ -521,7 +685,7 @@ public class OneDayClassService {
         lesson.setStartTime(request.startTime());
         lesson.setEndTime(request.startTime().plusMinutes(lesson.getOneDayClass().getDuration()));
 
-        return new LessonDto(lessonRepository.save(lesson), lesson.getOneDayClass().getPersonal());
+        return new LessonDtoDetail(lessonRepository.save(lesson), lesson.getOneDayClass().getPersonal());
 
     }
 
@@ -563,4 +727,169 @@ public class OneDayClassService {
             throw new RestApiException(EXISTS_RESERVED_PERSON);
         }
     }
+
+    public Page<ClassSearchDto> searchClass(String email, String query, CategoryType categoryType, double lat, double lng, LocationType location, OrderType orderType, int page) {
+        if(page < 1) page = 1;
+        NativeSearchQuery searchQuery = buildSearchQuery(query, categoryType, lat, lng, location, orderType, page);
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(searchQuery.getQuery());
+        Objects.requireNonNull(searchQuery.getOpenSearchSorts()).forEach(searchSourceBuilder::sort);
+        SearchHits<OneDayClassDocument> searchHits = operations.search(searchQuery, OneDayClassDocument.class);
+        List<ClassSearchDto> documents = searchHits.stream().map(SearchHit::getContent).map(ClassSearchDto::new).collect(Collectors.toList());
+
+        if(email != null && !email.isEmpty()) {
+            User user = getUser(email);
+
+            List<Long> wishListIds = wishRepository.findByUserUserId(user.getUserId())
+                    .stream().map(Wish::getOneDayClass).map(OneDayClass::getClassId).toList();
+
+            documents.forEach(document -> {
+                if(wishListIds.contains(document.getClassId())) {
+                    document.setWish(true);
+                }
+            });
+        }
+
+        return new PageImpl<>(documents, PageRequest.of(page - 1, 20), searchHits.getTotalHits());
+    }
+
+    private NativeSearchQuery buildSearchQuery(String query, CategoryType categoryType, double lat, double lnt, LocationType location, OrderType orderType, int page) {
+        int size = 20; // 한 페이지에 표시할 문서 수
+        int from = (page - 1) * size; // 시작 문서 번호
+
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+
+        if(lat != 0.0 && lnt != 0.0) {
+            queryBuilder.must(QueryBuilders.geoDistanceQuery("location")
+                    .point(lat, lnt)
+                    .distance("5km"));
+        }
+
+        if(location != null) {
+            queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery("address1", location.toString()));
+        }
+
+        if (categoryType != null) {
+            queryBuilder.must(QueryBuilders.matchQuery("category", categoryType.toString()));
+        }
+
+        if (query != null && !query.isEmpty()) {
+            BoolQueryBuilder className = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("className", query));
+            BoolQueryBuilder tutorName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("tutorName", query));
+            BoolQueryBuilder categoryName = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("category", query));
+
+            // tagList가 query와 정확히 일치하는 경우
+            QueryBuilder tagQuery = QueryBuilders.termQuery("tagList", query);
+
+            // 최종 쿼리 조합
+            BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
+                    .should(className)
+                    .should(tutorName)
+                    .should(categoryName)
+                    .should(tagQuery);
+
+            queryBuilder.must(finalQuery);
+        }
+
+        queryBuilder.filter(QueryBuilders.rangeQuery("endDate").gte(LocalDate.now()));
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder);
+
+        switch (orderType) {
+            case WISH:
+                searchSourceBuilder.sort("totalWish", SortOrder.DESC);
+                break;
+            case DIST:
+                GeoPoint geoPoint = new GeoPoint(lat, lnt);
+                GeoDistanceSortBuilder geoDistanceSortBuilder = new GeoDistanceSortBuilder("location", geoPoint)
+                        .unit(DistanceUnit.METERS)
+                        .order(SortOrder.ASC);
+                searchSourceBuilder.sort(geoDistanceSortBuilder);
+                break;
+            case STAR:
+                searchSourceBuilder.sort("starRate", SortOrder.DESC);
+                break;
+            case DATE:
+                searchSourceBuilder.sort("endDate", SortOrder.ASC);
+                break;
+            default:
+                searchSourceBuilder.sort("totalWish", SortOrder.DESC);
+                break;
+        }
+
+        searchSourceBuilder.from(from);
+        searchSourceBuilder.size(size);
+
+        return new NativeSearchQueryBuilder()
+                .withQuery(queryBuilder)
+                .withPageable(PageRequest.of(page - 1, 20))
+                .withSorts(searchSourceBuilder.sorts())
+                .build();
+    }
+
+    public List<String> autoCompleteSearch(String query) throws IOException {
+        String indexName = "onedayclass";
+        Set<String> set = new HashSet<>();
+        String[] fieldList = {"className", "tutorName", "tagList"};
+
+        SearchRequest searchRequest = new SearchRequest(indexName);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+        BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+        BoolQueryBuilder classNameOrTutorName = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchPhrasePrefixQuery("className", query))
+                .should(QueryBuilders.matchPhrasePrefixQuery("tutorName", query))
+                .should(QueryBuilders.wildcardQuery("tagList", query + "*"));
+
+        // 최종 쿼리 조합
+        BoolQueryBuilder finalQuery = QueryBuilders.boolQuery()
+                .should(classNameOrTutorName);
+
+        queryBuilder.must(finalQuery);
+
+        searchSourceBuilder.query(queryBuilder);
+
+        // _source 매개변수 사용하여 특정 필드만 가져오기
+        searchSourceBuilder.fetchSource(fieldList, null).size(5);
+
+        searchRequest.source(searchSourceBuilder);
+
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 검색 결과 처리
+        for (org.opensearch.search.SearchHit hit : searchResponse.getHits()) {
+            Map<String, Object> source = hit.getSourceAsMap();
+            for(String field : fieldList) {
+                Object highlight = source.get(field);
+                if (highlight instanceof ArrayList<?>) {
+                    List<String> tagList = (ArrayList<String>) highlight;
+                    for (String tag : tagList) {
+                        if(tag.contains(query)) {
+                            set.add(tag);
+                        }
+                    }
+                } else if(highlight.toString().contains(query)) {
+                    set.add(highlight.toString());
+                }
+            }
+        }
+
+        List<String> list = new ArrayList<>(set.stream().toList());
+
+        list.sort((o1, o2) -> {
+            if(o1.length() != o2.length()) {
+                return o1.length() - o2.length();
+            } else {
+                return o1.compareTo(o2);
+            }
+        });
+
+        return list.size() > 5 ? list.subList(0, 5) : list;
+    }
 }
+

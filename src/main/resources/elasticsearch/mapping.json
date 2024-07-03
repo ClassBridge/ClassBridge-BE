@@ -7,14 +7,21 @@
       "type": "text",
       "analyzer": "korean"
     },
+    "tutorName": {
+      "type": "text",
+      "analyzer": "korean"
+    },
     "address1": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "address2": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "address3": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "korean"
     },
     "location": {
       "type": "geo_point"
@@ -25,31 +32,27 @@
     "price": {
       "type": "integer"
     },
-    "personal": {
+    "totalReviews": {
       "type": "integer"
     },
     "starRate": {
       "type": "double"
     },
+    "totalWish": {
+      "type": "integer"
+    },
     "imageUrl": {
       "type": "text"
     },
     "tagList": {
-      "type": "keyword"
-    },
-    "hasParking": {
-      "type": "boolean"
-    },
-    "startDate": {
-      "type": "date",
-      "format": "yyyy-MM-dd"
+      "type": "text"
     },
     "endDate": {
       "type": "date",
       "format": "yyyy-MM-dd"
     },
     "category": {
-      "type": "text"
+      "type": "keyword"
     }
   }
 }

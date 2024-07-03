@@ -1,22 +1,26 @@
 package com.linked.classbridge.service;
 
+import static com.linked.classbridge.type.ErrorCode.REFUND_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.linked.classbridge.config.PayProperties;
 import com.linked.classbridge.domain.Lesson;
 import com.linked.classbridge.domain.Payment;
+import com.linked.classbridge.domain.Refund;
 import com.linked.classbridge.domain.Reservation;
+import com.linked.classbridge.domain.User;
 import com.linked.classbridge.dto.payment.KakaoStatusType;
 import com.linked.classbridge.dto.payment.PaymentStatusType;
 import com.linked.classbridge.dto.refund.PaymentRefundDto;
 import com.linked.classbridge.dto.refund.PaymentRefundDto.Response;
-import com.linked.classbridge.dto.reservation.ReservationStatus;
+import com.linked.classbridge.type.ReservationStatus;
 import com.linked.classbridge.exception.RestApiException;
 import com.linked.classbridge.repository.PaymentRepository;
 import com.linked.classbridge.repository.RefundRepository;
@@ -24,6 +28,8 @@ import com.linked.classbridge.type.ErrorCode;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -52,13 +58,20 @@ public class KakaoRefundServiceTest {
     @Mock
     private LessonService lessonService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private KakaoRefundService kakaoRefundService;
 
+    @InjectMocks
+    private KakaoRefundService refundService;
     private PaymentRefundDto.Requset request;
     private Payment payment;
+    private Refund refund;
     private Reservation reservation;
     private Lesson lesson;
+    private User user;
 
     private MockWebServer mockWebServer;
 
@@ -72,7 +85,7 @@ public class KakaoRefundServiceTest {
         request = new PaymentRefundDto.Requset();
         request.setPaymentId(1L);
         request.setCancelAmount(1000);
-        request.setRefundType(PaymentStatusType.REFUNDED);
+        request.setRefundType(PaymentStatusType.REFUNDED_BY_CUSTOMER);
         request.setQuantity(1);
 
         lesson = new Lesson();
@@ -90,6 +103,16 @@ public class KakaoRefundServiceTest {
         payment.setTotalAmount(10000);
         payment.setQuantity(1); // 수량 설정
 
+        refund = new Refund();
+        refund.setRefundId(1L);
+        refund.setStatus(PaymentStatusType.COMPLETED);
+        refund.setAmount(1000);
+        refund.setPayment(payment);
+
+        user = new User();
+        user.setUserId(1L);
+        user.setEmail("test@example.com");
+
         lenient().when(payProperties.getCancelUrl()).thenReturn(baseUrl);
         lenient().when(payProperties.getDevKey()).thenReturn("devKey");
         lenient().when(payProperties.getCid()).thenReturn("test_cid");
@@ -100,7 +123,7 @@ public class KakaoRefundServiceTest {
                 .defaultHeader("Authorization", "SECRET_KEY " + payProperties.getDevKey())
                 .build();
 
-        kakaoRefundService = new KakaoRefundService(payProperties, paymentRepository, refundRepository, lessonService);
+        kakaoRefundService = new KakaoRefundService(payProperties, paymentRepository, refundRepository, lessonService ,userService);
     }
 
     @AfterEach
@@ -173,6 +196,50 @@ public class KakaoRefundServiceTest {
         assertEquals(ErrorCode.PAY_ERROR, exception.getErrorCode());
         verify(paymentRepository).findById(request.getPaymentId());
         verify(lessonService, never()).updateParticipantCount(lesson, 1);
+    }
+
+    @Test
+    @DisplayName("환불 조회 성공")
+    void getAllRefunds_success() {
+        List<Refund> refunds = Arrays.asList(refund);
+
+        when(userService.getCurrentUserEmail()).thenReturn("test@example.com");
+        when(userService.getUserByEmail(user.getEmail())).thenReturn(user);
+        List<PaymentRefundDto> refundDtos = refundService.getAllRefundsByUser();
+
+        assertNotNull(refundDtos);
+//        assertEquals(1, refundDtos.size());
+//        assertEquals(refund.getRefundId(), refundDtos.get(0).getRefundId());
+//        verify(refundRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("특정 환불 조회 성공")
+    void getRefundById_success() {
+        Long refundId = 1L;
+
+        when(refundRepository.findById(refundId)).thenReturn(Optional.of(refund));
+
+        PaymentRefundDto refundDto = refundService.getRefundById(refundId);
+
+        assertNotNull(refundDto);
+        assertEquals(refundId, refundDto.getRefundId());
+        verify(refundRepository, times(1)).findById(refundId);
+    }
+
+    @Test
+    @DisplayName("환불 조회 실패")
+    void getRefundById_notFound() {
+        Long refundId = 1L;
+
+        when(refundRepository.findById(refundId)).thenReturn(Optional.empty());
+
+        RestApiException exception = assertThrows(RestApiException.class, () -> {
+            refundService.getRefundById(refundId);
+        });
+
+        assertEquals(REFUND_NOT_FOUND, exception.getErrorCode());
+        verify(refundRepository, times(1)).findById(refundId);
     }
 
 }

@@ -34,6 +34,7 @@ public class OneDayClassDocument {
     @Id
     private Long classId;
     private String className;   // 클래스명
+    private String tutorName;   // 강사 닉네임
     private String address1;    // 시도 명
     private String address2;    // 시군구 명
     private String address3;    // 나머지 상세 주소
@@ -41,7 +42,7 @@ public class OneDayClassDocument {
     private GeoPoint location;
     private int duration;      // 소요 시간
     private int price;          // 가격
-    private int personal;   // 수강 최대 인원
+    private int totalReviews;   // 총 댓글 수
     private Double starRate; // 별점
     private int totalWish;  // 총 찜 개수
 
@@ -49,28 +50,23 @@ public class OneDayClassDocument {
 
     private List<String> tagList;
 
-    private boolean hasParking;  // 주차장
-    @Field(type= FieldType.Date, format = DateFormat.date)
-    private LocalDate startDate;    // 시작일
     @Field(type= FieldType.Date, format = DateFormat.date)
     private LocalDate endDate;      // 종료일
-
     private CategoryType category;
 
     public OneDayClassDocument(OneDayClass oneDayClass) {
         this.classId = oneDayClass.getClassId();
         this.className = oneDayClass.getClassName();
+        this.tutorName = oneDayClass.getTutor().getNickname();
         this.address1 = oneDayClass.getAddress1();
         this.address2 = oneDayClass.getAddress2();
         this.address3 = oneDayClass.getAddress3();
         location = new GeoPoint(oneDayClass.getLatitude(), oneDayClass.getLongitude());
         duration = oneDayClass.getDuration();
         price = oneDayClass.getPrice();
-        personal = oneDayClass.getPersonal();
+        totalReviews = oneDayClass.getTotalReviews();
         starRate = oneDayClass.getTotalStarRate() / (oneDayClass.getTotalReviews() == 0 ? 1 : oneDayClass.getTotalReviews());
-        hasParking = oneDayClass.isHasParking();
         totalWish = oneDayClass.getTotalWish();
-        startDate = oneDayClass.getStartDate();
         endDate = oneDayClass.getEndDate();
         category = oneDayClass.getCategory().getName();
         tagList = oneDayClass.getTagList().stream().map(ClassTag::getName).toList();

@@ -1,13 +1,20 @@
 package com.linked.classbridge.dto.oneDayClass;
 
 import com.linked.classbridge.domain.ClassFAQ;
+import com.linked.classbridge.domain.ClassImage;
 import com.linked.classbridge.domain.ClassTag;
 import com.linked.classbridge.domain.OneDayClass;
+import com.linked.classbridge.domain.User;
+import com.linked.classbridge.repository.ClassImageRepository;
+import com.linked.classbridge.repository.OneDayClassRepository;
+import com.linked.classbridge.repository.UserRepository;
+import com.linked.classbridge.repository.WishRepository;
 import com.linked.classbridge.type.CategoryType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -26,7 +33,11 @@ import lombok.ToString;
 public class ClassDto {
     private Long classId;
     private String className;
+    private String tutorName;
     private String address;
+    private String address1;
+    private String address2;
+    private String address3;
     private int duration;
     private int price;
     private int personal;
@@ -34,16 +45,21 @@ public class ClassDto {
     private String introduction;
     private LocalDate startDate;
     private LocalDate endDate;
-    private CategoryType categoryType;
+    private CategoryType category;
     private double totalStarRate;
     private long totalReviews;
     private int totalWish;
+    private Double starRate;
+    private boolean wish;
     private String classImageUrl;
 
     public ClassDto(OneDayClass oneDayClass) {
         this.classId = oneDayClass.getClassId();
         this.className = oneDayClass.getClassName();
         this.address = oneDayClass.getAddress1() + " " + oneDayClass.getAddress2() + " " + oneDayClass.getAddress3();
+        this.address1 = oneDayClass.getAddress1();
+        this.address2 = oneDayClass.getAddress2();
+        this.address3 = oneDayClass.getAddress3();
         this.duration = oneDayClass.getDuration();
         this.price = oneDayClass.getPrice();
         this.personal = oneDayClass.getPersonal();
@@ -51,10 +67,44 @@ public class ClassDto {
         this.introduction = oneDayClass.getIntroduction();
         this.startDate = oneDayClass.getStartDate();
         this.endDate = oneDayClass.getEndDate();
-        this.categoryType = oneDayClass.getCategory().getName();
+        this.category = oneDayClass.getCategory().getName();
         this.totalStarRate = oneDayClass.getTotalStarRate();
         this.totalReviews = oneDayClass.getTotalReviews();
         this.totalWish = oneDayClass.getTotalWish();
+
+        if(oneDayClass.getTotalReviews() == 0){
+            this.starRate = 0.0;
+        } else {
+            DecimalFormat df = new DecimalFormat("#.#");
+            this.starRate = Double.valueOf(df.format(oneDayClass.getTotalStarRate() / oneDayClass.getTotalReviews()));
+        }
+    }
+
+    public void setTutorName(OneDayClassRepository oneDayClassRepository) {
+
+        String tutorName = oneDayClassRepository.findTutorNameByClassId(this.classId);
+        this.tutorName = tutorName;
+    }
+
+    public void setIsWish(User user, WishRepository wishRepository) {
+
+        if(user == null || wishRepository == null){
+            this.wish = false;
+            return;
+        }
+
+        if(wishRepository.existsByUserUserIdAndOneDayClassClassId(user.getUserId(), this.classId)){
+            this.wish = true;
+        } else {
+            this.wish = false;
+        }
+    }
+
+    public void setClassImage(ClassImageRepository classImageRepository) {
+
+        ClassImage classImage = classImageRepository.findFirstByOneDayClassClassIdAndSequence(this.classId, 1)
+                .orElse(null);
+        this.classImageUrl = classImage != null ? classImage.getUrl() : null;
     }
 
     @Builder
@@ -141,7 +191,7 @@ public class ClassDto {
         }
     }
 
-    public record ClassResponse(
+    public record ClassResponseByTutor(
             Long classId,
 
             String className,  // 클래스명
@@ -168,15 +218,16 @@ public class ClassDto {
             LocalDate startDate,   // 시작일
             LocalDate endDate,      // 종료일
             CategoryType category,
-            Long userId,
+            Long userId,   // 강사 id
+            boolean isWish,  // 찜 여부
 
             List<ClassImageDto> imageList,
-            List<LessonDto> lessonList,
+            List<LessonDtoDetail> lessonList,
             List<ClassFAQDto> faqList,
             List<ClassTagDto> tagList
     ) {
-        public static ClassResponse fromEntity(OneDayClass oneDayClass) {
-            return new ClassResponse(
+        public static ClassResponseByTutor fromEntity(OneDayClass oneDayClass) {
+            return new ClassResponseByTutor(
                     oneDayClass.getClassId(),
                     oneDayClass.getClassName(),
                     oneDayClass.getAddress1(),
@@ -196,6 +247,76 @@ public class ClassDto {
                     oneDayClass.getEndDate(),
                     oneDayClass.getCategory().getName(),
                     oneDayClass.getTutor().getUserId(),
+                    false,
+                    oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
+                    oneDayClass.getLessonList().stream().map(LessonDtoDetail::new).toList(),
+                    oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),
+                    oneDayClass.getTagList().stream().map(ClassTagDto::new).toList());
+        }
+    }
+
+    public record ClassResponseByUser(
+            Long classId,
+
+            String className,  // 클래스명
+
+            String address1,    // 시,도
+            String address2,    // 시,군,구
+            String address3,    // 상세 주소
+
+            double latitude,    // 위도
+            double longitude,   // 경도
+
+            int duration,     // 소요 시간
+
+            int price,         // 가격
+            int personal,
+
+            Double totalStarRate, // 총 별점 수
+            Integer totalReviews,  // 총 리뷰 수
+            Integer totalWish,     // 총 찜 수
+
+            boolean hasParking,  // 주차장 정보
+            String introduction,        // 클래스 소개
+
+            LocalDate startDate,   // 시작일
+            LocalDate endDate,      // 종료일
+            CategoryType category,
+            Long tutorId,   // 강사 id
+            String tutorName,  // 강사 닉네임
+            String tutorIntroduction,
+            boolean isWish,  // 찜 여부
+            boolean isWanted, // 수강 신청 가능 여부
+            List<ClassImageDto> imageList,
+            List<LessonDto> lessonList,
+            List<ClassFAQDto> faqList,
+            List<ClassTagDto> tagList
+    ) {
+        public static ClassResponseByUser fromEntity(OneDayClass oneDayClass, boolean isWish, boolean isWanted) {
+            return new ClassResponseByUser(
+                    oneDayClass.getClassId(),
+                    oneDayClass.getClassName(),
+                    oneDayClass.getAddress1(),
+                    oneDayClass.getAddress2(),
+                    oneDayClass.getAddress3(),
+                    oneDayClass.getLatitude(),
+                    oneDayClass.getLongitude(),
+                    oneDayClass.getDuration(),
+                    oneDayClass.getPrice(),
+                    oneDayClass.getPersonal(),
+                    oneDayClass.getTotalStarRate(),
+                    oneDayClass.getTotalReviews(),
+                    oneDayClass.getTotalWish(),
+                    oneDayClass.isHasParking(),
+                    oneDayClass.getIntroduction(),
+                    oneDayClass.getStartDate(),
+                    oneDayClass.getEndDate(),
+                    oneDayClass.getCategory().getName(),
+                    oneDayClass.getTutor().getUserId(),
+                    oneDayClass.getTutor().getNickname(),
+                    oneDayClass.getTutor().getSelfIntroduction(),
+                    isWish,
+                    isWanted,
                     oneDayClass.getImageList().stream().map(ClassImageDto::new).toList(),
                     oneDayClass.getLessonList().stream().map(LessonDto::new).toList(),
                     oneDayClass.getFaqList().stream().map(ClassFAQDto::new).toList(),

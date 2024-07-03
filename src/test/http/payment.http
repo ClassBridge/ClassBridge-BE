@@ -1,13 +1,37 @@
 ### 결제
 POST http://localhost:8080/api/payments/prepare
 Content-Type: application/json
-access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODE4NDMxOCwiZXhwIjoxNzE4MTg0OTE4fQ.XMjniYYGYMLvegLDcXm_K2mu2ZT0Z5kFrwAVcWE--YU
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODk3NTE5NiwiZXhwIjoxNzE4OTc1Nzk2fQ.PdWNbYfnCCMHXWoQmeziMlTKP8-xm_lv4GCVVcbxNDg
 
 {
-  "quantity": 2,
-  "total_amount": 10000,
-  "reservation_id":10,
+  "quantity": 1,
+  "total_amount": 1000,
+  "reservation_id":19,
   "item_name": "코딩클래스"
+}
+
+### 결제
+POST http://13.125.180.170:8080/api/payments/prepare
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxOTAzNDk4MiwiZXhwIjoxNzE5MDM1NTgyfQ.GPqynaN4KWUV3lnjEwtS5T2kyrMFT-0tuhF0Q9Rut98
+
+{
+  "quantity": 1,
+  "total_amount": 35000,
+  "reservation_id":2,
+  "item_name": "클래스 이름"
+}
+
+### 결제
+POST http://ec2-3-38-165-201.ap-northeast-2.compute.amazonaws.com:8080/api/payments/prepare
+Content-Type: application/json
+access: eyJhbGciOiJIUzI1NiJ9.eyJ0b2tlblR5cGUiOiJhY2Nlc3MiLCJlbWFpbCI6InVzZXJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sImlhdCI6MTcxODk4MjU5NSwiZXhwIjoxNzE4OTgzMTk1fQ.wD5yIpuSV1zU_2TpjiygwEwq7fHbdizAXpkCBaqXkoI
+
+{
+  "quantity": 1,
+  "total_amount": 35000,
+  "reservation_id":2,
+  "item_name": "클래스 이름"
 }
 
 ### test
@@ -15,8 +39,16 @@ POST http://localhost:8080/api/payments/complete
 Content-Type: application/json
 
 {
-    "tid": "test_tid",
-    "partner_order_id": "test_order_id",
-    "partner_user_id": "test_user_id",
-    "pg_token": "test_pg_token"
+  "tid": "test_tid",
+  "partner_order_id": "test_order_id",
+  "partner_user_id": "test_user_id",
+  "pg_token": "test_pg_token"
 }
+
+### 모든 결제 조회
+GET http://localhost:8080/api/payments
+Content-Type: application/json
+
+### 특정 결제 조회
+GET http://localhost:8080/api/payments/1
+Content-Type: application/json
